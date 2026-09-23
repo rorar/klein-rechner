@@ -5,9 +5,9 @@ import {
   GEBUEHR_FIX_CENT, ZAHLWEGE, findeZahlweg, versandartenFuer,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=11';
-import { textDu, textSie, textNeutral } from './texte.js?v=11';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=11';
+} from './rechnen.js?v=12';
+import { textDu, textSie, textNeutral } from './texte.js?v=12';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=12';
 
 const el = id => document.getElementById(id);
 
