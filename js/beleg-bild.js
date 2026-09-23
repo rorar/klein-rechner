@@ -91,7 +91,7 @@ export async function zeichneBeleg(r) {
 
   g.fillStyle = '#2c6a4f';
   g.font = '500 46px Newsreader, Georgia, serif';
-  const summe = fmt(r.summe);
+  const summe = fmt(r.kaeuferZahlt);
   g.fillText(summe, B - RAND - g.measureText(summe).width, y + 4);
   y += 62;
 
@@ -124,5 +124,5 @@ export async function zeichneBeleg(r) {
 }
 
 export function dateiname(r) {
-  return `sicher-bezahlen-${(r.summe / 100).toFixed(2).replace('.', '-')}-euro.png`;
+  return `sicher-bezahlen-${(r.kaeuferZahlt / 100).toFixed(2).replace('.', '-')}-euro.png`;
 }

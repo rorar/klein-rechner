@@ -13,7 +13,7 @@ export function aufstellung(r) {
     `Artikel: ${fmt(r.preis)}`,
     `Versand: ${versandText(r)}`,
     `Servicegebühr: ${fmt(r.gebuehr)}`,
-    `Gesamt: ${fmt(r.summe)}`
+    `Gesamt: ${fmt(r.kaeuferZahlt)}`
   ].join('\n');
 }
 
@@ -36,17 +36,17 @@ ${aufstellung(r)}
 
 export function textDu(r) {
   return `${rumpf(r)}
-Du zahlst damit insgesamt ${fmt(r.summe)}.`;
+Du zahlst damit insgesamt ${fmt(r.kaeuferZahlt)}.`;
 }
 
 export function textSie(r) {
   return `${rumpf(r)}
-Sie zahlen damit insgesamt ${fmt(r.summe)}.`;
+Sie zahlen damit insgesamt ${fmt(r.kaeuferZahlt)}.`;
 }
 
 /* Kommt ohne "du" und ohne "Sie" aus und passt damit auch, solange die
    Anrede zwischen zwei Leuten noch nicht geklärt ist. */
 export function textNeutral(r) {
   return `${rumpf(r)}
-Insgesamt sind das ${fmt(r.summe)}.`;
+Insgesamt sind das ${fmt(r.kaeuferZahlt)}.`;
 }

@@ -57,9 +57,9 @@ function aktualisiere() {
   el('out-versand-note').textContent = r.paketstation ? 'Zustellung an eine Paketstation' : '';
   el('out-gebuehr').textContent = fmt(r.gebuehr);
   el('out-gebuehr-formel').textContent = `${fmt(GEBUEHR_FIX_CENT)} + 4,5 % von ${fmt(r.preis)}`;
-  el('out-summe').textContent = fmt(r.summe);
+  el('out-summe').textContent = fmt(r.kaeuferZahlt);
 
-  kopien.summe = fmt(r.summe);
+  kopien.summe = fmt(r.kaeuferZahlt);
   kopien.link = location.href;   // schreibeUrl lief oben, die Adresse stimmt
   kopien.du = textDu(r);
   kopien.sie = textSie(r);
@@ -264,7 +264,7 @@ if (navigator.canShare && navigator.canShare({ files: [probe] })) {
       await navigator.share({
         files: [datei],
         title: 'Sicher bezahlen – Aufstellung',
-        text: `Käufer zahlt ${fmt(letzteRechnung.summe)}.`
+        text: `Käufer zahlt ${fmt(letzteRechnung.kaeuferZahlt)}.`
       });
     } catch (e) {
       if (e.name !== 'AbortError') toast('Teilen hat nicht geklappt');
