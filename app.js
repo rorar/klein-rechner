@@ -15,9 +15,7 @@ const VERSANDARTEN = [
   { name: 'Hermes Päckchen', cent: 489 },
   { name: 'Hermes Paket S', cent: 549 },
   { name: 'DHL Päckchen S', cent: 419 },
-  { name: 'DHL Paket bis 2 kg', cent: 549 },
-  { name: 'DHL Paket bis 5 kg', cent: 749 },
-  { name: 'Spedition oder Sperrgut', cent: 3900 }
+  { name: 'DHL Paket bis 2 kg', cent: 619 }
 ];
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
@@ -49,8 +47,7 @@ function berechne(preisCent, versandCent) {
     preis: preisCent,
     versand: versandCent,
     gebuehr,
-    summe: preisCent + versandCent + gebuehr,
-    verkaeufer: preisCent
+    summe: preisCent + versandCent + gebuehr
   };
 }
 
@@ -83,7 +80,7 @@ const kopien = { summe: '', du: '', sie: '' };
 const LEERTEXT = 'Trag oben einen Artikelpreis ein, dann steht hier der fertige Text.';
 
 function zeigeLeer() {
-  ['out-preis', 'out-versand', 'out-gebuehr', 'out-summe', 'out-verkaeufer']
+  ['out-preis', 'out-versand', 'out-gebuehr', 'out-summe']
     .forEach(id => { el(id).textContent = '—'; });
   el('out-gebuehr-formel').textContent = '';
   for (const feld of ['du', 'sie']) {
@@ -115,7 +112,6 @@ function aktualisiere() {
   el('out-gebuehr').textContent = fmt(r.gebuehr);
   el('out-gebuehr-formel').textContent = `${fmt(GEBUEHR_FIX_CENT)} + 4,5\u00a0% von ${fmt(r.preis)}`;
   el('out-summe').textContent = fmt(r.summe);
-  el('out-verkaeufer').textContent = fmt(r.verkaeufer);
 
   kopien.summe = fmt(r.summe);
   kopien.du = textDu(r);
@@ -162,16 +158,20 @@ async function kopiere(text) {
 }
 
 document.querySelectorAll('.copy').forEach(btn => {
+  btn.dataset.label = btn.textContent;   // einmalig, nicht beim Klick lesen
+  let zurueck;
+
   btn.addEventListener('click', async () => {
     const text = kopien[btn.dataset.copy];
     if (!text) return;
-    const beschriftung = btn.textContent;
+
     if (await kopiere(text)) {
       btn.textContent = 'Kopiert';
       btn.dataset.done = 'true';
       toast('In die Zwischenablage kopiert');
-      setTimeout(() => {
-        btn.textContent = beschriftung;
+      clearTimeout(zurueck);
+      zurueck = setTimeout(() => {
+        btn.textContent = btn.dataset.label;
         btn.dataset.done = 'false';
       }, 1600);
     } else {

@@ -6,9 +6,8 @@
 <title>Sicher-bezahlen-Rechner – was kostet der Kauf wirklich?</title>
 <meta name="description" content="Rechner für die Kleinanzeigen-Bezahlfunktion: Artikelpreis und Versand eingeben, Servicegebühr und Endsumme ablesen, Text zum Kopieren erhalten.">
 <meta name="color-scheme" content="light">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/Newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232C6A4F'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' fill='%23FBFBF7' text-anchor='middle'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
 </head>
@@ -86,8 +85,6 @@
       <span class="total-label">Käufer zahlt</span>
       <output class="total-amount" id="out-summe" for="preis versand">—</output>
     </div>
-
-    <p class="seller">Verkäufer bekommt <b id="out-verkaeufer">—</b> ausgezahlt.</p>
 
     <button type="button" class="copy copy-total" data-copy="summe">Summe kopieren</button>
 

@@ -20,8 +20,7 @@ Gerechnet wird in ganzen Cent, die Gebühr wird kaufmännisch auf Cent gerundet.
 Beispiel: 45,00 € Artikel und 5,49 € Versand ergeben 2,53 € Gebühr und 53,02 €
 Endsumme.
 
-Der Verkäufer bekommt den Artikelpreis ausgezahlt. Die Versandkosten gehen an den
-Versanddienst, die Gebühr trägt der Käufer.
+Die Gebühr trägt der Käufer.
 
 ## Annahmen
 
@@ -37,6 +36,7 @@ Versanddienst, die Gebühr trägt der Käufer.
 | `index.html` | Struktur der Seite |
 | `styles.css` | Gestaltung, Beleg-Optik |
 | `app.js` | Rechnung in Cent, Textbausteine, Combobox, Kopierfunktion |
+| `fonts/` | Schriften im Repo, damit keine Besucher-IP an Google geht |
 
 Kein Build-Schritt, keine Abhängigkeiten. Lokal ansehen:
 
