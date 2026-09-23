@@ -164,6 +164,24 @@ body {
 
 .error { color: #9c2b16; }
 
+.schalter {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+  cursor: pointer;
+}
+
+.schalter input {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  accent-color: var(--pine);
+  cursor: pointer;
+}
+
+.schalter span { font-size: 0.9375rem; }
+
 .formula {
   margin: 1.75rem 0 0;
   padding-top: 1rem;

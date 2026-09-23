@@ -38,7 +38,11 @@ Beide Felder lassen sich über die Adresse vorbelegen:
 ```
 https://rorar.github.io/klein-rechner/?preis=45,00&versand=5,49
 https://rorar.github.io/klein-rechner/?preis=12.34
+https://rorar.github.io/klein-rechner/?preis=30,00&versand=2,99&packstation=1
 ```
+
+`packstation=1` setzt den Haken für die Zustellung an eine Packstation. Ohne
+Versandkosten wird er ignoriert, weil es dann nichts zuzustellen gibt.
 
 Komma und Punkt werden beide gelesen. Beim Tippen schreibt die Seite den
 aktuellen Stand per `replaceState` zurück in die Adresse, die damit jederzeit
@@ -58,8 +62,12 @@ PNG an die Teilen-Funktion des Systems. Beides kommt ohne Bibliothek aus.
 * Die 4,5 % beziehen sich auf den Artikelpreis, nicht auf Artikelpreis plus Versand.
 * Die Versandarten im Auswahlfeld sind Richtwerte vom September 2026 und jederzeit
   überschreibbar – das Feld nimmt auch freie Beträge an. Die 2,99 € laufen über
-  Hermes und stehen so in Anzeigen mit Kleinanzeigen-Versand, Zustellung ggf. an
-  eine Packstation; die Preise je Paketgröße zeigt erst der Kaufvorgang.
+  Hermes und stehen so in Anzeigen mit Kleinanzeigen-Versand; die Preise je
+  Paketgröße zeigt erst der Kaufvorgang. Diese Versandart setzt den Haken für
+  die Packstation, jede andere nimmt ihn zurück – der Haken gehört zur
+  Versandart, lässt sich danach aber von Hand ändern. Steht er, taucht die
+  Zustellung in der Aufstellung, in allen drei Texten, im Bild und in der
+  Adresse auf.
 * Maßgeblich ist immer, was die Kleinanzeigen-App beim Kauf anzeigt.
 
 ## Aufbau

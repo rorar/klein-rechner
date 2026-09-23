@@ -13,7 +13,7 @@ const GEBUEHR_PROMILLE = 45;   // 4,5 % = 45/1000 des Artikelpreises
 const VERSANDARTEN = [
   { name: 'Abholung, kein Versand', cent: 0 },
   { name: 'Hermes über Kleinanzeigen, kleinste Größe', cent: 299,
-    hinweis: 'Zustellung ggf. an eine Packstation' },
+    hinweis: 'Zustellung ggf. an eine Packstation', packstation: true },
   { name: 'DHL Päckchen S', cent: 419 },
   { name: 'Hermes Päckchen', cent: 489 },
   { name: 'Hermes Paket S', cent: 549 },
@@ -44,13 +44,14 @@ function parseEuroToCent(roh) {
   return Number.isFinite(cent) ? cent : NaN;
 }
 
-function berechne(preisCent, versandCent) {
+function berechne(preisCent, versandCent, packstation) {
   const gebuehr = GEBUEHR_FIX_CENT + Math.round((preisCent * GEBUEHR_PROMILLE) / 1000);
   return {
     preis: preisCent,
     versand: versandCent,
     gebuehr,
-    summe: preisCent + versandCent + gebuehr
+    summe: preisCent + versandCent + gebuehr,
+    packstation: packstation && versandCent > 0
   };
 }
 
@@ -60,10 +61,15 @@ function berechne(preisCent, versandCent) {
    Schlusssatz unterscheiden sich. Du- und Sie-Text stehen trotzdem
    getrennt: ein Austausch einzelner Wörter fiele an "zahlst du" /
    "zahlen Sie" auseinander. */
+function versandText(r) {
+  if (r.versand === 0) return 'entfällt';
+  return r.packstation ? `${fmt(r.versand)} (Zustellung an eine Packstation)` : fmt(r.versand);
+}
+
 function aufstellung(r) {
   return [
     `Artikel: ${fmt(r.preis)}`,
-    `Versand: ${r.versand > 0 ? fmt(r.versand) : 'entfällt'}`,
+    `Versand: ${versandText(r)}`,
     `Servicegebühr: ${fmt(r.gebuehr)}`,
     `Gesamt: ${fmt(r.summe)}`
   ].join('\n');
@@ -111,6 +117,7 @@ const el = id => document.getElementById(id);
 
 const preisInput = el('preis');
 const versandInput = el('versand');
+const packstationFeld = el('packstation');
 const kopien = { summe: '', du: '', sie: '', neutral: '' };
 let letzteRechnung = null;
 
@@ -138,18 +145,19 @@ function aktualisiere() {
   el('preis-fehler').hidden = !preisKaputt;
   el('versand-fehler').hidden = !versandKaputt;
 
-  schreibeUrl(preis, versand);
+  schreibeUrl(preis, versand, packstationFeld.checked && versand > 0);
 
   if (preisKaputt || versandKaputt || preis === null) {
     zeigeLeer();
     return;
   }
 
-  const r = berechne(preis, versand === null ? 0 : versand);
+  const r = berechne(preis, versand === null ? 0 : versand, packstationFeld.checked);
   letzteRechnung = r;
 
   el('out-preis').textContent = fmt(r.preis);
   el('out-versand').textContent = r.versand > 0 ? fmt(r.versand) : '—';
+  el('out-versand-note').textContent = r.packstation ? 'Zustellung an eine Packstation' : '';
   el('out-gebuehr').textContent = fmt(r.gebuehr);
   el('out-gebuehr-formel').textContent = `${fmt(GEBUEHR_FIX_CENT)} + 4,5\u00a0% von ${fmt(r.preis)}`;
   el('out-summe').textContent = fmt(r.summe);
@@ -274,6 +282,7 @@ function bauCombo() {
 
   function waehle(i) {
     versandInput.value = (VERSANDARTEN[i].cent / 100).toFixed(2).replace('.', ',');
+    packstationFeld.checked = VERSANDARTEN[i].packstation === true;
     schliesse();
     aktualisiere();
   }
@@ -326,7 +335,8 @@ async function zeichneBeleg(r) {
   ]);
 
   const S = 2;                     // doppelte Auflösung, sonst franst Text aus
-  const B = 760, H = 566, RAND = 48;
+  const B = 760, RAND = 48;
+  const H = r.packstation ? 586 : 566;   // die Packstation-Zeile braucht Platz
   const c = document.createElement('canvas');
   c.width = B * S;
   c.height = H * S;
@@ -363,48 +373,68 @@ async function zeichneBeleg(r) {
     }
   };
 
-  zeile(180, 'Artikelpreis', fmt(r.preis));
-  zeile(218, 'Versand', r.versand > 0 ? fmt(r.versand) : 'entfällt');
-  zeile(256, 'Servicegebühr', fmt(r.gebuehr));
+  const notiz = (yy, text) => {
+    g.fillStyle = '#5d6a60';
+    g.font = '400 14px "IBM Plex Sans", sans-serif';
+    g.fillText(text, RAND, yy);
+  };
 
-  g.fillStyle = '#5d6a60';
-  g.font = '400 14px "IBM Plex Sans", sans-serif';
-  g.fillText(`${fmt(GEBUEHR_FIX_CENT)} + 4,5\u00a0% von ${fmt(r.preis)}`, RAND, 278);
+  /* Laufende Höhe statt fester Werte: die Packstation-Zeile schiebt alles
+     darunter nach unten. */
+  let y = 180;
+
+  zeile(y, 'Artikelpreis', fmt(r.preis));
+  y += 38;
+
+  zeile(y, 'Versand', r.versand > 0 ? fmt(r.versand) : 'entfällt');
+  if (r.packstation) {
+    y += 20;
+    notiz(y, 'Zustellung an eine Packstation');
+  }
+  y += 38;
+
+  zeile(y, 'Servicegebühr', fmt(r.gebuehr));
+  y += 22;
+  notiz(y, `${fmt(GEBUEHR_FIX_CENT)} + 4,5\u00a0% von ${fmt(r.preis)}`);
+  y += 28;
 
   g.fillStyle = '#14201a';
-  g.fillRect(RAND, 306, B - 2 * RAND, 2);
+  g.fillRect(RAND, y, B - 2 * RAND, 2);
+  y += 56;
 
   g.font = '500 18px "IBM Plex Sans", sans-serif';
-  g.fillText('Käufer zahlt', RAND, 362);
+  g.fillText('Käufer zahlt', RAND, y);
 
   g.fillStyle = '#2c6a4f';
   g.font = '500 46px Newsreader, Georgia, serif';
   const summe = fmt(r.summe);
-  g.fillText(summe, B - RAND - g.measureText(summe).width, 366);
+  g.fillText(summe, B - RAND - g.measureText(summe).width, y + 4);
+  y += 62;
 
   g.fillStyle = '#5d6a60';
   g.font = '400 14px "IBM Plex Sans", sans-serif';
-  g.fillText('Servicegebühr laut Kleinanzeigen: 0,50\u00a0€ plus 4,5\u00a0% vom Artikelpreis.', RAND, 424);
-  g.fillText('Halbe Cent gehen nach oben. Alle Angaben ohne Gewähr.', RAND, 446);
+  g.fillText('Servicegebühr laut Kleinanzeigen: 0,50\u00a0€ plus 4,5\u00a0% vom Artikelpreis.', RAND, y);
+  g.fillText('Halbe Cent gehen nach oben. Alle Angaben ohne Gewähr.', RAND, y + 22);
+  y += 52;
 
   g.fillStyle = '#2c6a4f';
   g.save();
-  g.translate(RAND, 476);
+  g.translate(RAND, y);
   g.fill(GITHUB_PFAD);
   g.restore();
 
   g.font = '500 15px "IBM Plex Sans", sans-serif';
-  g.fillText(REPO, RAND + 24, 489);
+  g.fillText(REPO, RAND + 24, y + 13);
 
   g.font = '400 15px "IBM Plex Sans", sans-serif';
   const label = 'Selbst rechnen: ';
   const labelBreite = g.measureText(label).width;   // messen, solange 400 gilt
   g.fillStyle = '#5d6a60';
-  g.fillText(label, RAND, 519);
+  g.fillText(label, RAND, y + 43);
 
   g.fillStyle = '#2c6a4f';
   g.font = '500 15px "IBM Plex Sans", sans-serif';
-  g.fillText(SEITE, RAND + labelBreite, 519);
+  g.fillText(SEITE, RAND + labelBreite, y + 43);
 
   return new Promise(res => c.toBlob(res, 'image/png'));
 }
@@ -459,11 +489,12 @@ function leseUrl() {
   const versand = p.get('versand');
   if (preis !== null) preisInput.value = preis;
   if (versand !== null) versandInput.value = versand;
+  packstationFeld.checked = p.get('packstation') === '1';
 }
 
 /* Punkt statt Komma, damit die Adresse ohne %2C lesbar bleibt.
    Die Eingabe versteht beides. */
-function schreibeUrl(preisCent, versandCent) {
+function schreibeUrl(preisCent, versandCent, packstation) {
   const p = new URLSearchParams(location.search);
   const setze = (name, cent) => {
     if (cent === null || Number.isNaN(cent)) p.delete(name);
@@ -471,6 +502,8 @@ function schreibeUrl(preisCent, versandCent) {
   };
   setze('preis', preisCent);
   setze('versand', versandCent);
+  if (packstation) p.set('packstation', '1');
+  else p.delete('packstation');
   const s = p.toString();
   history.replaceState(null, '', s ? '?' + s : location.pathname);
 }
@@ -479,6 +512,7 @@ function schreibeUrl(preisCent, versandCent) {
 
 preisInput.addEventListener('input', aktualisiere);
 versandInput.addEventListener('input', aktualisiere);
+packstationFeld.addEventListener('change', aktualisiere);
 bauCombo();
 zeigeLeer();
 leseUrl();
