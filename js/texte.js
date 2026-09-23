@@ -41,8 +41,12 @@ function block(titel, zeilen, schutzsatz) {
 }
 
 function schutzsatzDirekt(di) {
-  if (di.warnung) return `Ohne Käuferschutz. ${di.warnung}`;
-  return 'Ohne Käuferschutz.';
+  /* Nicht jeder Direktweg ist ungeschützt: PayPal Waren und Dienstleistungen
+     trägt `schutz: true`. Beleg und Bild lesen dasselbe Feld, der Text tat
+     es bisher nicht und behauptete auch dort „Ohne Käuferschutz“. */
+  const satz = di.schutz ? 'Der Käuferschutz greift.' : 'Ohne Käuferschutz.';
+  if (di.warnung) return `${satz} ${di.warnung}`;
+  return satz;
 }
 
 function vergleichRumpf(ka, di) {

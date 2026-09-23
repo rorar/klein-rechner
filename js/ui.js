@@ -58,6 +58,10 @@ function zeigeLeer() {
     .forEach(id => { el(id).textContent = '—'; });
   el('out-gebuehr-formel').textContent = '';
   el('d-gebuehr-formel').textContent = '';
+  /* Die Versandnotiz blieb bisher stehen, wenn der Preis geleert wurde –
+     dann hing „Zustellung an eine Paketstation“ an einem leeren Beleg. */
+  el('out-versand-note').textContent = '';
+  el('d-versand-note').textContent = '';
 
   for (const feld of ['du', 'sie', 'neutral']) {
     el('text-' + feld).textContent = LEERTEXT;
@@ -180,7 +184,10 @@ function aktualisiere() {
 
   const preisKaputt = Number.isNaN(preis);
   const versandKaputt = Number.isNaN(versand);
-  const direktKaputt = Number.isNaN(direktversand);
+  /* Nur im Vergleich zählt das Direktfeld. Sonst sperrte ein Tippfehler
+     darin die ganze Anzeige, während die dazugehörige Fehlermeldung im
+     ausgeblendeten Feld steckt und niemand den Grund zu sehen bekäme. */
+  const direktKaputt = vergleich && Number.isNaN(direktversand);
   el('preis-fehler').hidden = !preisKaputt;
   el('versand-fehler').hidden = !versandKaputt;
   el('direktversand-fehler').hidden = !direktKaputt;
@@ -386,17 +393,33 @@ function bauCombo({ feld, listeId, arten, nachWahl }) {
 /* ---------- Bild speichern und teilen ---------- */
 
 el('bild-knopf').addEventListener('click', async () => {
-  if (!letzteRechnung) return;
-  const blob = await zeichneBeleg(letzteRechnung, letzteDirekt, letzterBreakeven);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = dateiname(letzteRechnung);
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  toast('Bild gespeichert');
+  /* Der Stand wird festgehalten, bevor gewartet wird: tippt jemand während
+     des Zeichnens weiter, zeigten Bild und Dateiname sonst zwei
+     verschiedene Rechnungen – und beim Leeren des Feldes wäre
+     letzteRechnung hier null. */
+  const ka = letzteRechnung;
+  const di = letzteDirekt;
+  const b = letzterBreakeven;
+  if (!ka) return;
+
+  let url = null;
+  try {
+    const blob = await zeichneBeleg(ka, di, b);
+    url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = dateiname(ka);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast('Bild gespeichert');
+  } catch {
+    /* Ohne diesen Fang bliebe eine abgewiesene Zusage unbeachtet liegen
+       und der Knopf täte stumm gar nichts. */
+    toast('Bild speichern hat nicht geklappt');
+  } finally {
+    if (url) URL.revokeObjectURL(url);
+  }
 });
 
 /* Einen Link kann fast jedes Handy weiterreichen, Dateien deutlich seltener.
@@ -426,14 +449,20 @@ const probe = new File([new Uint8Array([0])], 'probe.png', { type: 'image/png' }
 if (navigator.canShare && navigator.canShare({ files: [probe] })) {
   teilenKnopf.hidden = false;
   teilenKnopf.addEventListener('click', async () => {
-    if (!letzteRechnung) return;
-    const blob = await zeichneBeleg(letzteRechnung, letzteDirekt, letzterBreakeven);
-    const datei = new File([blob], dateiname(letzteRechnung), { type: 'image/png' });
+    /* Wie beim Speichern: erst den Stand festhalten, dann warten. */
+    const ka = letzteRechnung;
+    const di = letzteDirekt;
+    const b = letzterBreakeven;
+    if (!ka) return;
     try {
+      /* Das Zeichnen steht mit im try, sonst bliebe sein Fehlschlag
+         unbeachtet liegen. */
+      const blob = await zeichneBeleg(ka, di, b);
+      const datei = new File([blob], dateiname(ka), { type: 'image/png' });
       await navigator.share({
         files: [datei],
         title: 'Sicher bezahlen – Aufstellung',
-        text: `Käufer zahlt ${fmt(letzteRechnung.kaeuferZahlt)}.`
+        text: `Käufer zahlt ${fmt(ka.kaeuferZahlt)}.`
       });
     } catch (e) {
       if (e.name !== 'AbortError') toast('Teilen hat nicht geklappt');

@@ -243,7 +243,11 @@ export async function zeichneBeleg(ka, di = null, b = null) {
   g.font = '500 15px "IBM Plex Sans", sans-serif';
   g.fillText(SEITE, RAND + labelBreite, y + 43);
 
-  return new Promise(res => c.toBlob(res, 'image/png'));
+  /* toBlob reicht bei einem Fehlschlag null durch. Ohne diese Prüfung liefe
+     das null bis in URL.createObjectURL und stürbe erst dort. */
+  return new Promise((res, rej) => {
+    c.toBlob(blob => blob ? res(blob) : rej(new Error('Das Bild ließ sich nicht erzeugen.')), 'image/png');
+  });
 }
 
 export function dateiname(r) {

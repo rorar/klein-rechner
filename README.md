@@ -123,7 +123,9 @@ Cloudflare Worker, der `rechnen.js` importiert.
 Ohne zusätzliche Infrastruktur tragen vier Wege. Pages sendet
 `access-control-allow-origin: *`, Cross-Origin funktioniert also.
 
-**Modul importieren**
+**Modul importieren** – im Browser, in Deno und in Bun. Node lehnt `https://`
+als Modulquelle ohne Weiteres ab; dort holt man die Datei per `fetch` oder legt
+sie ins eigene Projekt.
 
 ```js
 const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=11');
@@ -149,7 +151,9 @@ window.addEventListener('message', e => {
 });
 ```
 
-Die Antwort geht an den fragenden Ursprung zurück, nicht an `'*'`.
+Die Antwort geht an den fragenden Ursprung zurück, nicht an `'*'`. Eine
+einbettende Seite mit undurchsichtigem Ursprung – etwa aus `file://` oder einem
+`sandbox`-iframe ohne `allow-same-origin` – bekommt deshalb keine Antwort.
 
 **Von Hand** über den Knopf „Als JSON kopieren“ oder `?format=json` in der Adresse.
 
