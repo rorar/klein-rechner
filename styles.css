@@ -525,3 +525,208 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.01ms !important; }
 }
+
+/* ---------- Vergleichsmodus ---------- */
+
+/* Die beiden Pole des Balkens. Geprüft mit dem Palettenvalidator:
+   ΔE 13,2 (deutan), 18,7 (tritan), 25,5 (normal), Kontrast über 3:1.
+   Das Seiten-Pine --pine fällt als Markenfarbe durch den Chroma-Floor,
+   es liest sich in der Fläche als Grau. */
+:root {
+  --pol-ka: #1b7f51;
+  --pol-direkt: #7b3b86;
+}
+
+.schalter-vergleich {
+  margin-top: 1.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--rule);
+}
+
+.breakeven { grid-column: 1 / -1; }
+
+@media (min-width: 52rem) {
+  .sheet[data-vergleich="an"] > .panel {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 2rem;
+    align-items: start;
+  }
+
+  .sheet[data-vergleich="an"] > .panel > .panel-title,
+  .sheet[data-vergleich="an"] > .panel > .schalter-vergleich,
+  .sheet[data-vergleich="an"] > .panel > .hint,
+  .sheet[data-vergleich="an"] > .panel > .formula {
+    grid-column: 1 / -1;
+  }
+
+  .sheet[data-vergleich="an"] > .panel > .field + .field { margin-top: 0; }
+}
+
+/* ---------- Zahlweg ---------- */
+
+.zahlweg, .traeger {
+  margin: 0 0 1.25rem;
+  padding: 0;
+  border: 0;
+}
+
+.zahlweg legend, .traeger legend {
+  padding: 0 0 0.5rem;
+  font-weight: 500;
+  font-size: 0.9375rem;
+}
+
+.zahlweg label, .traeger label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+  cursor: pointer;
+}
+
+.zahlweg input, .traeger input {
+  accent-color: var(--pine);
+  cursor: pointer;
+}
+
+.zahlweg .zw-name { font-size: 0.9375rem; }
+
+.traeger {
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+}
+
+.warnung {
+  margin: 0.5rem 0 0;
+  padding-left: 0.75rem;
+  border-left: 2px solid #9c2b16;
+  font-size: 0.8125rem;
+  color: #9c2b16;
+}
+
+/* ---------- Beleg-Ergänzungen ---------- */
+
+.behaelt {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.9rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.behaelt b {
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.schutz {
+  margin: 0.6rem 0 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.schutz::before {
+  content: '○ ';
+  font-size: 0.9em;
+}
+
+.schutz-ja { color: var(--pol-ka); }
+.schutz-ja::before { content: '✓ '; }
+
+/* ---------- Breakeven ---------- */
+
+.breakeven {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  padding: clamp(1.25rem, 0.8rem + 1.6vw, 1.9rem);
+}
+
+.skala-koepfe {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.skala-kopf-links { color: var(--pol-ka); }
+.skala-kopf-rechts { color: var(--pol-direkt); }
+
+.skala-bahn {
+  position: relative;
+  display: flex;
+  height: 14px;
+  background: var(--paper);
+}
+
+.skala-links { background: var(--pol-ka); }
+.skala-rechts { background: var(--pol-direkt); flex: 1 1 auto; }
+
+.skala-marke {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--ink);
+  box-shadow: 0 0 0 2px var(--card);   /* Ring, damit die Marke auf der Grenze sichtbar bleibt */
+}
+
+.skala-marke-wert {
+  position: absolute;
+  top: -1.55rem;
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+  font-family: var(--serif);
+  font-size: 0.9375rem;
+}
+
+.skala-fuss {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.skala-schwelle {
+  position: absolute;
+  translate: -50% 0;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.befund {
+  margin: 1.2rem 0 0;
+  max-width: 62ch;
+}
+
+.befund b { font-family: var(--serif); font-size: 1.0625rem; }
+
+#befund-hinweis { margin-top: 0.8rem; }
+
+/* ---------- JSON-Ansicht ---------- */
+
+.json-ansicht {
+  grid-column: 1 / -1;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  padding: clamp(1.25rem, 0.8rem + 1.6vw, 1.9rem);
+}
+
+.json-ansicht pre {
+  margin: 0;
+  overflow-x: auto;
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}

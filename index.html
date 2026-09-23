@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="light">
 <link rel="preload" href="fonts/Newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css?v=10">
+<link rel="stylesheet" href="styles.css?v=11">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232C6A4F'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' fill='%23FBFBF7' text-anchor='middle'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -35,7 +35,7 @@
     </div>
 
     <div class="field">
-      <label for="versand" id="versand-label">Versandkosten</label>
+      <label for="versand" id="versand-label">Versandkosten über Kleinanzeigen</label>
       <div class="combo" data-combo>
         <div class="money-input">
           <input id="versand" type="text" inputmode="decimal" autocomplete="off"
@@ -59,6 +59,31 @@
       <p id="paketstation-hinweis" class="hint">Aktionspreise gibt es teils nur zu dieser Bedingung. Wer sich die Ware nach Hause liefern lässt, zahlt dann mehr.</p>
     </div>
 
+    <div class="field" id="direktversand-feld" hidden>
+      <label for="direktversand" id="direktversand-label">Versandkosten direkt beim Dienstleister</label>
+      <div class="combo" data-combo="direkt">
+        <div class="money-input">
+          <input id="direktversand" type="text" inputmode="decimal" autocomplete="off"
+                 placeholder="z. B. 5,19"
+                 role="combobox" aria-expanded="false" aria-controls="direktversand-liste"
+                 aria-autocomplete="list" aria-describedby="direktversand-hinweis">
+          <span class="unit" aria-hidden="true">€</span>
+          <button type="button" class="combo-toggle" aria-label="Versandarten anzeigen" tabindex="-1">
+            <svg viewBox="0 0 12 8" width="12" height="8" aria-hidden="true"><path d="M1 1.5 6 6.5l5-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <ul class="combo-list" id="direktversand-liste" role="listbox" aria-labelledby="direktversand-label" hidden></ul>
+      </div>
+      <p id="direktversand-hinweis" class="hint">Was derselbe Versand kostet, wenn du ihn selbst buchst. Online frankiert ist durchweg günstiger als im Shop gebucht.</p>
+      <p class="error" id="direktversand-fehler" role="alert" hidden>Bitte einen Betrag wie 5,19 eintragen oder das Feld leer lassen.</p>
+    </div>
+
+    <label class="schalter schalter-vergleich" for="vergleich">
+      <input type="checkbox" id="vergleich" aria-describedby="vergleich-hinweis">
+      <span>Direktkauf vergleichen</span>
+    </label>
+    <p id="vergleich-hinweis" class="hint">Rechnet den Weg ohne Kleinanzeigen daneben und zeigt, ab welchem Preis er günstiger wird. Aus, solange du ihn nicht brauchst – ein geteilter Link zeigt ihn nur, wenn er beim Teilen an war.</p>
+
     <p class="formula">
       Kleinanzeigen berechnet beim Kauf <b>0,50&nbsp;€ + 4,5&nbsp;%</b> vom Artikelpreis.
       Der Versand kommt unverändert obendrauf.
@@ -72,7 +97,7 @@
   </section>
 
   <section class="receipt" aria-labelledby="beleg-titel">
-    <h2 id="beleg-titel" class="panel-title">Aufstellung</h2>
+    <h2 id="beleg-titel" class="panel-title"><span data-solo>Aufstellung</span><span data-vergleich hidden>über „Sicher bezahlen“</span></h2>
 
     <div class="rows" id="rows" aria-live="polite">
       <div class="row">
@@ -99,6 +124,9 @@
       <output class="total-amount" id="out-summe" for="preis versand">—</output>
     </div>
 
+    <p class="behaelt"><span>Verkäufer behält</span> <b id="out-behaelt">—</b></p>
+    <p class="schutz schutz-ja">Der Käuferschutz greift.</p>
+
     <div class="receipt-actions">
       <button type="button" class="copy copy-total" data-copy="summe">Summe kopieren</button>
 
@@ -111,9 +139,89 @@
         <button type="button" class="neben" id="bild-knopf">Als Bild speichern</button>
         <button type="button" class="neben" id="teilen-knopf" hidden>Bild teilen</button>
       </div>
+
+      <div class="neben-reihe">
+        <button type="button" class="copy neben" data-copy="json">Als JSON kopieren</button>
+      </div>
     </div>
 
     <div class="tear" aria-hidden="true"></div>
+  </section>
+
+  <section class="receipt receipt-direkt" id="beleg-direkt" aria-labelledby="direkt-titel" hidden>
+    <h2 id="direkt-titel" class="panel-title">direkt, ohne Kleinanzeigen</h2>
+
+    <fieldset class="zahlweg">
+      <legend>Zahlweg</legend>
+      <div id="zahlweg-liste"></div>
+      <p class="warnung" id="zahlweg-warnung" hidden></p>
+    </fieldset>
+
+    <fieldset class="traeger" id="traeger-feld" hidden>
+      <legend>Die PayPal-Gebühr</legend>
+      <label><input type="radio" name="traeger" value="verkaeufer" checked> trägt der Verkäufer</label>
+      <label><input type="radio" name="traeger" value="kaeufer"> legt der Käufer drauf</label>
+    </fieldset>
+
+    <div class="rows" aria-live="polite">
+      <div class="row">
+        <span class="row-label">Artikelpreis</span>
+        <span class="row-dots" aria-hidden="true"></span>
+        <span class="row-amount" id="d-preis">—</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Versand</span>
+        <span class="row-dots" aria-hidden="true"></span>
+        <span class="row-amount" id="d-versand">—</span>
+        <span class="row-note" id="d-versand-note"></span>
+      </div>
+      <div class="row" id="d-gebuehr-zeile">
+        <span class="row-label">Gebühr</span>
+        <span class="row-dots" aria-hidden="true"></span>
+        <span class="row-amount" id="d-gebuehr">—</span>
+        <span class="row-note" id="d-gebuehr-formel"></span>
+      </div>
+    </div>
+
+    <div class="total">
+      <span class="total-label">Käufer zahlt</span>
+      <output class="total-amount" id="d-summe">—</output>
+    </div>
+
+    <p class="behaelt"><span>Verkäufer behält</span> <b id="d-behaelt">—</b></p>
+    <p class="schutz" id="d-schutz">Ohne Käuferschutz.</p>
+
+    <div class="tear" aria-hidden="true"></div>
+  </section>
+
+  <section class="breakeven" id="breakeven" aria-labelledby="breakeven-titel" hidden>
+    <h2 id="breakeven-titel" class="panel-title">Ab wann lohnt der Direktkauf?</h2>
+
+    <div class="skala" id="skala">
+      <div class="skala-koepfe">
+        <span class="skala-kopf skala-kopf-links">über Kleinanzeigen günstiger</span>
+        <span class="skala-kopf skala-kopf-rechts">direkt günstiger</span>
+      </div>
+      <div class="skala-bahn">
+        <div class="skala-links" id="skala-links"></div>
+        <div class="skala-rechts" id="skala-rechts"></div>
+        <div class="skala-marke" id="skala-marke" hidden><span class="skala-marke-wert" id="skala-marke-wert"></span></div>
+      </div>
+      <div class="skala-fuss">
+        <span id="skala-von">0,00 €</span>
+        <span class="skala-schwelle" id="skala-schwelle"></span>
+        <span id="skala-bis"></span>
+      </div>
+    </div>
+
+    <p class="befund" id="befund-kaeufer"></p>
+    <p class="befund" id="befund-verkaeufer"></p>
+    <p class="hint" id="befund-hinweis" hidden></p>
+  </section>
+
+  <section class="json-ansicht" id="json-ansicht" aria-labelledby="json-titel" hidden>
+    <h2 id="json-titel" class="panel-title">JSON</h2>
+    <pre id="json-text"></pre>
   </section>
 
   <section class="texts" aria-labelledby="texte-titel">
@@ -154,7 +262,10 @@
   </p>
   <p>
     Verlinkbar: <code>?preis=45,00&amp;versand=5,49</code> an die Adresse hängen, dann rechnet die
-    Seite beim Laden. Die Adresse zeigt immer den aktuellen Stand.
+    Seite beim Laden. Die Adresse zeigt immer den aktuellen Stand. Mit
+    <code>?format=json</code> steht das Ergebnis zusätzlich als JSON auf der Seite;
+    <a href="https://github.com/rorar/klein-rechner#externe-anbindung">wie man den Rechner einbindet</a>,
+    steht im README.
   </p>
   <p class="marken">
     Kleinanzeigen und „Sicher bezahlen“ sind Marken der Kleinanzeigen GmbH, Hermes ist eine Marke

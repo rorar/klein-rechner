@@ -10,18 +10,36 @@ export const GEBUEHR_PROMILLE = 45;   // 4,5 % = 45/1000 des Artikelpreises
 
 /* Richtwerte, Stand September 2026. Alle Werte sind überschreibbar –
    das Feld bleibt ein normales Eingabefeld.
-   Die 2,99 € laufen über Hermes und stehen so in Anzeigen mit
-   Kleinanzeigen-Versand ("Versand ab 2,99 €"); die Preise pro Paketgröße
-   zeigt erst der Kaufvorgang. */
+
+   Zwei Quellen, zwei Preisniveaus: über die Kleinanzeigen-Bezahlfunktion
+   gebuchter Versand ist billiger als derselbe Versand direkt beim
+   Dienstleister. Deshalb trägt jeder Eintrag, wo er gilt.
+   Hermes-Preise laut Preisliste gültig ab 02.03.2026, DHL laut
+   Onlinefrankierung. Online gebucht ist durchweg billiger als im Shop. */
 export const VERSANDARTEN = [
-  { name: 'Abholung, kein Versand', cent: 0 },
-  { name: 'Hermes über Kleinanzeigen, kleinste Größe', cent: 299,
+  { name: 'Abholung, kein Versand', cent: 0, quelle: 'beide' },
+
+  { name: 'Hermes über Kleinanzeigen, kleinste Größe', cent: 299, quelle: 'kleinanzeigen',
     hinweis: 'Aktionspreis nur bei Zustellung an eine Paketstation', paketstation: true },
-  { name: 'DHL Päckchen S', cent: 419 },
-  { name: 'Hermes Päckchen', cent: 489 },
-  { name: 'Hermes Paket S', cent: 549 },
-  { name: 'DHL Paket bis 2 kg', cent: 619 }
+
+  { name: 'Hermes Shop-to-Shop Päckchen', cent: 399, quelle: 'direkt',
+    hinweis: 'nur online, von Shop zu Shop' },
+  { name: 'DHL Päckchen S', cent: 419, quelle: 'direkt', hinweis: 'nur online' },
+  { name: 'Hermes Shop-to-Shop Paket S', cent: 489, quelle: 'direkt',
+    hinweis: 'nur online, von Shop zu Shop' },
+  { name: 'Hermes Päckchen, online', cent: 519, quelle: 'direkt', hinweis: 'an die Haustür' },
+  { name: 'Hermes Päckchen, im Shop gebucht', cent: 525, quelle: 'direkt', hinweis: 'an die Haustür' },
+  { name: 'Hermes Paket S, online', cent: 579, quelle: 'direkt', hinweis: 'an die Haustür' },
+  { name: 'Hermes Paket M an PaketShop', cent: 590, quelle: 'direkt', hinweis: 'nur online' },
+  { name: 'DHL Paket bis 2 kg', cent: 619, quelle: 'direkt', hinweis: 'nur online' },
+  { name: 'Hermes Paket S, im Shop gebucht', cent: 679, quelle: 'direkt', hinweis: 'an die Haustür' },
+  { name: 'Hermes Paket L an PaketShop', cent: 990, quelle: 'direkt', hinweis: 'nur online' }
 ];
+
+/* Die Auswahlliste je Feld: der Kleinanzeigen-Versand taucht nur im
+   Kleinanzeigen-Feld auf, die Preise der Dienstleister nur im Direktfeld. */
+export const versandartenFuer = quelle =>
+  VERSANDARTEN.filter(a => a.quelle === quelle || a.quelle === 'beide');
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
 
@@ -195,4 +213,87 @@ export function breakeven({ versandKleinanzeigen, versandDirekt, paketstation, z
     kaeuferAb: kleinsterPreis(p => di(p).kaeuferZahlt < ka(p).kaeuferZahlt),
     verkaeuferAb: verkaeuferGleich ? 'gleich' : kleinsterPreis(p => di(p).verkaeuferBehaelt > ka(p).verkaeuferBehaelt)
   };
+}
+
+/* ---------- Ergebnis als schlichtes Objekt ---------- */
+
+export const STAND_DER_WERTE = '2026-09-23';
+export const FASSUNG = 1;
+
+const HINWEIS = 'Richtwerte ohne Gewähr. Kein Angebot der Kleinanzeigen GmbH.';
+
+const alsPosten = r => ({
+  artikelCent: r.preis,
+  versandCent: r.versand,
+  gebuehrCent: r.gebuehr,
+  kaeuferZahltCent: r.kaeuferZahlt,
+  verkaeuferBehaeltCent: r.verkaeuferBehaelt,
+  kaeuferschutz: r.schutz
+});
+
+/* Einstieg für alles, was von außen kommt: Adresse, postMessage, fremder
+   Code. Liefert bei Unsinn ein Fehlerobjekt statt einer Ausnahme, damit
+   ein Aufrufer nichts abfangen muss. */
+export function berechneAlles(eingabe = {}) {
+  const {
+    artikelpreisCent,
+    versandKleinanzeigenCent = 0,
+    versandDirektCent = 0,
+    paketstation = false,
+    vergleich = false,
+    zahlweg = 'ueberweisung',
+    gebuehrTraeger = 'verkaeufer'
+  } = eingabe;
+
+  const ganzzahlAbNull = w => Number.isInteger(w) && w >= 0;
+
+  if (!ganzzahlAbNull(artikelpreisCent)) {
+    return { fehler: 'artikelpreisCent muss eine ganze Zahl in Cent ab 0 sein' };
+  }
+  if (!ganzzahlAbNull(versandKleinanzeigenCent) || !ganzzahlAbNull(versandDirektCent)) {
+    return { fehler: 'Versandkosten müssen ganze Zahlen in Cent ab 0 sein' };
+  }
+
+  const ka = berechne(artikelpreisCent, versandKleinanzeigenCent, paketstation);
+
+  const ergebnis = {
+    fassung: FASSUNG,
+    waehrung: 'EUR',
+    stand: STAND_DER_WERTE,
+    eingabe: {
+      artikelpreisCent,
+      versandKleinanzeigenCent,
+      paketstation: ka.paketstation,
+      vergleich: Boolean(vergleich)
+    },
+    kleinanzeigen: alsPosten(ka),
+    hinweis: HINWEIS
+  };
+
+  if (!vergleich) return ergebnis;
+
+  const gewaehlt = findeZahlweg(zahlweg);
+  const traeger = gewaehlt.traeger && gebuehrTraeger === 'kaeufer' ? 'kaeufer' : 'verkaeufer';
+  const di = berechneDirekt(artikelpreisCent, versandDirektCent, gewaehlt.id, traeger);
+
+  ergebnis.eingabe.versandDirektCent = di.versand;
+  ergebnis.eingabe.zahlweg = gewaehlt.id;
+  ergebnis.eingabe.gebuehrTraeger = di.gebuehrTraeger;
+
+  ergebnis.direkt = { zahlweg: gewaehlt.id, ...alsPosten(di) };
+
+  const b = breakeven({
+    versandKleinanzeigen: versandKleinanzeigenCent,
+    versandDirekt: versandDirektCent,
+    paketstation,
+    zahlweg: gewaehlt.id,
+    gebuehrTraeger: traeger
+  });
+  ergebnis.breakeven = { kaeuferAbCent: b.kaeuferAb, verkaeufer: b.verkaeuferAb };
+
+  const differenz = ka.kaeuferZahlt - di.kaeuferZahlt;
+  ergebnis.guenstigerFuerKaeufer = differenz === 0 ? 'gleich' : (differenz > 0 ? 'direkt' : 'kleinanzeigen');
+  ergebnis.differenzKaeuferCent = Math.abs(differenz);
+
+  return ergebnis;
 }
