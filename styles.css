@@ -335,6 +335,15 @@ body {
   gap: 0.6rem;
 }
 
+/* Flex statt Grid, damit ein ausgeblendeter Teilen-Knopf keine Lücke lässt. */
+.neben-reihe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.neben-reihe .neben { flex: 1 1 8rem; }
+
 .copy-total { width: 100%; }
 
 /* Abrisskante am Belegfuß: Dreiecke in Papierfarbe (--card, hier literal,
@@ -435,7 +444,7 @@ body {
   cursor: not-allowed;
 }
 
-.bild {
+.neben {
   padding: 0.65rem 1rem;
   border: 1px solid var(--rule);
   background: none;
@@ -445,14 +454,14 @@ body {
   transition: border-color 0.12s ease, color 0.12s ease;
 }
 
-.bild:hover { border-color: var(--pine); color: var(--pine); }
+.neben:hover { border-color: var(--pine); color: var(--pine); }
 
-.bild:disabled {
+.neben:disabled {
   color: #9aa79d;
   cursor: not-allowed;
 }
 
-.bild:disabled:hover { border-color: var(--rule); color: #9aa79d; }
+.neben:disabled:hover { border-color: var(--rule); color: #9aa79d; }
 
 .colophon code {
   font-family: var(--sans);

@@ -118,7 +118,7 @@ const el = id => document.getElementById(id);
 const preisInput = el('preis');
 const versandInput = el('versand');
 const paketstationFeld = el('paketstation');
-const kopien = { summe: '', du: '', sie: '', neutral: '' };
+const kopien = { summe: '', du: '', sie: '', neutral: '', link: '' };
 let letzteRechnung = null;
 
 const LEERTEXT = 'Trag oben einen Artikelpreis ein, dann steht hier der fertige Text.';
@@ -131,9 +131,9 @@ function zeigeLeer() {
     el('text-' + feld).textContent = LEERTEXT;
     el('text-' + feld).dataset.empty = 'true';
   }
-  kopien.summe = kopien.du = kopien.sie = kopien.neutral = '';
+  kopien.summe = kopien.du = kopien.sie = kopien.neutral = kopien.link = '';
   letzteRechnung = null;
-  document.querySelectorAll('.copy, .bild').forEach(b => { b.disabled = true; });
+  document.querySelectorAll('.copy, .neben').forEach(b => { b.disabled = true; });
 }
 
 function aktualisiere() {
@@ -163,6 +163,7 @@ function aktualisiere() {
   el('out-summe').textContent = fmt(r.summe);
 
   kopien.summe = fmt(r.summe);
+  kopien.link = location.href;   // schreibeUrl lief oben, die Adresse stimmt
   kopien.du = textDu(r);
   kopien.sie = textSie(r);
   kopien.neutral = textNeutral(r);
@@ -172,7 +173,7 @@ function aktualisiere() {
     el('text-' + feld).dataset.empty = 'false';
   }
 
-  document.querySelectorAll('.copy, .bild').forEach(b => { b.disabled = false; });
+  document.querySelectorAll('.copy, .neben').forEach(b => { b.disabled = false; });
 }
 
 /* ---------- Kopieren ---------- */
@@ -457,8 +458,27 @@ el('bild-knopf').addEventListener('click', async () => {
   toast('Bild gespeichert');
 });
 
-/* Teilen gibt es nur, wenn der Browser Dateien weiterreichen kann –
-   auf dem Desktop ist das selten, auf dem Handy die Regel. */
+/* Einen Link kann fast jedes Handy weiterreichen, Dateien deutlich seltener.
+   Deshalb werden beide Knöpfe getrennt geprüft. */
+const linkTeilenKnopf = el('link-teilen-knopf');
+
+if (navigator.share) {
+  linkTeilenKnopf.hidden = false;
+  linkTeilenKnopf.addEventListener('click', async () => {
+    if (!kopien.link) return;
+    try {
+      await navigator.share({
+        title: 'Sicher bezahlen – Aufstellung',
+        text: `Käufer zahlt ${kopien.summe}.`,
+        url: kopien.link
+      });
+    } catch (e) {
+      if (e.name !== 'AbortError') toast('Teilen hat nicht geklappt');
+    }
+  });
+}
+
+/* Bild teilen gibt es nur, wenn der Browser Dateien weiterreichen kann. */
 const teilenKnopf = el('teilen-knopf');
 
 const probe = new File([new Uint8Array([0])], 'probe.png', { type: 'image/png' });

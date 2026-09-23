@@ -44,6 +44,10 @@ https://rorar.github.io/klein-rechner/?preis=30,00&versand=2,99&paketstation=1
 `paketstation=1` setzt den Haken für die Zustellung an eine Paketstation. Ohne
 Versandkosten wird er ignoriert, weil es dann nichts zuzustellen gibt.
 
+Unter der Aufstellung kopiert oder teilt „Link kopieren“ beziehungsweise
+„Link teilen“ genau diese Adresse. Der Teilen-Knopf erscheint nur, wo der
+Browser `navigator.share` kennt.
+
 Der Haken ist keine Randnotiz: Aktionspreise über Kleinanzeigen kamen in der
 Vergangenheit nur zustande, wenn an eine Paketstation geliefert wurde. Wer sich
 die Ware nach Hause schicken lässt, zahlt dann mehr als der Rechner anzeigt.
