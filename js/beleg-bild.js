@@ -1,7 +1,7 @@
 /* Der Beleg wird von Hand auf ein Canvas gezeichnet. Das sind wenige
    Zeilen je Spalte – dafür lohnt keine Bibliothek, die das DOM nachbaut. */
 
-import { fmt, GEBUEHR_FIX_CENT, findeZahlweg } from './rechnen.js?v=13';
+import { fmt, GEBUEHR_FIX_CENT, findeZahlweg } from './rechnen.js?v=14';
 
 const REPO = 'github.com/rorar/klein-rechner';
 const SEITE = 'rorar.github.io/klein-rechner';
@@ -19,8 +19,11 @@ const GITHUB_PFAD = new Path2D('M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.5
 
 async function schriftenBereit() {
   /* Canvas fällt still auf eine Systemschrift zurück, wenn der Webfont
-     noch nicht geladen ist. Jede benutzte Größe einzeln anfordern. */
-  await Promise.all([
+     noch nicht geladen ist. Jede benutzte Größe einzeln anfordern.
+     allSettled statt all: eine einzelne Schrift, die nicht lädt, soll das
+     Bild nicht verhindern – sie fällt dann eben zurück, genau wie oben
+     beschrieben. */
+  await Promise.allSettled([
     document.fonts.load('500 44px Newsreader'),
     document.fonts.load('400 19px Newsreader'),
     document.fonts.load('400 16px "IBM Plex Sans"'),

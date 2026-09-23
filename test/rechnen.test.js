@@ -1,4 +1,4 @@
-/* Prüft den Rechenkern ohne Browser. Läuft mit `node --test test/`.
+/* Prüft den Rechenkern ohne Browser. Läuft mit `npm test`.
    Die Versionsangabe in der Import-Adresse muss zu der in js/ und
    index.html passen, sonst lädt Node ein zweites Modulexemplar. */
 
@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import {
   parseEuroToCent, kleinanzeigenGebuehr, berechne, fmt,
   paypalGebuehr, berechneDirekt, betragMitAufschlag, breakeven, ZAHLWEGE
-} from '../js/rechnen.js?v=13';
+} from '../js/rechnen.js?v=14';
 
 test('parseEuroToCent nimmt die Schreibweisen an, die Leute tippen', () => {
   assert.equal(parseEuroToCent('45'), 4500);

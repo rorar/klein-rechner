@@ -130,13 +130,18 @@ export const findeZahlweg = id => ZAHLWEGE.find(z => z.id === id) || ZAHLWEGE[0]
 
 /* Kleinster Betrag, von dem nach Abzug der Gebühr mindestens `ziel` übrig
    bleibt. Die geschlossene Formel ziel/(1−satz) trifft wegen der
-   Cent-Rundung daneben, deshalb wird von unten herangetastet. Der Abstand
-   beträgt höchstens wenige Cent, weil der Betrag schneller wächst als die
-   Gebühr darauf. */
+   Cent-Rundung daneben, deshalb wird von unten herangetastet.
+
+   Der Startwert kommt aus `gebuehrFn` selbst und nicht aus den
+   PayPal-Konstanten: sonst hinge die Funktion still an einem Zahlweg,
+   obwohl sie die Gebühr als Parameter bekommt. Von unten heranzutasten
+   heißt zugleich, dass das Ergebnis der kleinste gültige Betrag ist. */
 export function betragMitAufschlag(zielCent, gebuehrFn) {
-  let betrag = Math.ceil((zielCent + PAYPAL_FIX_CENT) / (1 - PAYPAL_BASISPUNKTE / 10000));
+  /* Zweimal schätzen, dann zählen: der erste Schätzwert liegt um die
+     Gebühr auf die Gebühr daneben, der zweite nur noch um wenige Cent. */
+  let betrag = zielCent + gebuehrFn(zielCent);
+  betrag = zielCent + gebuehrFn(betrag);
   while (betrag - gebuehrFn(betrag) < zielCent) betrag++;
-  while (betrag > zielCent && betrag - 1 - gebuehrFn(betrag - 1) >= zielCent) betrag--;
   return betrag;
 }
 

@@ -1,7 +1,7 @@
 /* Fertige Nachrichten zum Verschicken. Kein DOM, damit sich die Texte
    ohne Browser prüfen lassen. */
 
-import { fmt, GEBUEHR_FIX_CENT } from './rechnen.js?v=13';
+import { fmt, GEBUEHR_FIX_CENT } from './rechnen.js?v=14';
 
 export function versandText(r) {
   if (r.versand === 0) return 'entfällt';

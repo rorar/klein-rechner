@@ -5,9 +5,9 @@ import {
   GEBUEHR_FIX_CENT, ZAHLWEGE, findeZahlweg, versandartenFuer,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=13';
-import { textDu, textSie, textNeutral } from './texte.js?v=13';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=13';
+} from './rechnen.js?v=14';
+import { textDu, textSie, textNeutral } from './texte.js?v=14';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=14';
 
 const el = id => document.getElementById(id);
 
@@ -446,11 +446,23 @@ if (navigator.share) {
   });
 }
 
-/* Bild teilen gibt es nur, wenn der Browser Dateien weiterreichen kann. */
+/* Bild teilen gibt es nur, wenn der Browser Dateien weiterreichen kann.
+   Die Probe entsteht erst innerhalb der Prüfung: ein Browser ohne
+   File-Konstruktor hätte sonst schon beim Laden des Moduls aufgegeben und
+   die ganze Seite wäre tot. Eine leere Datei taugt nicht als Probe, manche
+   Browser weisen sie ab. */
 const teilenKnopf = el('teilen-knopf');
-const probe = new File([new Uint8Array([0])], 'probe.png', { type: 'image/png' });
 
-if (navigator.canShare && navigator.canShare({ files: [probe] })) {
+const kannDateienTeilen = () => {
+  if (!navigator.canShare || typeof File !== 'function') return false;
+  try {
+    return navigator.canShare({ files: [new File([new Uint8Array([0])], 'probe.png', { type: 'image/png' })] });
+  } catch {
+    return false;
+  }
+};
+
+if (kannDateienTeilen()) {
   teilenKnopf.hidden = false;
   teilenKnopf.addEventListener('click', async () => {
     /* Wie beim Speichern: erst den Stand festhalten, dann warten. */
@@ -505,6 +517,11 @@ window.kleinRechner = {
    zurück, nicht an '*': sonst liest jedes andere eingebettete Fenster mit. */
 window.addEventListener('message', ev => {
   if (ev.data?.typ !== 'klein-rechner:rechne') return;
+  /* Eine einbettende Seite ohne echten Ursprung – aus file:// oder einem
+     sandbox-iframe – meldet sich als "null". Dorthin zu antworten wirft,
+     und an '*' zu antworten würde jedes andere eingebettete Fenster
+     mitlesen lassen. Also gar nicht. */
+  if (!ev.origin || ev.origin === 'null') return;
   const ergebnis = berechneAlles(ev.data.eingabe);
   ev.source?.postMessage({ typ: 'klein-rechner:ergebnis', ergebnis }, ev.origin);
 });
@@ -527,9 +544,8 @@ function leseUrl() {
   const radio = document.querySelector(`input[name="zahlweg"][value="${zahlweg.id}"]`);
   if (radio) radio.checked = true;
 
-  if (p.get('traeger') === 'kaeufer') {
-    document.querySelector('input[name="traeger"][value="kaeufer"]').checked = true;
-  }
+  const traegerRadio = document.querySelector('input[name="traeger"][value="kaeufer"]');
+  if (p.get('traeger') === 'kaeufer' && traegerRadio) traegerRadio.checked = true;
 }
 
 /* Punkt statt Komma, damit die Adresse ohne %2C lesbar bleibt.
