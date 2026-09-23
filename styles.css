@@ -463,6 +463,14 @@ body {
 .colophon p { margin: 0 0 0.4rem; max-width: 62ch; }
 .colophon a { color: var(--pine); }
 
+.mit-zeichen {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.github-zeichen { flex: 0 0 auto; }
+
 /* ---------- Rückmeldung ---------- */
 
 .toast {
