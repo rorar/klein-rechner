@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="light">
 <link rel="preload" href="fonts/Newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=3">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232C6A4F'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' fill='%23FBFBF7' text-anchor='middle'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -56,6 +56,12 @@
     <p class="formula">
       Kleinanzeigen berechnet beim Kauf <b>0,50&nbsp;€ + 4,5&nbsp;%</b> vom Artikelpreis.
       Der Versand kommt unverändert obendrauf.
+      <a href="https://hilfe.kleinanzeigen.de/hc/de/articles/17211553583388-Was-ist-Sicher-bezahlen-wie-funktioniert-der-K%C3%A4uferschutz" rel="noopener">So steht es im Hilfe-Center</a>.
+    </p>
+
+    <p class="formula">
+      Halbe Cent gehen nach oben: 4,5&nbsp;% von 1,00&nbsp;€ sind genau 4,5&nbsp;Cent,
+      daraus werden 5&nbsp;Cent und damit <b>0,55&nbsp;€</b> Gebühr.
     </p>
   </section>
 
@@ -86,7 +92,11 @@
       <output class="total-amount" id="out-summe" for="preis versand">—</output>
     </div>
 
-    <button type="button" class="copy copy-total" data-copy="summe">Summe kopieren</button>
+    <div class="receipt-actions">
+      <button type="button" class="copy copy-total" data-copy="summe">Summe kopieren</button>
+      <button type="button" class="bild" id="bild-knopf">Als Bild speichern</button>
+      <button type="button" class="bild" id="teilen-knopf" hidden>Bild teilen</button>
+    </div>
 
     <div class="tear" aria-hidden="true"></div>
   </section>
@@ -115,11 +125,18 @@
 
 <footer class="colophon">
   <p>Privates Hilfsprojekt, kein Angebot von Kleinanzeigen. Gebühren und Versandpreise können sich ändern – im Zweifel gilt, was die App beim Kauf anzeigt.</p>
-  <p><a href="https://github.com/rorar/klein-rechner">Quellcode auf GitHub</a></p>
+  <p>
+    <a href="https://hilfe.kleinanzeigen.de/hc/de/articles/17211553583388-Was-ist-Sicher-bezahlen-wie-funktioniert-der-K%C3%A4uferschutz" rel="noopener">„Sicher bezahlen“ im Hilfe-Center</a>
+    · <a href="https://github.com/rorar/klein-rechner">Quellcode auf GitHub</a>
+  </p>
+  <p>
+    Verlinkbar: <code>?preis=45,00&amp;versand=5,49</code> an die Adresse hängen, dann rechnet die
+    Seite beim Laden. Die Adresse zeigt immer den aktuellen Stand.
+  </p>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="app.js"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>

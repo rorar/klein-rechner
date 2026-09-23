@@ -7,11 +7,12 @@ const GEBUEHR_PROMILLE = 45;   // 4,5 % = 45/1000 des Artikelpreises
 
 /* Richtwerte, Stand September 2026. Alle Werte sind überschreibbar –
    das Feld bleibt ein normales Eingabefeld.
-   Die 2,99 € stehen so in Anzeigen mit Kleinanzeigen-Versand ("Versand ab
-   2,99 €"); die Preise pro Paketgröße zeigt erst der Kaufvorgang. */
+   Die 2,99 € laufen über Hermes und stehen so in Anzeigen mit
+   Kleinanzeigen-Versand ("Versand ab 2,99 €"); die Preise pro Paketgröße
+   zeigt erst der Kaufvorgang. */
 const VERSANDARTEN = [
   { name: 'Abholung, kein Versand', cent: 0 },
-  { name: 'Kleinanzeigen-Versand, kleinste Größe', cent: 299 },
+  { name: 'Hermes über Kleinanzeigen, kleinste Größe', cent: 299 },
   { name: 'DHL Päckchen S', cent: 419 },
   { name: 'Hermes Päckchen', cent: 489 },
   { name: 'Hermes Paket S', cent: 549 },
@@ -35,6 +36,7 @@ function parseEuroToCent(roh) {
     s = s.replace(/\./g, '');          // 1.234 ist deutsch gemeint
   }
 
+  if (s.endsWith('.')) s = s.slice(0, -1);   // "45," beim Tippen
   if (!/^\d+(\.\d+)?$/.test(s)) return NaN;
 
   const cent = Math.round(Number(s) * 100);
@@ -53,20 +55,41 @@ function berechne(preisCent, versandCent) {
 
 /* ---------- Texte ---------- */
 
-/* Du- und Sie-Form stehen bewusst getrennt nebeneinander. Ein Austausch
-   einzelner Wörter würde an „zahlst du“ / „zahlen Sie“ auseinanderfallen. */
+/* Die Aufstellung ist in beiden Formen gleich, nur die Anrede und der
+   Schlusssatz unterscheiden sich. Du- und Sie-Text stehen trotzdem
+   getrennt: ein Austausch einzelner Wörter fiele an "zahlst du" /
+   "zahlen Sie" auseinander. */
+function aufstellung(r) {
+  return [
+    `Artikel: ${fmt(r.preis)}`,
+    `Versand: ${r.versand > 0 ? fmt(r.versand) : 'entfällt'}`,
+    `Servicegebühr: ${fmt(r.gebuehr)}`,
+    `Gesamt: ${fmt(r.summe)}`
+  ].join('\n');
+}
+
+function gebuehrSatz(r) {
+  return `Über „Sicher bezahlen“ kommt eine Servicegebühr von ${fmt(r.gebuehr)} dazu \u2013 das sind ${fmt(GEBUEHR_FIX_CENT)} plus 4,5\u00a0% vom Artikelpreis.`;
+}
+
 function textDu(r) {
-  const versandSatz = r.versand > 0
-    ? `Der Artikel kostet ${fmt(r.preis)}, der Versand ${fmt(r.versand)}.`
-    : `Der Artikel kostet ${fmt(r.preis)}, Versandkosten fallen keine an.`;
-  return `${versandSatz} Über „Sicher bezahlen“ kommt eine Servicegebühr von ${fmt(r.gebuehr)} dazu – das sind ${fmt(GEBUEHR_FIX_CENT)} plus 4,5\u00a0% vom Artikelpreis. Du zahlst damit insgesamt ${fmt(r.summe)}.`;
+  return `Hallo,
+
+der Artikel kostet ${fmt(r.preis)}. ${gebuehrSatz(r)}
+
+${aufstellung(r)}
+
+Du zahlst damit insgesamt ${fmt(r.summe)}.`;
 }
 
 function textSie(r) {
-  const versandSatz = r.versand > 0
-    ? `Der Artikel kostet ${fmt(r.preis)}, der Versand ${fmt(r.versand)}.`
-    : `Der Artikel kostet ${fmt(r.preis)}, Versandkosten fallen keine an.`;
-  return `${versandSatz} Über „Sicher bezahlen“ kommt eine Servicegebühr von ${fmt(r.gebuehr)} dazu – das sind ${fmt(GEBUEHR_FIX_CENT)} plus 4,5\u00a0% vom Artikelpreis. Sie zahlen damit insgesamt ${fmt(r.summe)}.`;
+  return `Hallo,
+
+der Artikel kostet ${fmt(r.preis)}. ${gebuehrSatz(r)}
+
+${aufstellung(r)}
+
+Sie zahlen damit insgesamt ${fmt(r.summe)}.`;
 }
 
 /* ---------- Ausgabe ---------- */
@@ -76,6 +99,7 @@ const el = id => document.getElementById(id);
 const preisInput = el('preis');
 const versandInput = el('versand');
 const kopien = { summe: '', du: '', sie: '' };
+let letzteRechnung = null;
 
 const LEERTEXT = 'Trag oben einen Artikelpreis ein, dann steht hier der fertige Text.';
 
@@ -88,7 +112,8 @@ function zeigeLeer() {
     el('text-' + feld).dataset.empty = 'true';
   }
   kopien.summe = kopien.du = kopien.sie = '';
-  document.querySelectorAll('.copy').forEach(b => { b.disabled = true; });
+  letzteRechnung = null;
+  document.querySelectorAll('.copy, .bild').forEach(b => { b.disabled = true; });
 }
 
 function aktualisiere() {
@@ -100,12 +125,15 @@ function aktualisiere() {
   el('preis-fehler').hidden = !preisKaputt;
   el('versand-fehler').hidden = !versandKaputt;
 
+  schreibeUrl(preis, versand);
+
   if (preisKaputt || versandKaputt || preis === null) {
     zeigeLeer();
     return;
   }
 
   const r = berechne(preis, versand === null ? 0 : versand);
+  letzteRechnung = r;
 
   el('out-preis').textContent = fmt(r.preis);
   el('out-versand').textContent = r.versand > 0 ? fmt(r.versand) : '—';
@@ -122,7 +150,7 @@ function aktualisiere() {
   el('text-du').dataset.empty = 'false';
   el('text-sie').dataset.empty = 'false';
 
-  document.querySelectorAll('.copy').forEach(b => { b.disabled = false; });
+  document.querySelectorAll('.copy, .bild').forEach(b => { b.disabled = false; });
 }
 
 /* ---------- Kopieren ---------- */
@@ -263,9 +291,158 @@ function bauCombo() {
   versandInput.addEventListener('input', () => { if (!liste.hidden) markiere(-1); });
 }
 
+/* ---------- Beleg als Bild ---------- */
+
+const REPO = 'github.com/rorar/klein-rechner';
+
+/* Der Beleg wird von Hand auf ein Canvas gezeichnet. Das sind vier Zeilen
+   plus Summe – dafür lohnt keine Bibliothek, die das DOM nachbaut. */
+async function zeichneBeleg(r) {
+  await Promise.all([
+    document.fonts.load('500 44px Newsreader'),
+    document.fonts.load('400 19px Newsreader'),
+    document.fonts.load('400 16px "IBM Plex Sans"'),
+    document.fonts.load('500 16px "IBM Plex Sans"')
+  ]);
+
+  const S = 2;                     // doppelte Auflösung, sonst franst Text aus
+  const B = 760, H = 520, RAND = 48;
+  const c = document.createElement('canvas');
+  c.width = B * S;
+  c.height = H * S;
+  const g = c.getContext('2d');
+  g.scale(S, S);
+
+  g.fillStyle = '#fbfbf7';
+  g.fillRect(0, 0, B, H);
+  g.strokeStyle = '#c6cdc1';
+  g.lineWidth = 1;
+  g.strokeRect(0.5, 0.5, B - 1, H - 1);
+
+  g.fillStyle = '#14201a';
+  g.font = '500 32px Newsreader, Georgia, serif';
+  g.fillText('„Sicher bezahlen“ – Aufstellung', RAND, 92);
+
+  g.fillStyle = '#5d6a60';
+  g.font = '400 15px "IBM Plex Sans", sans-serif';
+  g.fillText(new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' }), RAND, 120);
+
+  const zeile = (y, label, betrag) => {
+    g.fillStyle = '#14201a';
+    g.font = '400 17px "IBM Plex Sans", sans-serif';
+    g.fillText(label, RAND, y);
+    const lb = g.measureText(label).width;
+
+    g.font = '400 19px Newsreader, Georgia, serif';
+    const bb = g.measureText(betrag).width;
+    g.fillText(betrag, B - RAND - bb, y);
+
+    g.fillStyle = '#c6cdc1';
+    for (let x = RAND + lb + 8; x < B - RAND - bb - 8; x += 5) {
+      g.fillRect(x, y - 5, 1.5, 1.5);
+    }
+  };
+
+  zeile(180, 'Artikelpreis', fmt(r.preis));
+  zeile(218, 'Versand', r.versand > 0 ? fmt(r.versand) : 'entfällt');
+  zeile(256, 'Servicegebühr', fmt(r.gebuehr));
+
+  g.fillStyle = '#5d6a60';
+  g.font = '400 14px "IBM Plex Sans", sans-serif';
+  g.fillText(`${fmt(GEBUEHR_FIX_CENT)} + 4,5\u00a0% von ${fmt(r.preis)}`, RAND, 278);
+
+  g.fillStyle = '#14201a';
+  g.fillRect(RAND, 306, B - 2 * RAND, 2);
+
+  g.font = '500 18px "IBM Plex Sans", sans-serif';
+  g.fillText('Käufer zahlt', RAND, 362);
+
+  g.fillStyle = '#2c6a4f';
+  g.font = '500 46px Newsreader, Georgia, serif';
+  const summe = fmt(r.summe);
+  g.fillText(summe, B - RAND - g.measureText(summe).width, 366);
+
+  g.fillStyle = '#5d6a60';
+  g.font = '400 14px "IBM Plex Sans", sans-serif';
+  g.fillText('Servicegebühr laut Kleinanzeigen: 0,50\u00a0€ plus 4,5\u00a0% vom Artikelpreis.', RAND, 424);
+  g.fillText('Halbe Cent gehen nach oben. Alle Angaben ohne Gewähr.', RAND, 446);
+
+  g.fillStyle = '#2c6a4f';
+  g.font = '500 15px "IBM Plex Sans", sans-serif';
+  g.fillText(REPO, RAND, 480);
+
+  return new Promise(res => c.toBlob(res, 'image/png'));
+}
+
+function dateiname(r) {
+  return `sicher-bezahlen-${(r.summe / 100).toFixed(2).replace('.', '-')}-euro.png`;
+}
+
+el('bild-knopf').addEventListener('click', async () => {
+  if (!letzteRechnung) return;
+  const blob = await zeichneBeleg(letzteRechnung);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = dateiname(letzteRechnung);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast('Bild gespeichert');
+});
+
+/* Teilen gibt es nur, wenn der Browser Dateien weiterreichen kann –
+   auf dem Desktop ist das selten, auf dem Handy die Regel. */
+const teilenKnopf = el('teilen-knopf');
+
+if (navigator.canShare && navigator.canShare({ files: [new File([''], 'x.png', { type: 'image/png' })] })) {
+  teilenKnopf.hidden = false;
+  teilenKnopf.addEventListener('click', async () => {
+    if (!letzteRechnung) return;
+    const blob = await zeichneBeleg(letzteRechnung);
+    const datei = new File([blob], dateiname(letzteRechnung), { type: 'image/png' });
+    try {
+      await navigator.share({
+        files: [datei],
+        title: 'Sicher bezahlen – Aufstellung',
+        text: `Käufer zahlt ${fmt(letzteRechnung.summe)}.`
+      });
+    } catch (e) {
+      if (e.name !== 'AbortError') toast('Teilen hat nicht geklappt');
+    }
+  });
+}
+
+/* ---------- Adresse als Zustand ---------- */
+
+function leseUrl() {
+  const p = new URLSearchParams(location.search);
+  const preis = p.get('preis');
+  const versand = p.get('versand');
+  if (preis !== null) preisInput.value = preis;
+  if (versand !== null) versandInput.value = versand;
+}
+
+/* Punkt statt Komma, damit die Adresse ohne %2C lesbar bleibt.
+   Die Eingabe versteht beides. */
+function schreibeUrl(preisCent, versandCent) {
+  const p = new URLSearchParams(location.search);
+  const setze = (name, cent) => {
+    if (cent === null || Number.isNaN(cent)) p.delete(name);
+    else p.set(name, (cent / 100).toFixed(2));
+  };
+  setze('preis', preisCent);
+  setze('versand', versandCent);
+  const s = p.toString();
+  history.replaceState(null, '', s ? '?' + s : location.pathname);
+}
+
 /* ---------- Start ---------- */
 
 preisInput.addEventListener('input', aktualisiere);
 versandInput.addEventListener('input', aktualisiere);
 bauCombo();
 zeigeLeer();
+leseUrl();
+aktualisiere();

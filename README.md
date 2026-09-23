@@ -16,17 +16,44 @@ Gebühr = 0,50 € + 4,5 % × Artikelpreis
 Summe  = Artikelpreis + Versand + Gebühr
 ```
 
-Gerechnet wird in ganzen Cent, die Gebühr wird kaufmännisch auf Cent gerundet.
-Beispiel: 45,00 € Artikel und 5,49 € Versand ergeben 2,53 € Gebühr und 53,02 €
-Endsumme.
+Gerechnet wird in ganzen Cent. Halbe Cent gehen nach oben: 4,5 % von 1,00 € sind
+genau 4,5 Cent, daraus werden 5 Cent und damit 0,55 € Gebühr. Zweites Beispiel:
+45,00 € Artikel und 5,49 € Versand ergeben 2,53 € Gebühr und 53,02 € Endsumme.
+
+Die Formel steht so im
+[Hilfe-Center von Kleinanzeigen](https://hilfe.kleinanzeigen.de/hc/de/articles/17211553583388-Was-ist-Sicher-bezahlen-wie-funktioniert-der-K%C3%A4uferschutz).
+Wie dort gerundet wird, steht nirgends – der Hinweis auf der Seite beschreibt
+deshalb, was der Rechner tut.
 
 Die Gebühr trägt der Käufer.
+
+## Verlinkbare Rechnungen
+
+Beide Felder lassen sich über die Adresse vorbelegen:
+
+```
+https://rorar.github.io/klein-rechner/?preis=45,00&versand=5,49
+https://rorar.github.io/klein-rechner/?preis=12.34
+```
+
+Komma und Punkt werden beide gelesen. Beim Tippen schreibt die Seite den
+aktuellen Stand per `replaceState` zurück in die Adresse, die damit jederzeit
+teilbar ist.
+
+## Aufstellung als Bild
+
+„Als Bild speichern“ zeichnet den Beleg auf ein Canvas und lädt ihn als PNG
+herunter, mit der Repo-Adresse in der Fußzeile. Auf Geräten, deren Browser
+Dateien weiterreichen kann, erscheint zusätzlich „Bild teilen“ und übergibt das
+PNG an die Teilen-Funktion des Systems. Beides kommt ohne Bibliothek aus.
 
 ## Annahmen
 
 * Die 4,5 % beziehen sich auf den Artikelpreis, nicht auf Artikelpreis plus Versand.
 * Die Versandarten im Auswahlfeld sind Richtwerte vom September 2026 und jederzeit
-  überschreibbar – das Feld nimmt auch freie Beträge an.
+  überschreibbar – das Feld nimmt auch freie Beträge an. Die 2,99 € laufen über
+  Hermes und stehen so in Anzeigen mit Kleinanzeigen-Versand; die Preise je
+  Paketgröße zeigt erst der Kaufvorgang.
 * Maßgeblich ist immer, was die Kleinanzeigen-App beim Kauf anzeigt.
 
 ## Aufbau

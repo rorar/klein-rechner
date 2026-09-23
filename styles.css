@@ -173,6 +173,8 @@ body {
 }
 
 .formula b { color: var(--ink); font-weight: 600; }
+.formula a { color: var(--pine); }
+.formula + .formula { margin-top: 0.8rem; padding-top: 0; border-top: 0; }
 
 /* ---------- Combobox ---------- */
 
@@ -298,7 +300,13 @@ body {
 
 .seller b { color: var(--ink); font-weight: 600; font-family: var(--serif); font-size: 1.0625rem; }
 
-.copy-total { margin-top: 1.4rem; width: 100%; }
+.receipt-actions {
+  margin-top: 1.4rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.copy-total { width: 100%; }
 
 /* Abrisskante am Belegfuß: Dreiecke in Papierfarbe (--card, hier literal,
    weil eine CSS-Variable nicht in die Data-URI eingesetzt werden kann). */
@@ -352,6 +360,7 @@ body {
 .text-body {
   margin: 0;
   max-width: 46ch;
+  white-space: pre-line;
   font: 400 1.0625rem/1.65 var(--serif);
   color: var(--ink);
 }
@@ -389,6 +398,33 @@ body {
   background: none;
   color: #9aa79d;
   cursor: not-allowed;
+}
+
+.bild {
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--rule);
+  background: none;
+  color: var(--ink);
+  font: 500 0.9375rem/1.2 var(--sans);
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.bild:hover { border-color: var(--pine); color: var(--pine); }
+
+.bild:disabled {
+  color: #9aa79d;
+  cursor: not-allowed;
+}
+
+.bild:disabled:hover { border-color: var(--rule); color: #9aa79d; }
+
+.colophon code {
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  padding: 0.05rem 0.3rem;
 }
 
 :focus-visible {
