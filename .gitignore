@@ -1,0 +1,6 @@
+# Lokale Tool- und Sitzungsdaten, gehören nicht ins öffentliche Repo
+.claude/
+.serena/
+.remember/
+.DS_Store
+.playwright-mcp/

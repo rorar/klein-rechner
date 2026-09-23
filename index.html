@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sicher-bezahlen-Rechner – was kostet der Kauf wirklich?</title>
+<meta name="description" content="Rechner für die Kleinanzeigen-Bezahlfunktion: Artikelpreis und Versand eingeben, Servicegebühr und Endsumme ablesen, Text zum Kopieren erhalten.">
+<meta name="color-scheme" content="light">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232C6A4F'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' fill='%23FBFBF7' text-anchor='middle'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+<header class="masthead">
+  <h1>Was kostet der Kauf mit&nbsp;„Sicher&nbsp;bezahlen“?</h1>
+  <p class="standfirst">Artikelpreis und Versand eintragen. Der Rechner zeigt die Servicegebühr, die Endsumme und einen fertigen Text für den Chat.</p>
+</header>
+
+<main class="sheet">
+
+  <section class="panel" aria-labelledby="eingabe-titel">
+    <h2 id="eingabe-titel" class="panel-title">Eingabe</h2>
+
+    <div class="field">
+      <label for="preis">Artikelpreis</label>
+      <div class="money-input">
+        <input id="preis" type="text" inputmode="decimal" autocomplete="off"
+               placeholder="z. B. 45,00" aria-describedby="preis-hinweis">
+        <span class="unit" aria-hidden="true">€</span>
+      </div>
+      <p id="preis-hinweis" class="hint">Der Preis, auf den ihr euch geeinigt habt.</p>
+      <p class="error" id="preis-fehler" role="alert" hidden>Bitte einen Betrag wie 45,00 eintragen.</p>
+    </div>
+
+    <div class="field">
+      <label for="versand" id="versand-label">Versandkosten</label>
+      <div class="combo" data-combo>
+        <div class="money-input">
+          <input id="versand" type="text" inputmode="decimal" autocomplete="off"
+                 placeholder="z. B. 5,49"
+                 role="combobox" aria-expanded="false" aria-controls="versand-liste"
+                 aria-autocomplete="list" aria-describedby="versand-hinweis">
+          <span class="unit" aria-hidden="true">€</span>
+          <button type="button" class="combo-toggle" aria-label="Versandarten anzeigen" tabindex="-1">
+            <svg viewBox="0 0 12 8" width="12" height="8" aria-hidden="true"><path d="M1 1.5 6 6.5l5-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <ul class="combo-list" id="versand-liste" role="listbox" aria-labelledby="versand-label" hidden></ul>
+      </div>
+      <p id="versand-hinweis" class="hint">Eigenen Betrag tippen oder eine Versandart wählen. Die Preise sind Richtwerte vom September 2026.</p>
+      <p class="error" id="versand-fehler" role="alert" hidden>Bitte einen Betrag wie 5,49 eintragen oder das Feld leer lassen.</p>
+    </div>
+
+    <p class="formula">
+      Kleinanzeigen berechnet beim Kauf <b>0,50&nbsp;€ + 4,5&nbsp;%</b> vom Artikelpreis.
+      Der Versand kommt unverändert obendrauf.
+    </p>
+  </section>
+
+  <section class="receipt" aria-labelledby="beleg-titel">
+    <h2 id="beleg-titel" class="panel-title">Aufstellung</h2>
+
+    <div class="rows" id="rows" aria-live="polite">
+      <div class="row">
+        <span class="row-label">Artikelpreis</span>
+        <span class="row-dots" aria-hidden="true"></span>
+        <span class="row-amount" id="out-preis">—</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Versand</span>
+        <span class="row-dots" aria-hidden="true"></span>
+        <span class="row-amount" id="out-versand">—</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Servicegebühr</span>
+        <span class="row-dots" aria-hidden="true"></span>
+        <span class="row-amount" id="out-gebuehr">—</span>
+        <span class="row-note" id="out-gebuehr-formel"></span>
+      </div>
+    </div>
+
+    <div class="total">
+      <span class="total-label">Käufer zahlt</span>
+      <output class="total-amount" id="out-summe" for="preis versand">—</output>
+    </div>
+
+    <p class="seller">Verkäufer bekommt <b id="out-verkaeufer">—</b> ausgezahlt.</p>
+
+    <button type="button" class="copy copy-total" data-copy="summe">Summe kopieren</button>
+
+    <div class="tear" aria-hidden="true"></div>
+  </section>
+
+  <section class="texts" aria-labelledby="texte-titel">
+    <h2 id="texte-titel" class="panel-title">Zum Verschicken</h2>
+
+    <article class="text-card">
+      <div class="text-head">
+        <h3>Du-Form</h3>
+        <button type="button" class="copy" data-copy="du">Text kopieren</button>
+      </div>
+      <p class="text-body" id="text-du">Trag oben einen Artikelpreis ein, dann steht hier der fertige Text.</p>
+    </article>
+
+    <article class="text-card">
+      <div class="text-head">
+        <h3>Sie-Form</h3>
+        <button type="button" class="copy" data-copy="sie">Text kopieren</button>
+      </div>
+      <p class="text-body" id="text-sie">Trag oben einen Artikelpreis ein, dann steht hier der fertige Text.</p>
+    </article>
+  </section>
+
+</main>
+
+<footer class="colophon">
+  <p>Privates Hilfsprojekt, kein Angebot von Kleinanzeigen. Gebühren und Versandpreise können sich ändern – im Zweifel gilt, was die App beim Kauf anzeigt.</p>
+  <p><a href="https://github.com/rorar/klein-rechner">Quellcode auf GitHub</a></p>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
