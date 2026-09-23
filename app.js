@@ -12,7 +12,8 @@ const GEBUEHR_PROMILLE = 45;   // 4,5 % = 45/1000 des Artikelpreises
    zeigt erst der Kaufvorgang. */
 const VERSANDARTEN = [
   { name: 'Abholung, kein Versand', cent: 0 },
-  { name: 'Hermes über Kleinanzeigen, kleinste Größe', cent: 299 },
+  { name: 'Hermes über Kleinanzeigen, kleinste Größe', cent: 299,
+    hinweis: 'Zustellung ggf. an eine Packstation' },
   { name: 'DHL Päckchen S', cent: 419 },
   { name: 'Hermes Päckchen', cent: 489 },
   { name: 'Hermes Paket S', cent: 549 },
@@ -92,13 +93,25 @@ ${aufstellung(r)}
 Sie zahlen damit insgesamt ${fmt(r.summe)}.`;
 }
 
+/* Kommt ohne "du" und ohne "Sie" aus und passt damit auch, solange die
+   Anrede zwischen zwei Leuten noch nicht geklärt ist. */
+function textNeutral(r) {
+  return `Hallo,
+
+der Artikel kostet ${fmt(r.preis)}. ${gebuehrSatz(r)}
+
+${aufstellung(r)}
+
+Insgesamt sind das ${fmt(r.summe)}.`;
+}
+
 /* ---------- Ausgabe ---------- */
 
 const el = id => document.getElementById(id);
 
 const preisInput = el('preis');
 const versandInput = el('versand');
-const kopien = { summe: '', du: '', sie: '' };
+const kopien = { summe: '', du: '', sie: '', neutral: '' };
 let letzteRechnung = null;
 
 const LEERTEXT = 'Trag oben einen Artikelpreis ein, dann steht hier der fertige Text.';
@@ -107,11 +120,11 @@ function zeigeLeer() {
   ['out-preis', 'out-versand', 'out-gebuehr', 'out-summe']
     .forEach(id => { el(id).textContent = '—'; });
   el('out-gebuehr-formel').textContent = '';
-  for (const feld of ['du', 'sie']) {
+  for (const feld of ['du', 'sie', 'neutral']) {
     el('text-' + feld).textContent = LEERTEXT;
     el('text-' + feld).dataset.empty = 'true';
   }
-  kopien.summe = kopien.du = kopien.sie = '';
+  kopien.summe = kopien.du = kopien.sie = kopien.neutral = '';
   letzteRechnung = null;
   document.querySelectorAll('.copy, .bild').forEach(b => { b.disabled = true; });
 }
@@ -144,11 +157,12 @@ function aktualisiere() {
   kopien.summe = fmt(r.summe);
   kopien.du = textDu(r);
   kopien.sie = textSie(r);
+  kopien.neutral = textNeutral(r);
 
-  el('text-du').textContent = kopien.du;
-  el('text-sie').textContent = kopien.sie;
-  el('text-du').dataset.empty = 'false';
-  el('text-sie').dataset.empty = 'false';
+  for (const feld of ['du', 'sie', 'neutral']) {
+    el('text-' + feld).textContent = kopien[feld];
+    el('text-' + feld).dataset.empty = 'false';
+  }
 
   document.querySelectorAll('.copy, .bild').forEach(b => { b.disabled = false; });
 }
@@ -221,8 +235,9 @@ function bauCombo() {
     li.id = 'versandart-' + i;
     li.setAttribute('role', 'option');
     li.setAttribute('aria-selected', 'false');
-    li.innerHTML = `<span class="opt-name"></span><span class="opt-value"></span>`;
+    li.innerHTML = `<span class="opt-name"></span><span class="opt-hinweis"></span><span class="opt-value"></span>`;
     li.querySelector('.opt-name').textContent = art.name;
+    li.querySelector('.opt-hinweis').textContent = art.hinweis || '';
     li.querySelector('.opt-value').textContent = fmt(art.cent);
     li.addEventListener('mousedown', ev => {
       ev.preventDefault();          // Fokus bleibt im Eingabefeld
@@ -396,7 +411,9 @@ el('bild-knopf').addEventListener('click', async () => {
    auf dem Desktop ist das selten, auf dem Handy die Regel. */
 const teilenKnopf = el('teilen-knopf');
 
-if (navigator.canShare && navigator.canShare({ files: [new File([''], 'x.png', { type: 'image/png' })] })) {
+const probe = new File([new Uint8Array([0])], 'probe.png', { type: 'image/png' });
+
+if (navigator.canShare && navigator.canShare({ files: [probe] })) {
   teilenKnopf.hidden = false;
   teilenKnopf.addEventListener('click', async () => {
     if (!letzteRechnung) return;

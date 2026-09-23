@@ -212,19 +212,30 @@ body {
 }
 
 .combo-list li {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: baseline;
-  gap: 0.75rem;
+  gap: 0 0.75rem;
   padding: 0.5rem 0.85rem;
   cursor: pointer;
 }
+
+.combo-list .opt-name { grid-area: 1 / 1; }
+
+.combo-list .opt-value { grid-area: 1 / 2; text-align: right; }
+
+.opt-hinweis {
+  grid-area: 2 / 1 / 3 / 3;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.opt-hinweis:empty { display: none; }
 
 .combo-list li[aria-selected="true"],
 .combo-list li:hover {
   background: #e8f0ea;
 }
-
-.combo-list .opt-name { flex: 1 1 auto; }
 
 .combo-list .opt-value {
   font-family: var(--serif);
@@ -331,7 +342,11 @@ body {
 }
 
 @media (min-width: 52rem) {
-  .sheet, .texts { grid-template-columns: 1fr 1fr; }
+  .sheet { grid-template-columns: 1fr 1fr; }
+}
+
+@media (min-width: 58rem) {
+  .texts { grid-template-columns: repeat(3, 1fr); }
 }
 
 .texts { padding-top: 0.5rem; }
@@ -356,6 +371,8 @@ body {
   margin: 0;
   font: 500 1.0625rem/1 var(--sans);
 }
+
+.text-head .copy { white-space: nowrap; }
 
 .text-body {
   margin: 0;

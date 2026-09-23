@@ -29,6 +29,10 @@ Die Gebühr trägt der Käufer.
 
 ## Verlinkbare Rechnungen
 
+Der Text zum Verschicken steht in drei Fassungen bereit: Du-Form, Sie-Form und
+eine ohne Anrede an die Person, die auch passt, solange zwischen Käufer und
+Verkäufer noch nicht geklärt ist, wie man sich anspricht.
+
 Beide Felder lassen sich über die Adresse vorbelegen:
 
 ```
@@ -52,8 +56,8 @@ PNG an die Teilen-Funktion des Systems. Beides kommt ohne Bibliothek aus.
 * Die 4,5 % beziehen sich auf den Artikelpreis, nicht auf Artikelpreis plus Versand.
 * Die Versandarten im Auswahlfeld sind Richtwerte vom September 2026 und jederzeit
   überschreibbar – das Feld nimmt auch freie Beträge an. Die 2,99 € laufen über
-  Hermes und stehen so in Anzeigen mit Kleinanzeigen-Versand; die Preise je
-  Paketgröße zeigt erst der Kaufvorgang.
+  Hermes und stehen so in Anzeigen mit Kleinanzeigen-Versand, Zustellung ggf. an
+  eine Packstation; die Preise je Paketgröße zeigt erst der Kaufvorgang.
 * Maßgeblich ist immer, was die Kleinanzeigen-App beim Kauf anzeigt.
 
 ## Aufbau
