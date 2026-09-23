@@ -1,0 +1,14 @@
+{
+  "name": "klein-rechner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rechner für die Kleinanzeigen-Bezahlfunktion \"Sicher bezahlen\"",
+  "homepage": "https://rorar.github.io/klein-rechner/",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "start": "python3 -m http.server 8765"
+  },
+  "dependencies": {}
+}
