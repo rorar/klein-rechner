@@ -99,4 +99,6 @@ localhost; über `file://` greift nur die Rückfallebene.
 Privates Hilfsprojekt, kein Angebot von und nicht verbunden mit der Kleinanzeigen
 GmbH. Alle Angaben ohne Gewähr.
 
-Code unter der MIT-Lizenz, siehe [LICENSE](LICENSE).
+Der eigene Code steht unter der MIT-Lizenz, siehe [LICENSE](LICENSE). Die
+genannten Marken, die mitgelieferten Schriften und das GitHub-Zeichen gehören
+anderen und haben eigene Bedingungen – siehe [NOTICE.md](NOTICE.md).
