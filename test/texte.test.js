@@ -3,8 +3,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { berechne, berechneDirekt } from '../js/rechnen.js?v=12';
-import { textDu, textSie, textNeutral, aufstellung } from '../js/texte.js?v=12';
+import { berechne, berechneDirekt } from '../js/rechnen.js?v=13';
+import { textDu, textSie, textNeutral, aufstellung } from '../js/texte.js?v=13';
 
 const KA = berechne(4500, 299, true);
 const direktBlock = text => text.split('\n').filter(z => z.includes('Käuferschutz')).at(-1);

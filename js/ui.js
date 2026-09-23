@@ -5,9 +5,9 @@ import {
   GEBUEHR_FIX_CENT, ZAHLWEGE, findeZahlweg, versandartenFuer,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=12';
-import { textDu, textSie, textNeutral } from './texte.js?v=12';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=12';
+} from './rechnen.js?v=13';
+import { textDu, textSie, textNeutral } from './texte.js?v=13';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=13';
 
 const el = id => document.getElementById(id);
 
@@ -62,6 +62,10 @@ function zeigeLeer() {
      dann hing „Zustellung an eine Paketstation“ an einem leeren Beleg. */
   el('out-versand-note').textContent = '';
   el('d-versand-note').textContent = '';
+  /* Dasselbe für die JSON-Ansicht: zeigeJsonAnsicht() läuft nur am Ende von
+     aktualisiere(), auf diesem Weg also nie. Unter ?format=json stand sonst
+     die alte Ausgabe neben einem geleerten Beleg. */
+  el('json-text').textContent = '';
 
   for (const feld of ['du', 'sie', 'neutral']) {
     el('text-' + feld).textContent = LEERTEXT;
