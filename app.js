@@ -6,15 +6,15 @@ const GEBUEHR_FIX_CENT = 50;   // 0,50 € Grundbetrag
 const GEBUEHR_PROMILLE = 45;   // 4,5 % = 45/1000 des Artikelpreises
 
 /* Richtwerte, Stand September 2026. Alle Werte sind überschreibbar –
-   das Feld bleibt ein normales Eingabefeld. */
+   das Feld bleibt ein normales Eingabefeld.
+   Die 2,99 € stehen so in Anzeigen mit Kleinanzeigen-Versand ("Versand ab
+   2,99 €"); die Preise pro Paketgröße zeigt erst der Kaufvorgang. */
 const VERSANDARTEN = [
   { name: 'Abholung, kein Versand', cent: 0 },
-  { name: 'Hermes Päckchen, Shop-Aktion', cent: 99 },
-  { name: 'Hermes Paket S, Shop-Aktion', cent: 199 },
-  { name: 'Hermes Paket M, Shop-Aktion', cent: 249 },
+  { name: 'Kleinanzeigen-Versand, kleinste Größe', cent: 299 },
+  { name: 'DHL Päckchen S', cent: 419 },
   { name: 'Hermes Päckchen', cent: 489 },
   { name: 'Hermes Paket S', cent: 549 },
-  { name: 'DHL Päckchen S', cent: 419 },
   { name: 'DHL Paket bis 2 kg', cent: 619 }
 ];
 
