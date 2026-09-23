@@ -47,7 +47,9 @@ teilbar ist.
 ## Aufstellung als Bild
 
 „Als Bild speichern“ zeichnet den Beleg auf ein Canvas und lädt ihn als PNG
-herunter, mit der Repo-Adresse in der Fußzeile. Auf Geräten, deren Browser
+herunter. In der Fußzeile stehen das GitHub-Zeichen mit der Repo-Adresse und
+darunter die Adresse der Seite selbst, damit ein weitergereichtes Bild zurück
+zum Rechner führt. Auf Geräten, deren Browser
 Dateien weiterreichen kann, erscheint zusätzlich „Bild teilen“ und übergibt das
 PNG an die Teilen-Funktion des Systems. Beides kommt ohne Bibliothek aus.
 

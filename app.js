@@ -309,6 +309,11 @@ function bauCombo() {
 /* ---------- Beleg als Bild ---------- */
 
 const REPO = 'github.com/rorar/klein-rechner';
+const SEITE = 'rorar.github.io/klein-rechner';
+
+/* GitHub-Wortmarke als Pfad, 16 Einheiten im Quadrat (Octicon mark-github).
+   Als Pfad statt als Bild, damit das Canvas ohne zweite Datei auskommt. */
+const GITHUB_PFAD = new Path2D('M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z');
 
 /* Der Beleg wird von Hand auf ein Canvas gezeichnet. Das sind vier Zeilen
    plus Summe – dafür lohnt keine Bibliothek, die das DOM nachbaut. */
@@ -321,7 +326,7 @@ async function zeichneBeleg(r) {
   ]);
 
   const S = 2;                     // doppelte Auflösung, sonst franst Text aus
-  const B = 760, H = 520, RAND = 48;
+  const B = 760, H = 566, RAND = 48;
   const c = document.createElement('canvas');
   c.width = B * S;
   c.height = H * S;
@@ -383,8 +388,23 @@ async function zeichneBeleg(r) {
   g.fillText('Halbe Cent gehen nach oben. Alle Angaben ohne Gewähr.', RAND, 446);
 
   g.fillStyle = '#2c6a4f';
+  g.save();
+  g.translate(RAND, 476);
+  g.fill(GITHUB_PFAD);
+  g.restore();
+
   g.font = '500 15px "IBM Plex Sans", sans-serif';
-  g.fillText(REPO, RAND, 480);
+  g.fillText(REPO, RAND + 24, 489);
+
+  g.font = '400 15px "IBM Plex Sans", sans-serif';
+  const label = 'Selbst rechnen: ';
+  const labelBreite = g.measureText(label).width;   // messen, solange 400 gilt
+  g.fillStyle = '#5d6a60';
+  g.fillText(label, RAND, 519);
+
+  g.fillStyle = '#2c6a4f';
+  g.font = '500 15px "IBM Plex Sans", sans-serif';
+  g.fillText(SEITE, RAND + labelBreite, 519);
 
   return new Promise(res => c.toBlob(res, 'image/png'));
 }
