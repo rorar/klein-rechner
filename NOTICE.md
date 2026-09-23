@@ -9,12 +9,14 @@ folgt keine Verbindung zu den Inhabern und keine Billigung durch sie.
 | Name | Inhaber |
 | --- | --- |
 | Kleinanzeigen, „Sicher bezahlen“ | Kleinanzeigen GmbH |
+| PayPal | PayPal Holdings, Inc. |
 | Hermes | Hermes Germany GmbH |
 | DHL, Packstation | Deutsche Post DHL Group |
 | GitHub und das GitHub-Zeichen | GitHub, Inc. |
 | IBM, Plex | IBM Corp. |
 
-Dieses Projekt ist privat und steht in keiner Verbindung zur Kleinanzeigen GmbH.
+Dieses Projekt ist privat und steht in keiner Verbindung zur Kleinanzeigen GmbH
+oder zu PayPal.
 Die Gebührenformel gibt wieder, was Kleinanzeigen im Hilfe-Center nennt.
 Maßgeblich ist immer, was die App beim Kauf anzeigt.
 

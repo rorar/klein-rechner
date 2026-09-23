@@ -27,6 +27,54 @@ deshalb, was der Rechner tut.
 
 Die Gebühr trägt der Käufer.
 
+## Vergleichsmodus
+
+Der Haken „Direktkauf vergleichen“ rechnet den Weg ohne Kleinanzeigen daneben:
+Banküberweisung, PayPal Waren und Dienstleistungen, PayPal Freunde und Familie
+oder Barzahlung bei Abholung, mit den Versandpreisen der Dienstleister statt den
+verbilligten von Kleinanzeigen.
+
+Er ist standardmäßig aus. Der Vergleich ist ein Werkzeug für den Verkäufer, nicht
+zwingend etwas für den Käufer, und ein geteilter Link zeigt ihn nur, wenn er beim
+Teilen an war.
+
+```
+Kleinanzeigen   Käufer zahlt  Preis + Versand + 0,50 € + 4,5 % × Preis
+                Verkäufer     Preis
+
+direkt          Käufer zahlt  Preis + Versand (+ Gebühr, wenn er sie drauflegt)
+                Verkäufer     Preis (− Gebühr, wenn er sie trägt)
+```
+
+PayPal rechnet anders als Kleinanzeigen: **2,49 % + 0,35 € vom gesamten
+überwiesenen Betrag**, also einschließlich Versand, während die
+Kleinanzeigen-Gebühr nur den Artikelpreis als Grundlage hat.
+
+Einen käuferfinanzierten PayPal-Käuferschutz gibt es nicht. Schutz gibt es nur
+über „Waren und Dienstleistungen“, und dort trägt die Gebühr immer der Empfänger.
+Der Käufer kann sie nur ausgleichen, indem er mehr überweist – das ist der
+Schalter „legt der Käufer drauf“.
+
+## Ab wann lohnt der Direktkauf?
+
+Der Balken nennt die Schwelle für beide Seiten. Bei 2,99 € Kleinanzeigen-Versand
+gegen 5,19 € direkt:
+
+| Zahlweg | Käufer zahlt direkt weniger ab | Verkäufer behält direkt mehr ab |
+| --- | --- | --- |
+| Banküberweisung, Freunde und Familie | 37,89 € | gleich |
+| PayPal W&D, Verkäufer trägt | 37,89 € | nie |
+| PayPal W&D, Käufer legt drauf | 112,78 € | gleich |
+
+Für den Verkäufer gibt es keine Schwelle. Über Kleinanzeigen behält er entweder
+genau so viel wie direkt oder mehr, nie weniger – die Servicegebühr trägt der
+Käufer, der Versand geht in beiden Fällen an den Dienstleister. Ein Test hält das
+über den ganzen Preisbereich fest.
+
+Die Schwellen entstehen aus binärer Suche auf denselben Funktionen, die auch die
+Anzeige speisen. Eine geschlossene Formel läge wegen der Cent-Rundung um bis zu
+einen Cent daneben: 37,89 € statt der errechneten 37,78 €.
+
 ## Verlinkbare Rechnungen
 
 Der Text zum Verschicken steht in drei Fassungen bereit: Du-Form, Sie-Form und
@@ -39,7 +87,13 @@ Beide Felder lassen sich über die Adresse vorbelegen:
 https://rorar.github.io/klein-rechner/?preis=45,00&versand=5,49
 https://rorar.github.io/klein-rechner/?preis=12.34
 https://rorar.github.io/klein-rechner/?preis=30,00&versand=2,99&paketstation=1
+https://rorar.github.io/klein-rechner/?preis=45,00&versand=2,99&vergleich=1&direktversand=5,19&zahlweg=paypal-wd&traeger=kaeufer
 ```
+
+Im Vergleichsmodus kommen `vergleich=1`, `direktversand`, `zahlweg`
+(`ueberweisung`, `paypal-wd`, `paypal-ff`, `bar`) und `traeger`
+(`verkaeufer`, `kaeufer`) dazu. Unbekannte Werte fallen auf den Standard zurück,
+statt die Seite zu zerlegen. Ohne `vergleich=1` werden die vier nicht geschrieben.
 
 `paketstation=1` setzt den Haken für die Zustellung an eine Paketstation. Ohne
 Versandkosten wird er ignoriert, weil es dann nichts zuzustellen gibt.
@@ -57,6 +111,71 @@ Bild – der Käufer soll sie sehen, bevor er zusagt.
 Komma und Punkt werden beide gelesen. Beim Tippen schreibt die Seite den
 aktuellen Stand per `replaceState` zurück in die Adresse, die damit jederzeit
 teilbar ist.
+
+## Externe Anbindung
+
+Die Seite liegt auf GitHub Pages und liefert nur Dateien aus. **Einen Endpunkt,
+den man mit `fetch` abruft und der JSON zurückgibt, kann es deshalb nicht geben** –
+gerechnet wird im Browser, und ein `fetch` führt kein JavaScript aus. Wer einen
+echten HTTP-Endpunkt braucht, bräuchte etwas, das Code ausführt, etwa einen
+Cloudflare Worker, der `rechnen.js` importiert.
+
+Ohne zusätzliche Infrastruktur tragen vier Wege. Pages sendet
+`access-control-allow-origin: *`, Cross-Origin funktioniert also.
+
+**Modul importieren**
+
+```js
+const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=11');
+
+berechneAlles({
+  artikelpreisCent: 4500,
+  versandKleinanzeigenCent: 299,
+  versandDirektCent: 519,
+  paketstation: true,
+  vergleich: true,
+  zahlweg: 'ueberweisung'
+});
+```
+
+**Per Skript-Tag** steht dasselbe unter `window.kleinRechner` bereit.
+
+**Als eingebettete Seite**
+
+```js
+rahmen.contentWindow.postMessage({ typ: 'klein-rechner:rechne', eingabe: { … } }, '*');
+window.addEventListener('message', e => {
+  if (e.data?.typ === 'klein-rechner:ergebnis') console.log(e.data.ergebnis);
+});
+```
+
+Die Antwort geht an den fragenden Ursprung zurück, nicht an `'*'`.
+
+**Von Hand** über den Knopf „Als JSON kopieren“ oder `?format=json` in der Adresse.
+
+### Das Format
+
+```json
+{
+  "fassung": 1,
+  "waehrung": "EUR",
+  "stand": "2026-09-23",
+  "eingabe": { "artikelpreisCent": 4500, "versandKleinanzeigenCent": 299, "paketstation": true, "vergleich": true, "versandDirektCent": 519, "zahlweg": "ueberweisung", "gebuehrTraeger": null },
+  "kleinanzeigen": { "artikelCent": 4500, "versandCent": 299, "gebuehrCent": 253, "kaeuferZahltCent": 5052, "verkaeuferBehaeltCent": 4500, "kaeuferschutz": true },
+  "direkt": { "zahlweg": "ueberweisung", "artikelCent": 4500, "versandCent": 519, "gebuehrCent": 0, "kaeuferZahltCent": 5019, "verkaeuferBehaeltCent": 4500, "kaeuferschutz": false },
+  "breakeven": { "kaeuferAbCent": 3789, "verkaeufer": "gleich" },
+  "guenstigerFuerKaeufer": "direkt",
+  "differenzKaeuferCent": 33,
+  "hinweis": "Richtwerte ohne Gewähr. Kein Angebot der Kleinanzeigen GmbH."
+}
+```
+
+Beträge ausschließlich als ganze Cent; die Aufbereitung gehört dem Aufrufer.
+`breakeven.kaeuferAbCent` und `breakeven.verkaeufer` tragen entweder eine Zahl
+oder `"immer"`, `"nie"` beziehungsweise `"gleich"`. Ohne eingeschalteten Vergleich
+entfallen `direkt`, `breakeven` und die beiden Vergleichsfelder. Ungültige
+Eingaben liefern `{ "fehler": "…" }` statt einer Ausnahme. `fassung` steigt,
+sobald sich die Bedeutung eines Feldes ändert.
 
 ## Aufstellung als Bild
 
@@ -86,17 +205,30 @@ PNG an die Teilen-Funktion des Systems. Beides kommt ohne Bibliothek aus.
 | --- | --- |
 | `index.html` | Struktur der Seite |
 | `styles.css` | Gestaltung, Beleg-Optik |
-| `app.js` | Rechnung in Cent, Textbausteine, Combobox, Kopierfunktion |
+| `js/rechnen.js` | Gebührenmodelle, Schwellensuche, JSON – ohne DOM, damit prüfbar und importierbar |
+| `js/texte.js` | Textbausteine, einzeln und im Vergleich |
+| `js/beleg-bild.js` | Der Beleg als PNG, ein- oder zweispaltig |
+| `js/ui.js` | Verdrahtung: Eingaben, Combobox, Knöpfe, Adresse |
+| `test/` | `npm test` – Rechenkerne ohne Browser |
 | `fonts/` | Schriften im Repo, damit keine Besucher-IP an Google geht |
 
 Kein Build-Schritt, keine Abhängigkeiten. Lokal ansehen:
 
 ```sh
-python3 -m http.server 8000
+npm start        # python3 -m http.server 8765
+npm test         # node --test, ohne Browser
 ```
 
-Dann http://localhost:8000 öffnen. Die Kopierfunktion braucht HTTPS oder
-localhost; über `file://` greift nur die Rückfallebene.
+Dann http://localhost:8765 öffnen. Über `file://` läuft die Seite nicht: ES-Module
+brauchen HTTP. Auch die Kopierfunktion will HTTPS oder localhost.
+
+Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=11`). Ohne sie
+könnte ein Browser ein frisches `ui.js` mit einem veralteten `rechnen.js` mischen.
+Beim Ändern alle Vorkommen gemeinsam hochzählen:
+
+```sh
+sed -i 's/?v=11/?v=12/g' index.html js/*.js test/*.js
+```
 
 ## Rechtliches
 
