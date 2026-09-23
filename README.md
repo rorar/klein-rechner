@@ -38,11 +38,17 @@ Beide Felder lassen sich über die Adresse vorbelegen:
 ```
 https://rorar.github.io/klein-rechner/?preis=45,00&versand=5,49
 https://rorar.github.io/klein-rechner/?preis=12.34
-https://rorar.github.io/klein-rechner/?preis=30,00&versand=2,99&packstation=1
+https://rorar.github.io/klein-rechner/?preis=30,00&versand=2,99&paketstation=1
 ```
 
-`packstation=1` setzt den Haken für die Zustellung an eine Packstation. Ohne
+`paketstation=1` setzt den Haken für die Zustellung an eine Paketstation. Ohne
 Versandkosten wird er ignoriert, weil es dann nichts zuzustellen gibt.
+
+Der Haken ist keine Randnotiz: Aktionspreise über Kleinanzeigen kamen in der
+Vergangenheit nur zustande, wenn an eine Paketstation geliefert wurde. Wer sich
+die Ware nach Hause schicken lässt, zahlt dann mehr als der Rechner anzeigt.
+Deshalb steht die Bedingung in der Aufstellung, in allen drei Texten und im
+Bild – der Käufer soll sie sehen, bevor er zusagt.
 
 Komma und Punkt werden beide gelesen. Beim Tippen schreibt die Seite den
 aktuellen Stand per `replaceState` zurück in die Adresse, die damit jederzeit
@@ -64,7 +70,7 @@ PNG an die Teilen-Funktion des Systems. Beides kommt ohne Bibliothek aus.
   überschreibbar – das Feld nimmt auch freie Beträge an. Die 2,99 € laufen über
   Hermes und stehen so in Anzeigen mit Kleinanzeigen-Versand; die Preise je
   Paketgröße zeigt erst der Kaufvorgang. Diese Versandart setzt den Haken für
-  die Packstation, jede andere nimmt ihn zurück – der Haken gehört zur
+  die Paketstation, jede andere nimmt ihn zurück – der Haken gehört zur
   Versandart, lässt sich danach aber von Hand ändern. Steht er, taucht die
   Zustellung in der Aufstellung, in allen drei Texten, im Bild und in der
   Adresse auf.

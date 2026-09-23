@@ -13,7 +13,7 @@ const GEBUEHR_PROMILLE = 45;   // 4,5 % = 45/1000 des Artikelpreises
 const VERSANDARTEN = [
   { name: 'Abholung, kein Versand', cent: 0 },
   { name: 'Hermes über Kleinanzeigen, kleinste Größe', cent: 299,
-    hinweis: 'Zustellung ggf. an eine Packstation', packstation: true },
+    hinweis: 'Aktionspreis nur bei Zustellung an eine Paketstation', paketstation: true },
   { name: 'DHL Päckchen S', cent: 419 },
   { name: 'Hermes Päckchen', cent: 489 },
   { name: 'Hermes Paket S', cent: 549 },
@@ -44,14 +44,14 @@ function parseEuroToCent(roh) {
   return Number.isFinite(cent) ? cent : NaN;
 }
 
-function berechne(preisCent, versandCent, packstation) {
+function berechne(preisCent, versandCent, paketstation) {
   const gebuehr = GEBUEHR_FIX_CENT + Math.round((preisCent * GEBUEHR_PROMILLE) / 1000);
   return {
     preis: preisCent,
     versand: versandCent,
     gebuehr,
     summe: preisCent + versandCent + gebuehr,
-    packstation: packstation && versandCent > 0
+    paketstation: paketstation && versandCent > 0
   };
 }
 
@@ -63,7 +63,7 @@ function berechne(preisCent, versandCent, packstation) {
    "zahlen Sie" auseinander. */
 function versandText(r) {
   if (r.versand === 0) return 'entfällt';
-  return r.packstation ? `${fmt(r.versand)} (Zustellung an eine Packstation)` : fmt(r.versand);
+  return r.paketstation ? `${fmt(r.versand)} (Zustellung an eine Paketstation)` : fmt(r.versand);
 }
 
 function aufstellung(r) {
@@ -117,7 +117,7 @@ const el = id => document.getElementById(id);
 
 const preisInput = el('preis');
 const versandInput = el('versand');
-const packstationFeld = el('packstation');
+const paketstationFeld = el('paketstation');
 const kopien = { summe: '', du: '', sie: '', neutral: '' };
 let letzteRechnung = null;
 
@@ -145,19 +145,19 @@ function aktualisiere() {
   el('preis-fehler').hidden = !preisKaputt;
   el('versand-fehler').hidden = !versandKaputt;
 
-  schreibeUrl(preis, versand, packstationFeld.checked && versand > 0);
+  schreibeUrl(preis, versand, paketstationFeld.checked && versand > 0);
 
   if (preisKaputt || versandKaputt || preis === null) {
     zeigeLeer();
     return;
   }
 
-  const r = berechne(preis, versand === null ? 0 : versand, packstationFeld.checked);
+  const r = berechne(preis, versand === null ? 0 : versand, paketstationFeld.checked);
   letzteRechnung = r;
 
   el('out-preis').textContent = fmt(r.preis);
   el('out-versand').textContent = r.versand > 0 ? fmt(r.versand) : '—';
-  el('out-versand-note').textContent = r.packstation ? 'Zustellung an eine Packstation' : '';
+  el('out-versand-note').textContent = r.paketstation ? 'Zustellung an eine Paketstation' : '';
   el('out-gebuehr').textContent = fmt(r.gebuehr);
   el('out-gebuehr-formel').textContent = `${fmt(GEBUEHR_FIX_CENT)} + 4,5\u00a0% von ${fmt(r.preis)}`;
   el('out-summe').textContent = fmt(r.summe);
@@ -282,7 +282,7 @@ function bauCombo() {
 
   function waehle(i) {
     versandInput.value = (VERSANDARTEN[i].cent / 100).toFixed(2).replace('.', ',');
-    packstationFeld.checked = VERSANDARTEN[i].packstation === true;
+    paketstationFeld.checked = VERSANDARTEN[i].paketstation === true;
     schliesse();
     aktualisiere();
   }
@@ -336,7 +336,7 @@ async function zeichneBeleg(r) {
 
   const S = 2;                     // doppelte Auflösung, sonst franst Text aus
   const B = 760, RAND = 48;
-  const H = r.packstation ? 586 : 566;   // die Packstation-Zeile braucht Platz
+  const H = r.paketstation ? 586 : 566;   // die Paketstation-Zeile braucht Platz
   const c = document.createElement('canvas');
   c.width = B * S;
   c.height = H * S;
@@ -379,7 +379,7 @@ async function zeichneBeleg(r) {
     g.fillText(text, RAND, yy);
   };
 
-  /* Laufende Höhe statt fester Werte: die Packstation-Zeile schiebt alles
+  /* Laufende Höhe statt fester Werte: die Paketstation-Zeile schiebt alles
      darunter nach unten. */
   let y = 180;
 
@@ -387,9 +387,9 @@ async function zeichneBeleg(r) {
   y += 38;
 
   zeile(y, 'Versand', r.versand > 0 ? fmt(r.versand) : 'entfällt');
-  if (r.packstation) {
+  if (r.paketstation) {
     y += 20;
-    notiz(y, 'Zustellung an eine Packstation');
+    notiz(y, 'Zustellung an eine Paketstation');
   }
   y += 38;
 
@@ -489,12 +489,12 @@ function leseUrl() {
   const versand = p.get('versand');
   if (preis !== null) preisInput.value = preis;
   if (versand !== null) versandInput.value = versand;
-  packstationFeld.checked = p.get('packstation') === '1';
+  paketstationFeld.checked = p.get('paketstation') === '1';
 }
 
 /* Punkt statt Komma, damit die Adresse ohne %2C lesbar bleibt.
    Die Eingabe versteht beides. */
-function schreibeUrl(preisCent, versandCent, packstation) {
+function schreibeUrl(preisCent, versandCent, paketstation) {
   const p = new URLSearchParams(location.search);
   const setze = (name, cent) => {
     if (cent === null || Number.isNaN(cent)) p.delete(name);
@@ -502,8 +502,8 @@ function schreibeUrl(preisCent, versandCent, packstation) {
   };
   setze('preis', preisCent);
   setze('versand', versandCent);
-  if (packstation) p.set('packstation', '1');
-  else p.delete('packstation');
+  if (paketstation) p.set('paketstation', '1');
+  else p.delete('paketstation');
   const s = p.toString();
   history.replaceState(null, '', s ? '?' + s : location.pathname);
 }
@@ -512,7 +512,7 @@ function schreibeUrl(preisCent, versandCent, packstation) {
 
 preisInput.addEventListener('input', aktualisiere);
 versandInput.addEventListener('input', aktualisiere);
-packstationFeld.addEventListener('change', aktualisiere);
+paketstationFeld.addEventListener('change', aktualisiere);
 bauCombo();
 zeigeLeer();
 leseUrl();
