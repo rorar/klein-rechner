@@ -1,7 +1,7 @@
 /* Fertige Nachrichten zum Verschicken. Kein DOM, damit sich die Texte
    ohne Browser prüfen lassen. */
 
-import { fmt, KLEINANZEIGEN_FORMEL } from './rechnen.js?v=19';
+import { fmt, KLEINANZEIGEN_FORMEL } from './rechnen.js?v=20';
 
 export function versandText(r) {
   if (r.versand === 0) return 'entfällt';
@@ -112,4 +112,37 @@ export function textSie(ka, di) {
    Anrede zwischen zwei Leuten noch nicht geklärt ist. */
 export function textNeutral(ka, di) {
   return baue(ka, di, 'neutral', `Insgesamt sind das ${fmt(ka.kaeuferZahlt)}.`);
+}
+
+/* ---------- Befunde zum Breakeven ---------- */
+
+/* Standen doppelt in ui.js und beleg-bild.js, in zwei Schreibweisen, und
+   beide Fassungen vergaßen, dass kleinsterPreis auch 'immer' liefern kann –
+   fmt('immer') ergibt „NaN €“. Hier einmal, damit sie prüfbar sind. */
+export function breakevenSaetze(b, ka, di, { persoenlich = false } = {}) {
+  const verkaeufer = persoenlich ? 'Für dich als Verkäufer' : 'Für den Verkäufer';
+
+  let kaeuferSatz;
+  if (typeof b.kaeuferAb === 'number') {
+    kaeuferSatz = `Für den Käufer dreht es sich bei ${fmt(b.kaeuferAb)}: darunter ist „Sicher bezahlen“ günstiger, darüber der Direktkauf.`;
+  } else if (b.kaeuferAb === 'immer') {
+    kaeuferSatz = 'Für den Käufer ist der Direktkauf bei jedem Preis günstiger.';
+  } else {
+    kaeuferSatz = 'Für den Käufer ist „Sicher bezahlen“ bei jedem Preis günstiger.';
+  }
+
+  let verkaeuferSatz;
+  if (b.verkaeuferAb === 'gleich') {
+    verkaeuferSatz = persoenlich
+      ? `${verkaeufer} macht es keinen Unterschied – du behältst über beide Wege ${fmt(ka.verkaeuferBehaelt)}.`
+      : `${verkaeufer} macht es keinen Unterschied: über beide Wege bleiben ${fmt(ka.verkaeuferBehaelt)}.`;
+  } else if (b.verkaeuferAb === 'nie') {
+    verkaeuferSatz = `${verkaeufer} ist „Sicher bezahlen“ immer besser: dort zahlt der Käufer die Gebühr, hier gingen ${fmt(di.gebuehr)} ${persoenlich ? 'von deinem Erlös' : 'vom Erlös'} ab.`;
+  } else if (b.verkaeuferAb === 'immer') {
+    verkaeuferSatz = `${verkaeufer} ist der Direktkauf bei jedem Preis besser.`;
+  } else {
+    verkaeuferSatz = `${verkaeufer} ab ${fmt(b.verkaeuferAb)}.`;
+  }
+
+  return { kaeufer: kaeuferSatz, verkaeufer: verkaeuferSatz };
 }

@@ -53,6 +53,12 @@
 
 * { box-sizing: border-box; }
 
+/* Die Regel des Browsers für [hidden] ist eine Herkunftsstufe tiefer als
+   alles hier und verliert deshalb gegen jedes display aus dieser Datei.
+   Ohne diese Zeile blieb ein per JavaScript verstecktes Feld sichtbar,
+   sobald eine Layoutregel ihm ein display gab. */
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -756,8 +762,8 @@ body {
 @media (max-width: 32rem) {
   /* 0,8125rem sind 13 px und damit so klein wie der kleinste Text
      sonst auf der Seite. Darunter wird es auf dem Handy mühsam. */
+  /* .skala-fuss steht schon in der Grundregel auf diesem Wert. */
   .skala-koepfe { font-size: 0.8125rem; }
-  .skala-fuss { font-size: 0.8125rem; }
   .skala-marke-wert { font-size: 0.875rem; }
 }
 
@@ -789,9 +795,12 @@ body {
    ob jemand mit dem Finger trifft, nicht wie breit sein Fenster ist.
    44 px ist das Mindestmaß, unter dem Treffer unzuverlässig werden. */
 @media (pointer: coarse) {
+  /* .schalter ist schon zentriert, die beiden anderen stehen auf
+     baseline und brauchen die Angabe. */
+  .schalter { min-height: 44px; }
+
   .zahlweg label,
-  .traeger label,
-  .schalter {
+  .traeger label {
     min-height: 44px;
     align-items: center;
   }

@@ -11,7 +11,7 @@
 
 import {
   KLEINANZEIGEN, ZAHLWEGE as ZAHLWEGE_BESCHREIBUNG, VERSANDARTEN, STAND_DER_WERTE
-} from './daten.js?v=19';
+} from './daten.js?v=20';
 
 export { VERSANDARTEN, STAND_DER_WERTE };
 
@@ -106,19 +106,25 @@ export function berechne(preisCent, versandCent, paketstation) {
 
 /* Kleinster Betrag, von dem nach Abzug der Gebühr mindestens `ziel` übrig
    bleibt. Die geschlossene Formel ziel/(1−satz) trifft wegen der
-   Cent-Rundung daneben, deshalb wird von unten herangetastet.
+   Cent-Rundung daneben.
 
-   Der Startwert kommt aus `gebuehrFn` selbst und nicht aus den
-   PayPal-Konstanten: sonst hinge die Funktion still an einem Zahlweg,
-   obwohl sie die Gebühr als Parameter bekommt. Von unten heranzutasten
-   heißt zugleich, dass das Ergebnis der kleinste gültige Betrag ist. */
+   Gesucht wird per Bisektion, nicht durch Hochzählen: `betrag − gebuehr`
+   wächst mit jedem Cent um 1 minus 0 oder 1, ist also nie fallend, und
+   damit ist die Bedingung monoton. Hochzählen lief bei großen Beträgen
+   über hundert Millionen Runden und oberhalb von 2^53 überhaupt nicht
+   mehr weiter, weil betrag + 1 dort denselben Wert ergibt. */
 export function betragMitAufschlag(zielCent, gebuehrFn) {
-  /* Zweimal schätzen, dann zählen: der erste Schätzwert liegt um die
-     Gebühr auf die Gebühr daneben, der zweite nur noch um wenige Cent. */
-  let betrag = zielCent + gebuehrFn(zielCent);
-  betrag = zielCent + gebuehrFn(betrag);
-  while (betrag - gebuehrFn(betrag) < zielCent) betrag++;
-  return betrag;
+  const reicht = betrag => betrag - gebuehrFn(betrag) >= zielCent;
+
+  let lo = zielCent;
+  let hi = zielCent + gebuehrFn(zielCent) * 2 + 1000;
+  while (!reicht(hi)) hi *= 2;      // greift nur bei sehr großen Sätzen
+
+  while (lo < hi) {
+    const mitte = Math.floor((lo + hi) / 2);
+    if (reicht(mitte)) hi = mitte; else lo = mitte + 1;
+  }
+  return lo;
 }
 
 /* gebuehrTraeger: 'verkaeufer' – die Gebühr geht vom Erlös ab.
@@ -163,38 +169,57 @@ export function berechneDirekt(preisCent, versandCent, zahlwegId, gebuehrTraeger
 
 /* ---------- Schwellen ---------- */
 
-const MAX_PREIS_CENT = 100000000;   // 1.000.000 €, weit jenseits jeder Anzeige
+export const MAX_PREIS_CENT = 100000000;   // 1.000.000 €, weit jenseits jeder Anzeige
 
-/* Kleinster Artikelpreis, ab dem `besser` zutrifft. Binäre Suche auf
-   genau den Funktionen, die auch die Anzeige speist – eine Formel läge
-   wegen der Rundung um bis zu einen Cent daneben.
-   Die Suche ist zulässig, weil die Kleinanzeigen-Gebühr mit 4,5 %
-   schneller wächst als jede Alternative mit höchstens 2,49 %. */
+/* Wie weit unter dem Fund der Bisektion noch nach einer früheren Stelle
+   gesucht wird. Die Cent-Rundung in beiden Gebührenmodellen lässt den
+   Unterschied mehrfach das Vorzeichen wechseln – gemessen über ein Band
+   von gut zwanzig Cent. 50 € Fenster sind reichlich und kosten nur eine
+   Schleife über wenige tausend Werte. */
+const FEINFENSTER_CENT = 5000;
+
+/* Kleinster Artikelpreis, ab dem `besser` zutrifft.
+
+   Die Bedingung ist im Groben monoton – die Kleinanzeigen-Gebühr wächst
+   mit 4,5 % schneller als jede Alternative mit höchstens 2,49 % –, im
+   Feinen aber nicht: die Rundung auf ganze Cent lässt sie um den
+   Wendepunkt herum mehrfach kippen. Reine Bisektion griff deshalb daneben
+   und meldete zum Beispiel 49,67 € statt der richtigen 49,45 €.
+   Die Bisektion findet jetzt nur die Gegend, die Feinsuche die Stelle. */
 export function kleinsterPreis(besser, maxCent = MAX_PREIS_CENT) {
   if (besser(0)) return 'immer';
   if (!besser(maxCent)) return 'nie';
+
   let lo = 0, hi = maxCent;
   while (lo < hi) {
     const mitte = Math.floor((lo + hi) / 2);
     if (besser(mitte)) hi = mitte; else lo = mitte + 1;
   }
+
+  const von = Math.max(0, lo - FEINFENSTER_CENT);
+  for (let p = von; p < lo; p++) {
+    if (besser(p)) return p;
+  }
   return lo;
 }
 
 /* Liefert je Perspektive einen Betrag in Cent, 'immer', 'nie' oder
-   'gleich'. 'gleich' gibt es nur beim Verkäufer: bei Überweisung, Freunden
-   und Familie, Barzahlung und beim Käufer-Aufschlag behält er über beide
-   Wege genau denselben Betrag. */
+   'gleich'. */
 export function breakeven({ versandKleinanzeigen, versandDirekt, paketstation, zahlweg, gebuehrTraeger }) {
   const ka = p => berechne(p, versandKleinanzeigen, paketstation);
   const di = p => berechneDirekt(p, versandDirekt, zahlweg, gebuehrTraeger);
 
-  const stichproben = [1000, 5000, 20000];
-  const verkaeuferGleich = stichproben.every(p => di(p).verkaeuferBehaelt === ka(p).verkaeuferBehaelt);
+  /* Die Verkäufersicht braucht keine Suche, sie folgt aus dem Zahlweg:
+     über Kleinanzeigen behält er immer den Artikelpreis, direkt ebenso –
+     außer die Gebühr geht von seinem Erlös ab. Dann ist Kleinanzeigen bei
+     jedem Preis besser, nie erst ab einem. Vorher wurde das aus drei fest
+     verdrahteten Stichproben geraten. */
+  const gewaehlt = findeZahlweg(zahlweg);
+  const traegtVerkaeufer = Boolean(gewaehlt.gebuehr(1)) && gewaehlt.traeger && gebuehrTraeger !== 'kaeufer';
 
   return {
     kaeuferAb: kleinsterPreis(p => di(p).kaeuferZahlt < ka(p).kaeuferZahlt),
-    verkaeuferAb: verkaeuferGleich ? 'gleich' : kleinsterPreis(p => di(p).verkaeuferBehaelt > ka(p).verkaeuferBehaelt)
+    verkaeuferAb: traegtVerkaeufer ? 'nie' : 'gleich'
   };
 }
 
@@ -216,7 +241,11 @@ const alsPosten = r => ({
 /* Einstieg für alles, was von außen kommt: Adresse, postMessage, fremder
    Code. Liefert bei Unsinn ein Fehlerobjekt statt einer Ausnahme, damit
    ein Aufrufer nichts abfangen muss. */
-export function berechneAlles(eingabe = {}) {
+export function berechneAlles(roheEingabe) {
+  /* `= {}` deckt nur undefined ab. null, Zahlen und Zeichenketten kamen
+     bis in die Zerlegung und warfen dort – entgegen der Zusage in diesem
+     Kommentar und im README. */
+  const eingabe = (roheEingabe && typeof roheEingabe === 'object') ? roheEingabe : {};
   const {
     artikelpreisCent,
     versandKleinanzeigenCent = 0,
@@ -227,13 +256,15 @@ export function berechneAlles(eingabe = {}) {
     gebuehrTraeger = 'verkaeufer'
   } = eingabe;
 
-  const ganzzahlAbNull = w => Number.isInteger(w) && w >= 0;
+  /* Obergrenze nicht aus Bequemlichkeit: ohne sie liefen Suche und
+     Aufschlag über absurd große Beträge und die Seite stand. */
+  const imRahmen = w => Number.isInteger(w) && w >= 0 && w <= MAX_PREIS_CENT;
 
-  if (!ganzzahlAbNull(artikelpreisCent)) {
-    return { fehler: 'artikelpreisCent muss eine ganze Zahl in Cent ab 0 sein' };
+  if (!imRahmen(artikelpreisCent)) {
+    return { fehler: `artikelpreisCent muss eine ganze Zahl in Cent zwischen 0 und ${MAX_PREIS_CENT} sein` };
   }
-  if (!ganzzahlAbNull(versandKleinanzeigenCent) || !ganzzahlAbNull(versandDirektCent)) {
-    return { fehler: 'Versandkosten müssen ganze Zahlen in Cent ab 0 sein' };
+  if (!imRahmen(versandKleinanzeigenCent) || !imRahmen(versandDirektCent)) {
+    return { fehler: `Versandkosten müssen ganze Zahlen in Cent zwischen 0 und ${MAX_PREIS_CENT} sein` };
   }
 
   const ka = berechne(artikelpreisCent, versandKleinanzeigenCent, paketstation);

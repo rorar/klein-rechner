@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="light">
 <link rel="preload" href="fonts/Newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css?v=19">
+<link rel="stylesheet" href="styles.css?v=20">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232C6A4F'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' fill='%23FBFBF7' text-anchor='middle'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -52,7 +52,7 @@
         <ul class="combo-list" id="versand-liste" role="listbox" aria-labelledby="versand-label" hidden></ul>
       </div>
       <div class="field-fuss">
-        <p id="versand-hinweis" class="hint">Eigenen Betrag tippen oder eine Versandart wählen. Die Preise sind Richtwerte vom September 2026.</p>
+        <p id="versand-hinweis" class="hint">Eigenen Betrag tippen oder eine Versandart wählen. Die Preise sind Richtwerte, Stand <span id="stand-der-werte">–</span>.</p>
         <p class="error" id="versand-fehler" role="alert" hidden>Bitte einen Betrag wie 5,49 eintragen oder das Feld leer lassen.</p>
 
         <label class="schalter" for="paketstation">
@@ -91,14 +91,13 @@
     <p id="vergleich-hinweis" class="hint">Rechnet den Weg ohne Kleinanzeigen daneben und zeigt, ab welchem Preis er günstiger wird. Aus, solange du ihn nicht brauchst – ein geteilter Link zeigt ihn nur, wenn er beim Teilen an war.</p>
 
     <p class="formula">
-      Kleinanzeigen berechnet beim Kauf <b>0,50&nbsp;€ + 4,5&nbsp;%</b> vom Artikelpreis.
+      Kleinanzeigen berechnet beim Kauf <b id="formel-satz">–</b> vom Artikelpreis.
       Der Versand kommt unverändert obendrauf.
       <a href="https://hilfe.kleinanzeigen.de/hc/de/articles/17211553583388-Was-ist-Sicher-bezahlen-wie-funktioniert-der-K%C3%A4uferschutz" rel="noopener">So steht es im Hilfe-Center</a>.
     </p>
 
     <p class="formula">
-      Halbe Cent gehen nach oben: 4,5&nbsp;% von 1,00&nbsp;€ sind genau 4,5&nbsp;Cent,
-      daraus werden 5&nbsp;Cent und damit <b>0,55&nbsp;€</b> Gebühr.
+      <span id="rundungs-beispiel">–</span>
     </p>
   </section>
 
@@ -288,6 +287,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script type="module" src="js/ui.js?v=19"></script>
+<script type="module" src="js/ui.js?v=20"></script>
 </body>
 </html>

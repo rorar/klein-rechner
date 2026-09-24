@@ -3,13 +3,31 @@
 
 import {
   KLEINANZEIGEN_FORMEL, zahlwegFormel, ZAHLWEGE, findeZahlweg, versandartenFuer,
+  kleinanzeigenGebuehr, STAND_DER_WERTE,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=19';
-import { textDu, textSie, textNeutral } from './texte.js?v=19';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=19';
+} from './rechnen.js?v=20';
+import { textDu, textSie, textNeutral, breakevenSaetze } from './texte.js?v=20';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=20';
+
+/* Steht ganz oben, vor jedem Zugriff aufs Dokument: auf einer fremden
+   Seite gäbe es die Knöpfe nicht, das Modul bräche beim Laden ab, und die
+   Schnittstelle wäre nie gesetzt worden - ausgerechnet für den Fall, für
+   den sie gedacht ist. */
+/* Für Einbindung per Skript-Tag, wenn jemand keine Module nutzen kann. */
+window.kleinRechner = {
+  berechneAlles, berechne, berechneDirekt, breakeven, kleinsterPreis,
+  paypalGebuehr, betragMitAufschlag, parseEuroToCent, fmt,
+  ZAHLWEGE, versandartenFuer
+};
 
 const el = id => document.getElementById(id);
+
+/* Das Modul dient zwei Zwecken: es verdrahtet diese Seite, und es reicht
+   window.kleinRechner an fremde Seiten weiter. Fehlt das Markup, ist nur
+   der zweite gemeint – dann wird nichts verdrahtet, statt beim ersten
+   fehlenden Knopf abzubrechen. */
+const aufDerEigenenSeite = Boolean(document.getElementById('preis'));
 
 const preisInput = el('preis');
 const versandInput = el('versand');
@@ -92,13 +110,28 @@ function zeigeKleinanzeigen(r) {
   el('out-schutz').textContent = `Der ${r.schutzName} greift.`;
 }
 
+/* Beiwerk, das allein vom Zahlweg abhängt. Lief früher nur mit, wenn eine
+   Rechnung zustande kam - eine geleerte Eingabe ließ dann die Warnung zu
+   Freunden und Familie unter einer Banküberweisung stehen. */
+function zeigeZahlwegBeiwerk() {
+  const zahlweg = findeZahlweg(zahlwegAktuell());
+  el('d-gebuehr-label').textContent = zahlweg.gebuehrName;
+  const warnung = el('zahlweg-warnung');
+  warnung.textContent = zahlweg.warnung || '';
+  warnung.hidden = !zahlweg.warnung;
+  el('traeger-feld').hidden = !zahlweg.traeger;
+  el('direktversand-feld').hidden = !vergleichFeld.checked || zahlweg.ohneVersand;
+  const schutz = el('d-schutz');
+  schutz.textContent = zahlweg.schutz ? `Der ${zahlweg.schutzName} greift.` : 'Ohne Käuferschutz.';
+  schutz.classList.toggle('schutz-ja', Boolean(zahlweg.schutz));
+}
+
 function zeigeDirekt(d) {
   const zahlweg = findeZahlweg(d.zahlweg);
 
   el('d-preis').textContent = fmt(d.preis);
   el('d-versand').textContent = d.versand > 0 ? fmt(d.versand) : '—';
   el('d-versand-note').textContent = zahlweg.ohneVersand ? 'Abholung, kein Versand' : '';
-  el('d-gebuehr-label').textContent = d.gebuehrName;
   el('d-gebuehr').textContent = d.gebuehr > 0 ? fmt(d.gebuehr) : '—';
   el('d-gebuehr-formel').textContent = d.gebuehr > 0
     ? `${zahlwegFormel(d.zahlweg)} vom Gesamtbetrag, getragen ${d.gebuehrTraeger === 'kaeufer' ? 'vom Käufer' : 'vom Verkäufer'}`
@@ -106,16 +139,6 @@ function zeigeDirekt(d) {
   el('d-summe').textContent = fmt(d.kaeuferZahlt);
   el('d-behaelt').textContent = fmt(d.verkaeuferBehaelt);
 
-  const schutz = el('d-schutz');
-  schutz.textContent = d.schutz ? `Der ${d.schutzName} greift.` : 'Ohne Käuferschutz.';
-  schutz.classList.toggle('schutz-ja', d.schutz);
-
-  const warnung = el('zahlweg-warnung');
-  warnung.textContent = d.warnung || '';
-  warnung.hidden = !d.warnung;
-
-  el('traeger-feld').hidden = !zahlweg.traeger;
-  el('direktversand-feld').hidden = zahlweg.ohneVersand;
 }
 
 /* ---------- Breakeven ---------- */
@@ -160,23 +183,9 @@ function zeigeBreakeven(b, ka, di) {
   el('skala-marke-wert').textContent = fmt(ka.preis);
   el('skala-bis').textContent = fmt(ende);
 
-  const kaeufer = el('befund-kaeufer');
-  if (typeof schwelle === 'number') {
-    kaeufer.innerHTML = `Für den Käufer dreht es sich bei <b>${fmt(schwelle)}</b>: darunter ist „Sicher bezahlen“ günstiger, darüber der Direktkauf.`;
-  } else if (schwelle === 'immer') {
-    kaeufer.textContent = 'Für den Käufer ist der Direktkauf bei jedem Preis günstiger.';
-  } else {
-    kaeufer.textContent = 'Für den Käufer ist „Sicher bezahlen“ bei jedem Preis günstiger.';
-  }
-
-  const verkaeufer = el('befund-verkaeufer');
-  if (b.verkaeuferAb === 'gleich') {
-    verkaeufer.innerHTML = `Für dich als Verkäufer macht es keinen Unterschied – du behältst über beide Wege <b>${fmt(ka.verkaeuferBehaelt)}</b>.`;
-  } else if (b.verkaeuferAb === 'nie') {
-    verkaeufer.innerHTML = `Für dich als Verkäufer ist „Sicher bezahlen“ immer besser: dort zahlt der Käufer die Gebühr, hier gingen <b>${fmt(di.gebuehr)}</b> von deinem Erlös ab.`;
-  } else {
-    verkaeufer.innerHTML = `Für dich als Verkäufer ab <b>${fmt(b.verkaeuferAb)}</b>.`;
-  }
+  const saetze = breakevenSaetze(b, ka, di, { persoenlich: true });
+  el('befund-kaeufer').textContent = saetze.kaeufer;
+  el('befund-verkaeufer').textContent = saetze.verkaeufer;
 
   const hinweis = el('befund-hinweis');
   const bar = findeZahlweg(di.zahlweg).ohneVersand;
@@ -197,18 +206,23 @@ function aktualisiere() {
   /* Nur im Vergleich zählt das Direktfeld. Sonst sperrte ein Tippfehler
      darin die ganze Anzeige, während die dazugehörige Fehlermeldung im
      ausgeblendeten Feld steckt und niemand den Grund zu sehen bekäme. */
-  const direktKaputt = vergleich && Number.isNaN(direktversand);
+  /* Nur wenn der Zahlweg das Feld überhaupt heranzieht. Bei Barzahlung
+     wirft berechneDirekt den Wert ohnehin weg; ein Tippfehler darin hätte
+     sonst die gesamte Anzeige gesperrt, mitsamt der Kleinanzeigen-Seite,
+     und die Begründung steckte im ausgeblendeten Feld. */
+  const direktZaehlt = vergleich && !findeZahlweg(zahlwegAktuell()).ohneVersand;
+  const direktKaputt = direktZaehlt && Number.isNaN(direktversand);
   el('preis-fehler').hidden = !preisKaputt;
   el('versand-fehler').hidden = !versandKaputt;
   el('direktversand-fehler').hidden = !direktKaputt;
 
   sheet.dataset.vergleich = vergleich ? 'an' : 'aus';
   el('beleg-direkt').hidden = !vergleich;
-  el('direktversand-feld').hidden = !vergleich;
+  zeigeZahlwegBeiwerk();
   document.querySelectorAll('#beleg-titel [data-solo]').forEach(s => { s.hidden = vergleich; });
   document.querySelectorAll('#beleg-titel [data-vergleich]').forEach(s => { s.hidden = !vergleich; });
 
-  schreibeUrl({
+  const adresse = baueUrl({
     preis, versand, direktversand,
     paketstation: paketstationFeld.checked && versand > 0,
     vergleich
@@ -216,6 +230,7 @@ function aktualisiere() {
 
   if (preisKaputt || versandKaputt || direktKaputt || preis === null) {
     zeigeLeer();
+    schreibeUrl(adresse);
     return;
   }
 
@@ -245,11 +260,17 @@ function aktualisiere() {
 
   kopien.summe = fmt(ka.kaeuferZahlt);
   kopien.dsumme = di ? fmt(di.kaeuferZahlt) : '';
-  kopien.link = location.href;   // schreibeUrl lief oben, die Adresse stimmt
+  /* Aus der selbst gebauten Adresse, nicht aus location.href: schlägt
+     replaceState fehl oder wird es gedrosselt, stimmt location.href nicht
+     mehr und der geteilte Link trüge einen falschen Preis. */
+  kopien.link = new URL(adresse, location.href).href;
   kopien.du = textDu(ka, di);
   kopien.sie = textSie(ka, di);
   kopien.neutral = textNeutral(ka, di);
-  kopien.json = JSON.stringify(aktuellesErgebnis(), null, 2);
+  /* Erst auf Verlangen: das Ergebnis noch einmal zu berechnen und zu
+     serialisieren kostete bei jedem Tastendruck zwei weitere
+     Schwellensuchen, obwohl es meist niemand liest. */
+  kopien.json = '';
 
   for (const feld of ['du', 'sie', 'neutral']) {
     el('text-' + feld).textContent = kopien[feld];
@@ -258,6 +279,7 @@ function aktualisiere() {
 
   document.querySelectorAll('.copy, .neben').forEach(b => { b.disabled = false; });
   zeigeJsonAnsicht();
+  schreibeUrl(adresse);
 }
 
 /* ---------- Kopieren ---------- */
@@ -292,11 +314,12 @@ async function kopiere(text) {
   }
 }
 
-document.querySelectorAll('.copy').forEach(btn => {
+if (aufDerEigenenSeite) document.querySelectorAll('.copy').forEach(btn => {
   btn.dataset.label = btn.textContent;   // einmalig, nicht beim Klick lesen
   let zurueck;
 
   btn.addEventListener('click', async () => {
+    if (btn.dataset.copy === 'json') kopien.json = jsonText();
     const text = kopien[btn.dataset.copy];
     if (!text) return;
 
@@ -403,7 +426,7 @@ function bauCombo({ feld, listeId, arten, nachWahl }) {
 
 /* ---------- Bild speichern und teilen ---------- */
 
-el('bild-knopf').addEventListener('click', async () => {
+if (aufDerEigenenSeite) el('bild-knopf').addEventListener('click', async () => {
   /* Der Stand wird festgehalten, bevor gewartet wird: tippt jemand während
      des Zeichnens weiter, zeigten Bild und Dateiname sonst zwei
      verschiedene Rechnungen – und beim Leeren des Feldes wäre
@@ -429,7 +452,10 @@ el('bild-knopf').addEventListener('click', async () => {
        und der Knopf täte stumm gar nichts. */
     toast('Bild speichern hat nicht geklappt');
   } finally {
-    if (url) URL.revokeObjectURL(url);
+    /* Nicht sofort: a.click() reiht den Download nur ein. Wird die Adresse
+       im selben Durchlauf freigegeben, bricht er auf manchen Browsern
+       still ab und die Datei bleibt leer. */
+    if (url) setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 });
 
@@ -437,7 +463,7 @@ el('bild-knopf').addEventListener('click', async () => {
    Deshalb werden beide Knöpfe getrennt geprüft. */
 const linkTeilenKnopf = el('link-teilen-knopf');
 
-if (navigator.share) {
+if (aufDerEigenenSeite && navigator.share) {
   linkTeilenKnopf.hidden = false;
   linkTeilenKnopf.addEventListener('click', async () => {
     if (!kopien.link) return;
@@ -469,7 +495,7 @@ const kannDateienTeilen = () => {
   }
 };
 
-if (kannDateienTeilen()) {
+if (aufDerEigenenSeite && kannDateienTeilen()) {
   teilenKnopf.hidden = false;
   teilenKnopf.addEventListener('click', async () => {
     /* Wie beim Speichern: erst den Stand festhalten, dann warten. */
@@ -507,18 +533,13 @@ function aktuellesErgebnis() {
   });
 }
 
+const jsonText = () => letzteRechnung ? JSON.stringify(aktuellesErgebnis(), null, 2) : '';
+
 function zeigeJsonAnsicht() {
   const an = new URLSearchParams(location.search).get('format') === 'json';
   el('json-ansicht').hidden = !an;
-  if (an) el('json-text').textContent = kopien.json;
+  if (an) el('json-text').textContent = jsonText();
 }
-
-/* Für Einbindung per Skript-Tag, wenn jemand keine Module nutzen kann. */
-window.kleinRechner = {
-  berechneAlles, berechne, berechneDirekt, breakeven, kleinsterPreis,
-  paypalGebuehr, betragMitAufschlag, parseEuroToCent, fmt,
-  ZAHLWEGE, versandartenFuer
-};
 
 /* Für eingebettete Seiten. Die Antwort geht an den fragenden Ursprung
    zurück, nicht an '*': sonst liest jedes andere eingebettete Fenster mit. */
@@ -557,7 +578,7 @@ function leseUrl() {
 
 /* Punkt statt Komma, damit die Adresse ohne %2C lesbar bleibt.
    Die Eingabe versteht beides. */
-function schreibeUrl({ preis, versand, direktversand, paketstation, vergleich }) {
+function baueUrl({ preis, versand, direktversand, paketstation, vergleich }) {
   const p = new URLSearchParams(location.search);
   const setze = (name, cent) => {
     if (cent === null || Number.isNaN(cent)) p.delete(name);
@@ -579,30 +600,57 @@ function schreibeUrl({ preis, versand, direktversand, paketstation, vergleich })
   }
 
   const s = p.toString();
-  history.replaceState(null, '', s ? '?' + s : location.pathname);
+  return s ? location.pathname + '?' + s : location.pathname;
+}
+
+/* Getrennt vom Bauen: replaceState kann werfen – in einem sandbox-iframe
+   ohne allow-same-origin bei jedem Tastendruck. Vorher stand der Aufruf
+   als erste Anweisung der Aktualisierung und hätte dann die gesamte
+   Neuberechnung abgebrochen. */
+function schreibeUrl(adresse) {
+  try {
+    history.replaceState(null, '', adresse);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/* Die Sätze und der Stand stehen in daten.js. Stünden sie zusätzlich als
+   Text im Markup, druckte die Seite nach einer Änderung die eine Formel
+   und rechnete direkt darunter mit der anderen. */
+function fuelleDatenTexte() {
+  el('formel-satz').textContent = KLEINANZEIGEN_FORMEL;
+  el('stand-der-werte').textContent =
+    new Date(STAND_DER_WERTE).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  el('rundungs-beispiel').textContent =
+    `Halbe Cent gehen nach oben: der Anteil an 1,00\u00a0€ wird aufgerundet, die Gebühr beträgt damit ${fmt(kleinanzeigenGebuehr(100))}.`;
 }
 
 /* ---------- Start ---------- */
 
-preisInput.addEventListener('input', aktualisiere);
-versandInput.addEventListener('input', aktualisiere);
-direktversandInput.addEventListener('input', aktualisiere);
-paketstationFeld.addEventListener('change', aktualisiere);
-vergleichFeld.addEventListener('change', aktualisiere);
+if (aufDerEigenenSeite) {
+  preisInput.addEventListener('input', aktualisiere);
+  versandInput.addEventListener('input', aktualisiere);
+  direktversandInput.addEventListener('input', aktualisiere);
+  paketstationFeld.addEventListener('change', aktualisiere);
+  vergleichFeld.addEventListener('change', aktualisiere);
 
-bauZahlwege();
-bauCombo({
-  feld: versandInput,
-  listeId: 'versand-liste',
-  arten: versandartenFuer('kleinanzeigen'),
-  nachWahl: art => { paketstationFeld.checked = art.paketstation === true; }
-});
-bauCombo({
-  feld: direktversandInput,
-  listeId: 'direktversand-liste',
-  arten: versandartenFuer('direkt')
-});
+  fuelleDatenTexte();
+  bauZahlwege();
+  bauCombo({
+    feld: versandInput,
+    listeId: 'versand-liste',
+    arten: versandartenFuer('kleinanzeigen'),
+    nachWahl: art => { paketstationFeld.checked = art.paketstation === true; }
+  });
+  bauCombo({
+    feld: direktversandInput,
+    listeId: 'direktversand-liste',
+    arten: versandartenFuer('direkt')
+  });
 
-zeigeLeer();
-leseUrl();
-aktualisiere();
+  zeigeLeer();
+  leseUrl();
+  aktualisiere();
+}

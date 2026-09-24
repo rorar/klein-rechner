@@ -7,8 +7,9 @@ import assert from 'node:assert/strict';
 
 import {
   parseEuroToCent, kleinanzeigenGebuehr, berechne, fmt,
-  paypalGebuehr, berechneDirekt, betragMitAufschlag, breakeven, ZAHLWEGE
-} from '../js/rechnen.js?v=19';
+  paypalGebuehr, berechneDirekt, betragMitAufschlag, breakeven, ZAHLWEGE,
+  berechneAlles, MAX_PREIS_CENT
+} from '../js/rechnen.js?v=20';
 
 test('parseEuroToCent nimmt die Schreibweisen an, die Leute tippen', () => {
   assert.equal(parseEuroToCent('45'), 4500);
@@ -151,4 +152,87 @@ test('Kleinanzeigen bringt dem Verkäufer nie weniger als der Direktweg', () => 
       }
     }
   }
+});
+
+/* ---------- Schwelle gegen vollständige Abtastung ---------- */
+
+/* Der Grund für diesen Test: die Bedingung ist im Feinen nicht monoton.
+   Reine Bisektion meldete bei 2,99 gegen 3,99 € Versand 49,67 € statt der
+   richtigen 49,45 € – und der einzige vorher festgehaltene Wert war
+   ausgerechnet eine Kombination, bei der sie zufällig traf. */
+function direktBilliger(p, vKa, vDirekt, zahlweg, traeger) {
+  return berechneDirekt(p, vDirekt, zahlweg, traeger).kaeuferZahlt
+       < berechne(p, vKa, false).kaeuferZahlt;
+}
+
+test('die Schwelle ist wirklich die erste Stelle, nicht nur eine', () => {
+  const paare = [[299, 399], [299, 519], [100, 200], [0, 300], [0, 990], [299, 679], [50, 419]];
+  for (const [vKa, vDirekt] of paare) {
+    for (const [zahlweg, traeger] of [['ueberweisung', 'verkaeufer'], ['paypal-wd', 'verkaeufer'], ['paypal-wd', 'kaeufer']]) {
+      const lage = { versandKleinanzeigen: vKa, versandDirekt: vDirekt, paketstation: false, zahlweg, gebuehrTraeger: traeger };
+      const gesucht = breakeven(lage).kaeuferAb;
+      const wo = `${vKa}/${vDirekt} ${zahlweg}/${traeger}`;
+      if (typeof gesucht !== 'number') continue;
+
+      assert.ok(direktBilliger(gesucht, vKa, vDirekt, zahlweg, traeger), `${wo}: gemeldete Stelle trifft nicht zu`);
+      /* Und darunter gibt es keine frühere – lückenlos abgetastet. */
+      for (let p = 0; p < gesucht; p++) {
+        assert.ok(!direktBilliger(p, vKa, vDirekt, zahlweg, traeger),
+          `${wo}: ${p} ist schon billiger, gemeldet wurde aber erst ${gesucht}`);
+      }
+    }
+  }
+});
+
+test('der Aufschlag bleibt auch bei sehr großen Beträgen beherrschbar', () => {
+  /* Hochzählen lief hier über hundert Millionen Runden und oberhalb von
+     2^53 gar nicht mehr weiter. */
+  for (const ziel of [1, 100, MAX_PREIS_CENT, 1e13]) {
+    const betrag = betragMitAufschlag(ziel, paypalGebuehr);
+    assert.ok(betrag - paypalGebuehr(betrag) >= ziel, `zu wenig bei ${ziel}`);
+    assert.ok(betrag - 1 - paypalGebuehr(betrag - 1) < ziel, `nicht der kleinste bei ${ziel}`);
+  }
+});
+
+/* ---------- berechneAlles, die veröffentlichte Schnittstelle ---------- */
+
+test('berechneAlles wirft nie, auch nicht bei Unsinn', () => {
+  for (const eingabe of [null, undefined, 'quatsch', 42, [], { artikelpreisCent: 'viel' },
+                         { artikelpreisCent: -1 }, { artikelpreisCent: 1.5 },
+                         { artikelpreisCent: MAX_PREIS_CENT + 1 },
+                         { artikelpreisCent: 4500, versandKleinanzeigenCent: -1 }]) {
+    const e = berechneAlles(eingabe);
+    assert.ok(e.fehler, `kein Fehlerobjekt für ${JSON.stringify(eingabe)}`);
+  }
+});
+
+test('berechneAlles liefert die dokumentierte Form', () => {
+  const ohne = berechneAlles({ artikelpreisCent: 4500, versandKleinanzeigenCent: 299 });
+  assert.deepEqual(Object.keys(ohne), ['fassung', 'waehrung', 'stand', 'eingabe', 'kleinanzeigen', 'hinweis']);
+  assert.equal(ohne.fassung, 1);
+  assert.equal(ohne.waehrung, 'EUR');
+  assert.equal(ohne.kleinanzeigen.kaeuferZahltCent, 5052);
+
+  const mit = berechneAlles({
+    artikelpreisCent: 4500, versandKleinanzeigenCent: 299, versandDirektCent: 519,
+    paketstation: true, vergleich: true, zahlweg: 'ueberweisung'
+  });
+  assert.ok(mit.direkt && mit.breakeven, 'direkt und breakeven fehlen im Vergleich');
+  assert.equal(mit.guenstigerFuerKaeufer, 'direkt');
+  assert.equal(mit.differenzKaeuferCent, 33);
+  assert.equal(mit.breakeven.kaeuferAbCent, 3789);
+
+  /* Alle Beträge ganzzahlig, und das Ganze übersteht eine Runde JSON. */
+  const wieder = JSON.parse(JSON.stringify(mit));
+  assert.deepEqual(wieder, mit);
+  for (const posten of [wieder.kleinanzeigen, wieder.direkt]) {
+    for (const [feld, wert] of Object.entries(posten)) {
+      if (feld.endsWith('Cent')) assert.ok(Number.isInteger(wert), `${feld} nicht ganzzahlig`);
+    }
+  }
+});
+
+test('unbekannter Zahlweg fällt auf den Standard zurück statt zu scheitern', () => {
+  const e = berechneAlles({ artikelpreisCent: 4500, versandDirektCent: 519, vergleich: true, zahlweg: 'gibtesnicht' });
+  assert.equal(e.direkt.zahlweg, ZAHLWEGE[0].id);
 });

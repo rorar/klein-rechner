@@ -150,7 +150,7 @@ Projekt. `rechnen.js` importiert `daten.js`, eine einzelne Datei zu holen reicht
 also nicht.
 
 ```js
-const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=19');
+const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=20');
 
 berechneAlles({
   artikelpreisCent: 4500,
@@ -249,12 +249,13 @@ npm test         # node --test, ohne Browser
 Dann http://localhost:8765 öffnen. Über `file://` läuft die Seite nicht: ES-Module
 brauchen HTTP. Auch die Kopierfunktion will HTTPS oder localhost.
 
-Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=19`). Ohne sie
+Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=20`). Ohne sie
 könnte ein Browser ein frisches `ui.js` mit einem veralteten `rechnen.js` mischen.
 Beim Ändern alle Vorkommen gemeinsam hochzählen:
 
 ```sh
-sed -i 's/?v=19/?v=19/g' index.html js/*.js test/*.js
+alt=20; neu=21
+sed -i "s/?v=$alt/?v=$neu/g" index.html js/*.js test/*.js README.md
 ```
 
 ## Rechtliches

@@ -1,7 +1,8 @@
 /* Der Beleg wird von Hand auf ein Canvas gezeichnet. Das sind wenige
    Zeilen je Spalte – dafür lohnt keine Bibliothek, die das DOM nachbaut. */
 
-import { fmt, KLEINANZEIGEN_FORMEL, zahlwegFormel, findeZahlweg } from './rechnen.js?v=19';
+import { fmt, KLEINANZEIGEN_FORMEL, zahlwegFormel, findeZahlweg } from './rechnen.js?v=20';
+import { breakevenSaetze } from './texte.js?v=20';
 
 const REPO = 'github.com/rorar/klein-rechner';
 const SEITE = 'rorar.github.io/klein-rechner';
@@ -117,23 +118,8 @@ function zeichneSpalte(g, { x, breite, titel, farbe, r, gebuehrLabel, gebuehrNot
 }
 
 function befundZeilen(b, ka, di) {
-  const zeilen = [];
-  if (typeof b.kaeuferAb === 'number') {
-    zeilen.push(`Für den Käufer dreht es sich bei ${fmt(b.kaeuferAb)}: darunter ist „Sicher bezahlen“ günstiger, darüber der Direktkauf.`);
-  } else if (b.kaeuferAb === 'immer') {
-    zeilen.push('Für den Käufer ist der Direktkauf bei jedem Preis günstiger.');
-  } else {
-    zeilen.push('Für den Käufer ist „Sicher bezahlen“ bei jedem Preis günstiger.');
-  }
-
-  if (b.verkaeuferAb === 'gleich') {
-    zeilen.push(`Für den Verkäufer macht es keinen Unterschied: über beide Wege bleiben ${fmt(ka.verkaeuferBehaelt)}.`);
-  } else if (b.verkaeuferAb === 'nie') {
-    zeilen.push(`Für den Verkäufer ist „Sicher bezahlen“ immer besser: dort zahlt der Käufer die Gebühr, hier gingen ${fmt(di.gebuehr)} vom Erlös ab.`);
-  } else {
-    zeilen.push(`Für den Verkäufer ab ${fmt(b.verkaeuferAb)}.`);
-  }
-  return zeilen;
+  const s = breakevenSaetze(b, ka, di);
+  return [s.kaeufer, s.verkaeufer];
 }
 
 export async function zeichneBeleg(ka, di = null, b = null) {
