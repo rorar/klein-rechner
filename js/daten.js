@@ -127,10 +127,13 @@ export const PAKETSTATION_ZUSTELLUNG = 'von Shop zu Shop';
    deren Teilnahmebedingungen nennen als Bedingung die Bezahlfunktion in
    Verbindung mit Hermes Shop-to-Shop, nicht die Paketstation.
 
-   Achtung, die beiden Quellen widersprechen sich beim M-Paket: der Dialog
-   in der App zeigt 2,99 €, die Teilnahmebedingungen nennen 2,49 €. Hier
-   steht der Wert aus der App, weil er das ist, was der Verkäufer beim
-   Einstellen sieht.
+   Achtung, die beiden Quellen widersprechen sich beim M-Paket. Der Dialog
+   in der App zeigt „ab 2,99 €“ neben einem durchgestrichenen „5,90 €“ –
+   nachgesehen am 25.09.2026 –, die Teilnahmebedingungen nennen 2,49 €.
+   Hier steht der Wert aus der App, weil er das ist, was der Verkäufer beim
+   Einstellen sieht; der Hinweis unter dem Schalter sagt deshalb, dass die
+   Beträge aus dem Dialog stammen. Was das „ab“ des Dialogs einschließt,
+   steht nirgends, also behauptet die Seite darüber nichts.
 
    Hermes-Preise für den selbst gebuchten Versand laut Preis- und
    Serviceübersicht gültig ab 02.03.2026
@@ -157,21 +160,21 @@ export const VERSANDARTEN = [
     aktionBis: '2026-12-31', quelle: 'kleinanzeigen',
     mass: 'längste und kürzeste Seite zusammen höchstens 37 cm', gewicht: 'bis 25 kg',
     haftungCent: 5000,
-    hinweis: 'Aktionspreis, nur mit Bezahlfunktion und Hermes Shop-to-Shop',
+    hinweis: 'Aktionspreis, nur über „Sicher bezahlen“ und Hermes Shop-to-Shop',
     zustellung: PAKETSTATION_ZUSTELLUNG, paketstation: true },
 
   { groesse: 'klein', name: 'Hermes S-Paket', cent: 199, regulaerCent: 489,
     aktionBis: '2026-12-31', quelle: 'kleinanzeigen',
     mass: 'längste und kürzeste Seite zusammen höchstens 50 cm', gewicht: 'bis 25 kg',
     haftungCent: 50000,
-    hinweis: 'Aktionspreis, nur mit Bezahlfunktion und Hermes Shop-to-Shop',
+    hinweis: 'Aktionspreis, nur über „Sicher bezahlen“ und Hermes Shop-to-Shop',
     zustellung: PAKETSTATION_ZUSTELLUNG, paketstation: true },
 
   { groesse: 'mittel', name: 'Hermes M-Paket', cent: 299, regulaerCent: 590,
     aktionBis: '2026-12-31', quelle: 'kleinanzeigen',
     mass: 'längste und kürzeste Seite zusammen höchstens 80 cm', gewicht: 'bis 25 kg',
     haftungCent: 50000,
-    hinweis: 'Aktionspreis, nur mit Bezahlfunktion und Hermes Shop-to-Shop',
+    hinweis: 'Aktionspreis, nur über „Sicher bezahlen“ und Hermes Shop-to-Shop',
     zustellung: PAKETSTATION_ZUSTELLUNG, paketstation: true },
 
   { groesse: 'klein', name: 'DHL Paket 2 kg', cent: 619, regulaerCent: 619,

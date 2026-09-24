@@ -107,10 +107,10 @@ Unter der Aufstellung kopiert oder teilt „Link kopieren“ beziehungsweise
 „Link teilen“ genau diese Adresse. Der Teilen-Knopf erscheint nur, wo der
 Browser `navigator.share` kennt.
 
-Der Haken ist keine Randnotiz: die ermäßigten Hermes-Preise gelten laut
-[Teilnahmebedingungen](https://themen.kleinanzeigen.de/reduzierter-hermes-versand/)
-nur mit der Bezahlfunktion und Lieferung von Shop zu Shop. Wer anders versendet,
-zahlt mehr als der Rechner anzeigt.
+Der Haken ist keine Randnotiz: die ermäßigten Hermes-Aktionspreise gelten laut
+[Kleinanzeigen-Teilnahmebedingungen](https://themen.kleinanzeigen.de/reduzierter-hermes-versand/)
+nur über „Sicher bezahlen“ und mit Lieferung von Shop zu Shop. Wer anders
+versendet, zahlt mehr als der Rechner anzeigt.
 
 Der Name `paketstation` ist historisch – früher hing die Aktion an der
 Paketstation. Er bleibt, weil geteilte Links ihn tragen; was er bedeutet, steht

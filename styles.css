@@ -70,6 +70,13 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Eine Regel für alle Verweise. Vorher stand dieselbe Zeile dreimal, je
+   einmal für Formel, Hinweis und Fußzeile – und jeder Abschnitt, der
+   später dazukam, brauchte eine vierte. Die Verweise im erklärenden
+   Abschnitt und auf der Datenschutzseite waren deshalb browserblau
+   geblieben. */
+a { color: var(--pine); }
+
 /* ---------- Kopfzeile ---------- */
 
 .masthead {
@@ -228,7 +235,6 @@ body {
 }
 
 .formula b { color: var(--ink); font-weight: 600; }
-.formula a { color: var(--pine); }
 .formula + .formula { margin-top: 0.8rem; padding-top: 0; border-top: 0; }
 
 /* ---------- Combobox ---------- */
@@ -580,7 +586,6 @@ body {
    Fließtext, den man Zeile für Zeile liest. Auf 62ch gedeckelt stand er auf
    halber Breite und ließ rechts daneben ein Loch. */
 .colophon p { margin: 0 0 0.4rem; }
-.colophon a { color: var(--pine); }
 
 .marken {
   margin-top: 1rem;

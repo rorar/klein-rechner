@@ -108,7 +108,12 @@
           <input type="checkbox" id="paketstation" aria-describedby="paketstation-hinweis">
           <span>Hermes Shop-to-Shop</span>
         </label>
-        <p id="paketstation-hinweis" class="hint">Setzt den Zusatz in die Nachricht an den Käufer, wenn du den Versandbetrag von Hand einträgst. Die ermäßigten Hermes-Preise gelten laut Teilnahmebedingungen nur mit der Bezahlfunktion und Lieferung von Shop zu Shop; die Aktion läuft am 31.12.2026 aus, danach rechnet die Seite mit den regulären Preisen.</p>
+        <p id="paketstation-hinweis" class="hint">Setzt den Zusatz in die Nachricht an den Käufer, wenn du den Versandbetrag von Hand einträgst.</p>
+        <!-- Steht bewusst außerhalb von #paketstation-hinweis: Das ist das Ziel
+             von aria-describedby, und eine Beschreibung wird zu einer flachen
+             Zeichenkette gerechnet. Ein Link darin verlöre Rolle und Adresse,
+             und der ganze Absatz würde bei jedem Fokus vorgelesen. -->
+        <p class="hint">Die ermäßigten Hermes-Aktionspreise gelten laut <a href="https://themen.kleinanzeigen.de/reduzierter-hermes-versand/" rel="noopener">Kleinanzeigen-Teilnahmebedingungen</a> nur über „Sicher bezahlen“ und mit Lieferung von Shop zu Shop; die Aktion läuft am 31.12.2026 aus, danach rechnet die Seite mit den regulären Preisen. Die Beträge sind die aus dem Versanddialog der App.</p>
       </div>
     </div>
 
@@ -148,7 +153,7 @@
       <input type="checkbox" id="vergleich" aria-describedby="vergleich-hinweis">
       <span>Direktkauf vergleichen</span>
     </label>
-    <p id="vergleich-hinweis" class="hint">Rechnet den Weg ohne Kleinanzeigen daneben und zeigt, ab welchem Preis er günstiger wird. Aus, solange du ihn nicht brauchst – ein geteilter Link zeigt ihn nur, wenn er beim Teilen an war.</p>
+    <p id="vergleich-hinweis" class="hint">Zeigt eine zweite Aufstellung: was der Käufer zahlt, wenn er direkt an dich zahlt statt über Kleinanzeigen – und ab welchem Preis sich das für wen lohnt. Ein geteilter Link zeigt den Vergleich nur, wenn er beim Teilen eingeschaltet war.</p>
 
     <p class="formula">
       Kleinanzeigen berechnet beim Kauf <b id="formel-satz">–</b> vom Artikelpreis.
