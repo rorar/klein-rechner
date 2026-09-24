@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="light">
 <link rel="preload" href="fonts/Newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css?v=25">
+<link rel="stylesheet" href="styles.css?v=26">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232C6A4F'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' fill='%23FBFBF7' text-anchor='middle'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -204,14 +204,20 @@
         <span class="skala-kopf skala-kopf-links">Kleinanzeigen günstiger</span>
         <span class="skala-kopf skala-kopf-rechts">Direktkauf günstiger</span>
       </div>
+      <!-- Beide Beschriftungen stehen über der Bahn, untereinander: oben
+           die Schwelle, darunter der aktuelle Preis an seiner Marke. Unter
+           der Bahn stieß die Schwelle bei kleinen Werten auf „0,00 €“. -->
+      <div class="skala-marken" id="skala-marken">
+        <span class="skala-schwelle" id="skala-schwelle" hidden></span>
+        <span class="skala-marke-wert" id="skala-marke-wert"></span>
+      </div>
       <div class="skala-bahn">
         <div class="skala-links" id="skala-links"></div>
         <div class="skala-rechts" id="skala-rechts"></div>
-        <div class="skala-marke" id="skala-marke" hidden><span class="skala-marke-wert" id="skala-marke-wert"></span></div>
+        <div class="skala-marke" id="skala-marke" hidden></div>
       </div>
       <div class="skala-fuss">
         <span id="skala-von">0,00 €</span>
-        <span class="skala-schwelle" id="skala-schwelle"></span>
         <span id="skala-bis"></span>
       </div>
     </div>
@@ -295,6 +301,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script type="module" src="js/ui.js?v=25"></script>
+<script type="module" src="js/ui.js?v=26"></script>
 </body>
 </html>

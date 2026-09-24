@@ -780,17 +780,39 @@ body {
   box-shadow: 0 0 0 2px var(--card);   /* Ring, damit die Marke auf der Grenze sichtbar bleibt */
 }
 
-/* Am Rand der Skala würde die mittig gesetzte Beschriftung heraushängen.
-   zeigeBreakeven setzt dann data-seite und sie klebt am Balkenende. */
-.skala-marke[data-seite="links"] .skala-marke-wert { left: 0; translate: 0 0; }
-.skala-marke[data-seite="rechts"] .skala-marke-wert { left: auto; right: 0; translate: 0 0; }
+/* Zwei Beschriftungen über der Bahn, untereinander statt nebeneinander:
+   die Schwelle oben, der aktuelle Preis unten an seiner Marke. Nebeneinander
+   überlappten sie sich, sobald beide Werte nah beieinander lagen; unter der
+   Bahn traf die Schwelle bei kleinen Werten auf „0,00 €“.
 
-.skala-marke-wert {
+   Ohne Schwelle - der Direktkauf ist dann durchweg günstiger oder durchweg
+   teurer - bleibt die obere Zeile weg statt leer zu stehen. */
+.skala-marken {
+  position: relative;
+  height: 1.5rem;
+}
+
+.skala-marken[data-schwelle="ja"] { height: 3rem; }
+
+.skala-schwelle, .skala-marke-wert {
   position: absolute;
-  top: -1.55rem;
-  left: 50%;
   translate: -50% 0;
   white-space: nowrap;
+}
+
+/* Am Rand der Skala hinge die mittig gesetzte Beschriftung heraus. */
+.skala-marken [data-seite="links"] { left: 0; translate: 0 0; }
+.skala-marken [data-seite="rechts"] { right: 0; translate: 0 0; }
+
+.skala-schwelle {
+  top: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.skala-marke-wert {
+  bottom: 0;
   font-family: var(--serif);
   font-size: 0.9375rem;
 }
@@ -802,13 +824,6 @@ body {
   margin-top: 0.5rem;
   font-size: 0.8125rem;
   color: var(--muted);
-}
-
-.skala-schwelle {
-  position: absolute;
-  translate: -50% 0;
-  color: var(--ink);
-  font-weight: 500;
 }
 
 .befund {

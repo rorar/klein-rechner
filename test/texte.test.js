@@ -3,12 +3,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { berechne, berechneDirekt, fmt } from '../js/rechnen.js?v=25';
-import { VERSANDARTEN } from '../js/daten.js?v=25';
+import { berechne, berechneDirekt, fmt } from '../js/rechnen.js?v=26';
+import { VERSANDARTEN } from '../js/daten.js?v=26';
 import {
   textDu, textSie, textNeutral, aufstellung, schutzSatz,
   kostenPosten, ausgerichtetePosten, POSTEN_ARTEN
-} from '../js/texte.js?v=25';
+} from '../js/texte.js?v=26';
 
 const art = cent => VERSANDARTEN.find(a => a.cent === cent);
 const KA_ART = art(299);                 // Hermes M-Paket über Kleinanzeigen, von Shop zu Shop

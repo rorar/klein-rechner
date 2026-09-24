@@ -6,11 +6,11 @@ import {
   kleinanzeigenGebuehr, STAND_DER_WERTE, sendungBeschreibung,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=25';
+} from './rechnen.js?v=26';
 import {
   textDu, textSie, textNeutral, breakevenSaetze, kostenPosten
-} from './texte.js?v=25';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=25';
+} from './texte.js?v=26';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=26';
 
 /* Steht ganz oben, vor jedem Zugriff aufs Dokument: auf einer fremden
    Seite gäbe es die Knöpfe nicht, das Modul bräche beim Laden ab, und die
@@ -210,25 +210,49 @@ function zeigeBreakeven(b, ka, di) {
 
   const links = el('skala-links');
   const marke = el('skala-marke');
+  const marken = el('skala-marken');
   const schwelleLabel = el('skala-schwelle');
+
+  /* Die Beschriftung steht mittig über ihrer Stelle. Nur wenn sie dabei
+     aus der Skala ragte, wandert sie an den Rand - gemessen, nicht an einem
+     geratenen Prozentwert festgemacht: wie weit sie übersteht, hängt an der
+     Breite des Textes und der der Seite. */
+  const setzeLabel = (elem, pos) => {
+    elem.dataset.seite = 'mitte';
+    elem.style.left = pos + '%';
+    const rahmen = marken.getBoundingClientRect();
+    const kasten = elem.getBoundingClientRect();
+    if (kasten.left < rahmen.left) {
+      elem.dataset.seite = 'links';
+      elem.style.left = '';
+    } else if (kasten.right > rahmen.right) {
+      elem.dataset.seite = 'rechts';
+      elem.style.left = '';
+    }
+  };
 
   if (typeof schwelle === 'number') {
     links.style.flexBasis = anteil(schwelle) + '%';
     schwelleLabel.textContent = fmt(schwelle);
-    schwelleLabel.style.left = anteil(schwelle) + '%';
+    /* Erst sichtbar machen, dann setzen: setzeLabel misst, und ein
+       verstecktes Feld misst sich als Nullfläche - die liegt links außerhalb
+       der Skala, und die Beschriftung klebte an deren Rand. */
     schwelleLabel.hidden = false;
+    setzeLabel(schwelleLabel, anteil(schwelle));
   } else {
     // 'immer' heißt: direkt ist auf der ganzen Länge günstiger
     links.style.flexBasis = schwelle === 'immer' ? '0%' : '100%';
     schwelleLabel.hidden = true;
   }
+  /* Ohne Schwelle bleibt die obere Zeile weg statt leer zu stehen. */
+  marken.dataset.schwelle = typeof schwelle === 'number' ? 'ja' : 'nein';
 
   const markePos = anteil(ka.preis);
   marke.hidden = false;
   marke.style.left = markePos + '%';
-  /* Nahe den Enden hinge die mittig gesetzte Beschriftung heraus. */
-  marke.dataset.seite = markePos < 12 ? 'links' : (markePos > 88 ? 'rechts' : 'mitte');
-  el('skala-marke-wert').textContent = fmt(ka.preis);
+  const preisLabel = el('skala-marke-wert');
+  preisLabel.textContent = fmt(ka.preis);
+  setzeLabel(preisLabel, markePos);
   el('skala-bis').textContent = fmt(ende);
 
   const saetze = breakevenSaetze(b, ka, di, { persoenlich: true });

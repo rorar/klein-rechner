@@ -9,7 +9,7 @@ import {
   parseEuroToCent, kleinanzeigenGebuehr, berechne, fmt,
   paypalGebuehr, berechneDirekt, betragMitAufschlag, breakeven, ZAHLWEGE,
   berechneAlles, MAX_PREIS_CENT, imRahmen, versandartenFuer
-} from '../js/rechnen.js?v=25';
+} from '../js/rechnen.js?v=26';
 
 test('parseEuroToCent nimmt die Schreibweisen an, die Leute tippen', () => {
   assert.equal(parseEuroToCent('45'), 4500);
