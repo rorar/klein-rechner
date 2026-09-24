@@ -10,10 +10,11 @@
    lässt sich von außen über seine Adresse importieren. */
 
 import {
-  KLEINANZEIGEN, ZAHLWEGE as ZAHLWEGE_BESCHREIBUNG, VERSANDARTEN, STAND_DER_WERTE
+  KLEINANZEIGEN, ZAHLWEGE as ZAHLWEGE_BESCHREIBUNG, VERSANDARTEN, STAND_DER_WERTE,
+  sendungBeschreibung, haftungSatz
 } from './daten.js?v=24';
 
-export { VERSANDARTEN, STAND_DER_WERTE };
+export { VERSANDARTEN, STAND_DER_WERTE, sendungBeschreibung, haftungSatz };
 
 export const KLEINANZEIGEN_GEBUEHR_NAME = KLEINANZEIGEN.gebuehrName;
 export const KLEINANZEIGEN_SCHUTZ_NAME = KLEINANZEIGEN.schutzName;
@@ -117,7 +118,11 @@ export function berechne(preisCent, versandCent, paketstation, versandart = null
     schutzName: KLEINANZEIGEN_SCHUTZ_NAME,
     paketstation: paketstation && versandCent > 0,
     versandName: versandart ? (versandart.kurz || versandart.name) : null,
-    versandZustellung: versandart?.zustellung || null
+    versandZustellung: versandart?.zustellung || null,
+    /* Von allem, was die Sendung beschreibt, geht den Käufer nur die
+       Haftungsgrenze etwas an: Maß und Gewicht sind die Sorge dessen, der
+       das Paket packt. */
+    versandHaftung: versandart ? haftungSatz(versandart) : null
   };
 }
 
@@ -194,7 +199,8 @@ export function berechneDirekt(preisCent, versandCent, zahlwegId, gebuehrTraeger
     warnung: zahlweg.warnung || null,
     paketstation: false,
     versandName: zahlweg.ohneVersand || !versandart ? null : (versandart.kurz || versandart.name),
-    versandZustellung: zahlweg.ohneVersand ? null : (versandart?.zustellung || null)
+    versandZustellung: zahlweg.ohneVersand ? null : (versandart?.zustellung || null),
+    versandHaftung: zahlweg.ohneVersand || !versandart ? null : haftungSatz(versandart)
   };
 }
 

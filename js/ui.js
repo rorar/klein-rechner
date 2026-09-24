@@ -3,7 +3,7 @@
 
 import {
   KLEINANZEIGEN_FORMEL, KLEINANZEIGEN_GEBUEHR_NAME, ZAHLWEGE, findeZahlweg, versandartenFuer, imRahmen,
-  kleinanzeigenGebuehr, STAND_DER_WERTE,
+  kleinanzeigenGebuehr, STAND_DER_WERTE, sendungBeschreibung,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
 } from './rechnen.js?v=24';
@@ -407,8 +407,12 @@ function bauCombo({ feld, listeId, arten, nachWahl }) {
     li.id = `${listeId}-${i}`;
     li.setAttribute('role', 'option');
     li.setAttribute('aria-selected', 'false');
-    li.innerHTML = '<span class="opt-name"></span><span class="opt-hinweis"></span><span class="opt-value"></span>';
+    li.innerHTML = '<span class="opt-name"></span><span class="opt-value"></span>'
+      + '<span class="opt-sendung"></span><span class="opt-hinweis"></span>';
     li.querySelector('.opt-name').textContent = art.name;
+    /* Größe, Maß, Gewicht und Haftung stehen über dem Hinweis: sie
+       beschreiben die Sendung, der Hinweis betrifft die Buchung. */
+    li.querySelector('.opt-sendung').textContent = sendungBeschreibung(art);
     li.querySelector('.opt-hinweis').textContent = art.hinweis || '';
     li.querySelector('.opt-value').textContent = fmt(art.cent);
     li.addEventListener('mousedown', ev => {

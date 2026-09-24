@@ -16,7 +16,10 @@ function versandZusatz(r) {
      ist. Die Seite las den Schalter, das Bild nicht; die Bedingung fehlte
      dort also genau dann, wenn sie am wenigsten offensichtlich war. */
   const zustellung = r.versandZustellung || (r.paketstation ? PAKETSTATION_ZUSTELLUNG : null);
-  const teile = [r.versandName, zustellung].filter(Boolean);
+  /* Die Haftungsgrenze steht dabei, weil sie den Käufer betrifft: sie sagt
+     ihm, bis wohin er im Verlustfall abgesichert ist. Maß und Gewicht
+     bleiben draußen – die gehen den an, der das Paket packt. */
+  const teile = [r.versandName, zustellung, r.versandHaftung].filter(Boolean);
   return teile.length ? teile.join(', ') : null;
 }
 

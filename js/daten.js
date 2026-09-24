@@ -72,10 +72,15 @@ export const ZAHLWEGE = [
 
 /* ---------- Versandkosten ---------- */
 
-/* Der Zusatz, den der Paketstations-Schalter bedeutet. Steht hier, weil
-   ihn auch texte.js braucht: wer den Versandbetrag von Hand eintippt,
-   wählt keine Versandart, der Schalter gilt aber trotzdem. */
-export const PAKETSTATION_ZUSTELLUNG = 'Zustellung an eine Paketstation';
+/* Der Zusatz, den der Aktionsschalter bedeutet. Steht hier, weil ihn auch
+   texte.js braucht: wer den Versandbetrag von Hand eintippt, wählt keine
+   Versandart, der Schalter gilt aber trotzdem.
+
+   Die Bezeichner heißen weiter `paketstation` – im Datenfeld wie im
+   Adressparameter `?paketstation=1`. Der Name ist generisch gemeint und
+   bleibt, damit geteilte Links weiter gelten; was er bedeutet, steht in
+   diesem Text, und das ist seit der Hermes-Aktion Shop-to-Shop. */
+export const PAKETSTATION_ZUSTELLUNG = 'von Shop zu Shop';
 
 /* Zwei verschiedene Leser, zwei Felder:
 
@@ -126,6 +131,23 @@ export const PAKETSTATION_ZUSTELLUNG = 'Zustellung an eine Paketstation';
    DHL laut Onlinefrankierung
    (https://www.dhl.de/de/privatkunden/pakete-versenden.html).
    Online gebucht ist durchweg billiger als im Shop. */
+/* Die Sendung in einer Zeile, wie sie in der Auswahlliste steht: Größe,
+   Maß, Gewicht, Haftung. Das geht den Verkäufer an, der beim Einstellen
+   die passende Größe sucht. Dem Käufer sagt es nichts, was er entscheiden
+   könnte – er bekommt nur die Haftungsgrenze. */
+export function sendungBeschreibung(art) {
+  const groessen = { klein: 'klein', mittel: 'mittel', gross: 'groß' };
+  return [groessen[art.groesse], art.mass, art.gewicht, haftungSatz(art)]
+    .filter(Boolean).join(' · ');
+}
+
+/* Ohne Angabe wird nichts behauptet: „Haftung bis 0 €“ wäre eine Aussage,
+   die so nirgends steht. */
+export function haftungSatz(art) {
+  if (typeof art.haftungCent !== 'number') return null;
+  return `Haftung bis ${(art.haftungCent / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}`;
+}
+
 export const VERSANDARTEN = [
   { name: 'Abholung, kein Versand', cent: 0, regulaerCent: 0, quelle: 'beide' },
 
@@ -136,21 +158,21 @@ export const VERSANDARTEN = [
     mass: 'längste und kürzeste Seite zusammen höchstens 37 cm', gewicht: 'bis 25 kg',
     haftungCent: 5000,
     hinweis: 'Aktionspreis, nur mit Bezahlfunktion und Hermes Shop-to-Shop',
-    zustellung: 'von Shop zu Shop' },
+    zustellung: PAKETSTATION_ZUSTELLUNG, paketstation: true },
 
   { groesse: 'klein', name: 'Hermes S-Paket', cent: 199, regulaerCent: 489,
     aktionBis: '2026-12-31', quelle: 'kleinanzeigen',
     mass: 'längste und kürzeste Seite zusammen höchstens 50 cm', gewicht: 'bis 25 kg',
     haftungCent: 50000,
     hinweis: 'Aktionspreis, nur mit Bezahlfunktion und Hermes Shop-to-Shop',
-    zustellung: 'von Shop zu Shop' },
+    zustellung: PAKETSTATION_ZUSTELLUNG, paketstation: true },
 
   { groesse: 'mittel', name: 'Hermes M-Paket', cent: 299, regulaerCent: 590,
     aktionBis: '2026-12-31', quelle: 'kleinanzeigen',
     mass: 'längste und kürzeste Seite zusammen höchstens 80 cm', gewicht: 'bis 25 kg',
     haftungCent: 50000,
     hinweis: 'Aktionspreis, nur mit Bezahlfunktion und Hermes Shop-to-Shop',
-    zustellung: 'von Shop zu Shop' },
+    zustellung: PAKETSTATION_ZUSTELLUNG, paketstation: true },
 
   { groesse: 'klein', name: 'DHL Paket 2 kg', cent: 619, regulaerCent: 619,
     quelle: 'kleinanzeigen',

@@ -252,13 +252,21 @@ body {
 
 .combo-list .opt-value { grid-area: 1 / 2; text-align: right; }
 
-.opt-hinweis {
+/* Zwei Zeilen unter dem Namen: erst die Sendung (Größe, Maß, Gewicht,
+   Haftung), dann der Hinweis zur Buchung. */
+.opt-sendung {
   grid-area: 2 / 1 / 3 / 3;
   font-size: 0.8125rem;
   color: var(--muted);
 }
 
-.opt-hinweis:empty { display: none; }
+.opt-hinweis {
+  grid-area: 3 / 1 / 4 / 3;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.opt-sendung:empty, .opt-hinweis:empty { display: none; }
 
 .combo-list li[aria-selected="true"],
 .combo-list li:hover {

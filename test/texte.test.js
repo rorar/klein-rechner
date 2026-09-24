@@ -22,7 +22,7 @@ test('der Kostenblock nennt Beträge zuerst und in fester Reihenfolge', () => {
   assert.equal(zeilen.length, 5);
   assert.match(zeilen[0], /^78,00\s?€ Artikelpreis$/);
   assert.match(zeilen[1], /^4,01\s?€ Servicegebühr Kleinanzeigen \(0,50\s?€ Pauschal \+ 4,5\s?% vom Artikelpreis\)$/);
-  assert.match(zeilen[2], /^2,99\s?€ Versand \(Hermes M-Paket, von Shop zu Shop\)$/);
+  assert.match(zeilen[2], /^2,99\s?€ Versand \(Hermes M-Paket, von Shop zu Shop, Haftung bis 500\s?€\)$/);
   assert.equal(zeilen[3], '------');
   assert.match(zeilen[4], /^85,00\s?€ zusammen$/);
 });
@@ -186,12 +186,20 @@ test('Arten, die keine Spalte kennt, fallen ganz weg', () => {
 /* Der Grund: wer den Versandbetrag von Hand eintippt, trifft keine
    Versandart. Die Bedingung des Aktionspreises stand dann nur auf der
    Seite, nicht in Nachricht und Bild. */
-test('die Paketstation steht auch ohne gewählte Versandart dabei', () => {
+test('der Aktionsschalter steht auch ohne gewählte Versandart dabei', () => {
   const vonHand = berechne(7800, 450, true, null);
-  assert.match(aufstellung(vonHand), /Versand \(Zustellung an eine Paketstation\)/);
+  assert.match(aufstellung(vonHand), /Versand \(von Shop zu Shop\)/);
 
   const ohneSchalter = berechne(7800, 450, false, null);
-  assert.doesNotMatch(aufstellung(ohneSchalter), /Paketstation/);
+  assert.doesNotMatch(aufstellung(ohneSchalter), /Shop zu Shop/);
+});
+
+/* Den Käufer geht von der Sendung nur die Haftung etwas an. Maß und
+   Gewicht sind die Sorge dessen, der das Paket packt. */
+test('die Nachricht nennt die Haftung, nicht Maß und Gewicht', () => {
+  const text = aufstellung(KA);
+  assert.match(text, /Haftung bis 500\s?€/);
+  assert.doesNotMatch(text, /80 cm|25 kg|mittel/);
 });
 
 /* Der Grund: im Bild stand links „4,5 %“ ohne Bezug neben rechts
