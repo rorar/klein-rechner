@@ -593,7 +593,10 @@ body {
     min-width: 0;
   }
 
-  .sheet[data-vergleich="an"] > .panel > .field > label { align-self: end; }
+  /* Oben ausrichten, nicht unten: so beginnt jede Beschriftung auf
+     derselben Zeile. Die Eingaben fluchten trotzdem, weil subgrid die
+     Zeile so hoch macht wie die höchste Beschriftung. */
+  .sheet[data-vergleich="an"] > .panel > .field > label { align-self: start; }
 }
 
 /* ---------- Zahlweg ---------- */

@@ -5,9 +5,9 @@ import {
   KLEINANZEIGEN_FORMEL, zahlwegFormel, ZAHLWEGE, findeZahlweg, versandartenFuer,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=18';
-import { textDu, textSie, textNeutral } from './texte.js?v=18';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=18';
+} from './rechnen.js?v=19';
+import { textDu, textSie, textNeutral } from './texte.js?v=19';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=19';
 
 const el = id => document.getElementById(id);
 

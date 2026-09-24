@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import {
   parseEuroToCent, kleinanzeigenGebuehr, berechne, fmt,
   paypalGebuehr, berechneDirekt, betragMitAufschlag, breakeven, ZAHLWEGE
-} from '../js/rechnen.js?v=18';
+} from '../js/rechnen.js?v=19';
 
 test('parseEuroToCent nimmt die Schreibweisen an, die Leute tippen', () => {
   assert.equal(parseEuroToCent('45'), 4500);
