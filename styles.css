@@ -333,11 +333,18 @@ body {
 
 .seller b { color: var(--ink); font-weight: 600; font-family: var(--serif); font-size: 1.0625rem; }
 
-.receipt-actions {
-  margin-top: 1.4rem;
-  display: grid;
-  gap: 0.6rem;
+.receipt-actions { margin-top: 1.4rem; }
+
+/* Seitenweite Aktionen stehen außerhalb der Belege: sie wirken auf den
+   gesamten Stand, nicht auf eine einzelne Aufstellung. */
+.weitergeben {
+  grid-column: 1 / -1;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  padding: clamp(1.25rem, 0.8rem + 1.6vw, 1.9rem);
 }
+
+.weitergeben .hint { margin: 0 0 1rem; }
 
 /* Flex statt Grid, damit ein ausgeblendeter Teilen-Knopf keine Lücke lässt. */
 .neben-reihe {

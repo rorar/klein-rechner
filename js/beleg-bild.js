@@ -1,7 +1,7 @@
 /* Der Beleg wird von Hand auf ein Canvas gezeichnet. Das sind wenige
    Zeilen je Spalte – dafür lohnt keine Bibliothek, die das DOM nachbaut. */
 
-import { fmt, GEBUEHR_FIX_CENT, findeZahlweg } from './rechnen.js?v=16';
+import { fmt, KLEINANZEIGEN_FORMEL, zahlwegFormel, findeZahlweg } from './rechnen.js?v=17';
 
 const REPO = 'github.com/rorar/klein-rechner';
 const SEITE = 'rorar.github.io/klein-rechner';
@@ -159,7 +159,7 @@ export async function zeichneBeleg(ka, di = null, b = null) {
       farbe: vergleich ? POL_KA : '#2c6a4f',
       r: ka,
       gebuehrLabel: ka.gebuehrName,
-      gebuehrNotiz: `${fmt(GEBUEHR_FIX_CENT)} + 4,5\u00a0% von ${fmt(ka.preis)}`
+      gebuehrNotiz: `${KLEINANZEIGEN_FORMEL} von ${fmt(ka.preis)}`
     }
   ];
 
@@ -172,7 +172,7 @@ export async function zeichneBeleg(ka, di = null, b = null) {
       r: di,
       gebuehrLabel: di.gebuehrName,
       gebuehrNotiz: di.gebuehr > 0
-        ? `2,49\u00a0% + 0,35\u00a0€, getragen ${di.gebuehrTraeger === 'kaeufer' ? 'vom Käufer' : 'vom Verkäufer'}`
+        ? `${zahlwegFormel(di.zahlweg)}, getragen ${di.gebuehrTraeger === 'kaeufer' ? 'vom Käufer' : 'vom Verkäufer'}`
         : 'keine Gebühr',
       fussnote: di.warnung ? 'Verstößt bei Verkäufen gegen die PayPal-Bedingungen.' : null
     });
@@ -223,7 +223,7 @@ export async function zeichneBeleg(ka, di = null, b = null) {
 
   g.fillStyle = GRAU;
   g.font = '400 14px "IBM Plex Sans", sans-serif';
-  g.fillText('Servicegebühr laut Kleinanzeigen: 0,50 € plus 4,5 % vom Artikelpreis.', RAND, y);
+  g.fillText(`Servicegebühr laut Kleinanzeigen: ${KLEINANZEIGEN_FORMEL} vom Artikelpreis.`, RAND, y);
   g.fillText('Halbe Cent gehen nach oben. Alle Angaben ohne Gewähr.', RAND, y + 22);
   y += 52;
 

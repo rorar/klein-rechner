@@ -2,54 +2,65 @@
    Gerechnet wird durchgehend in ganzen Cent, damit keine Fließkomma-Reste
    entstehen (0.1 + 0.2 lässt grüßen).
 
+   Hier stehen die Formeln. Die Zahlen und Bezeichnungen, die sich ändern
+   können, stehen in daten.js – wer Preise oder Gebühren pflegt, fasst nur
+   jene Datei an.
+
    Dieses Modul hängt an keinem DOM. Es läuft damit unter node --test und
    lässt sich von außen über seine Adresse importieren. */
 
-export const GEBUEHR_FIX_CENT = 50;   // 0,50 € Grundbetrag
-export const GEBUEHR_PROMILLE = 45;   // 4,5 % = 45/1000 des Artikelpreises
+import {
+  KLEINANZEIGEN, ZAHLWEGE as ZAHLWEGE_BESCHREIBUNG, VERSANDARTEN, STAND_DER_WERTE
+} from './daten.js?v=17';
 
-/* Wer die Gebühr nimmt und wessen Schutz greift, steht an einer Stelle.
-   Beleg, Bild und Textbaustein lesen dieselben Felder – als „Käuferschutz“
-   ohne Nennung liefen sie schon einmal auseinander. */
-export const KLEINANZEIGEN_GEBUEHR_NAME = 'Servicegebühr Kleinanzeigen';
-export const KLEINANZEIGEN_SCHUTZ_NAME = 'Kleinanzeigen-Käuferschutz';
+export { VERSANDARTEN, STAND_DER_WERTE };
 
-/* Richtwerte, Stand September 2026. Alle Werte sind überschreibbar –
-   das Feld bleibt ein normales Eingabefeld.
+export const KLEINANZEIGEN_GEBUEHR_NAME = KLEINANZEIGEN.gebuehrName;
+export const KLEINANZEIGEN_SCHUTZ_NAME = KLEINANZEIGEN.schutzName;
+export const GEBUEHR_FIX_CENT = KLEINANZEIGEN.gebuehr.festCent;
 
-   Zwei Quellen, zwei Preisniveaus: über die Kleinanzeigen-Bezahlfunktion
-   gebuchter Versand ist billiger als derselbe Versand direkt beim
-   Dienstleister. Deshalb trägt jeder Eintrag, wo er gilt.
-   Hermes-Preise laut Preisliste gültig ab 02.03.2026, DHL laut
-   Onlinefrankierung. Online gebucht ist durchweg billiger als im Shop. */
-export const VERSANDARTEN = [
-  { name: 'Abholung, kein Versand', cent: 0, quelle: 'beide' },
+/* Aus einem Deskriptor in daten.js wird hier eine Funktion. Der Anteil
+   steht in Zehntausendsteln, halbe Cent gehen nach oben. `null` heißt
+   gebührenfrei. */
+export function gebuehrAus(deskriptor) {
+  if (!deskriptor) return () => 0;
+  return betragCent => deskriptor.festCent + Math.round((betragCent * deskriptor.basispunkte) / 10000);
+}
 
-  { name: 'Hermes über Kleinanzeigen, kleinste Größe', cent: 299, quelle: 'kleinanzeigen',
-    hinweis: 'Aktionspreis nur bei Zustellung an eine Paketstation', paketstation: true },
+/* Die Zahlwege kommen als Beschreibung aus daten.js, die Gebührenfunktion
+   entsteht erst hier. Ein neuer Zahlweg ist damit eine reine Datenänderung. */
+export const ZAHLWEGE = ZAHLWEGE_BESCHREIBUNG.map(z => ({ ...z, gebuehr: gebuehrAus(z.gebuehr) }));
 
-  { name: 'Hermes Shop-to-Shop Päckchen', cent: 399, quelle: 'direkt',
-    hinweis: 'nur online, von Shop zu Shop' },
-  { name: 'DHL Päckchen S', cent: 419, quelle: 'direkt', hinweis: 'nur online' },
-  { name: 'Hermes Shop-to-Shop Paket S', cent: 489, quelle: 'direkt',
-    hinweis: 'nur online, von Shop zu Shop' },
-  { name: 'Hermes Päckchen, online', cent: 519, quelle: 'direkt', hinweis: 'an die Haustür' },
-  { name: 'Hermes Päckchen, im Shop gebucht', cent: 525, quelle: 'direkt', hinweis: 'an die Haustür' },
-  { name: 'Hermes Paket S, online', cent: 579, quelle: 'direkt', hinweis: 'an die Haustür' },
-  { name: 'Hermes Paket M an PaketShop', cent: 590, quelle: 'direkt', hinweis: 'nur online' },
-  { name: 'DHL Paket bis 2 kg', cent: 619, quelle: 'direkt', hinweis: 'nur online' },
-  { name: 'Hermes Paket S, im Shop gebucht', cent: 679, quelle: 'direkt', hinweis: 'an die Haustür' },
-  { name: 'Hermes Paket L an PaketShop', cent: 990, quelle: 'direkt', hinweis: 'nur online' }
-];
+export const findeZahlweg = id => ZAHLWEGE.find(z => z.id === id) || ZAHLWEGE[0];
 
 /* Die Auswahlliste je Feld: der Kleinanzeigen-Versand taucht nur im
    Kleinanzeigen-Feld auf, die Preise der Dienstleister nur im Direktfeld. */
 export const versandartenFuer = quelle =>
   VERSANDARTEN.filter(a => a.quelle === quelle || a.quelle === 'beide');
 
+/* Anders als Kleinanzeigen bemisst PayPal die Gebühr am gesamten
+   überwiesenen Betrag, also einschließlich Versand. Einzeln herausgereicht
+   für Aufrufer von außen und für die Tests. */
+export const paypalGebuehr = gebuehrAus(
+  ZAHLWEGE_BESCHREIBUNG.find(z => z.id === 'paypal-wd').gebuehr
+);
+
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const prozent = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
 export const fmt = cent => euro.format(cent / 100);
+
+/* Schreibt einen Gebühren-Deskriptor als Formel aus, damit die Sätze
+   nirgends noch einmal als Text stehen. */
+export function gebuehrFormel(deskriptor) {
+  if (!deskriptor) return 'keine Gebühr';
+  return `${fmt(deskriptor.festCent)} + ${prozent.format(deskriptor.basispunkte / 100)}\u00a0%`;
+}
+
+export const KLEINANZEIGEN_FORMEL = gebuehrFormel(KLEINANZEIGEN.gebuehr);
+
+export const zahlwegFormel = id =>
+  gebuehrFormel(ZAHLWEGE_BESCHREIBUNG.find(z => z.id === id)?.gebuehr);
 
 /* Nimmt „45“, „45,00“, „45.00“, „1.234,56“ und „12 €“ entgegen.
    Rückgabe: Cent als Ganzzahl, null bei leer, NaN bei Unsinn. */
@@ -71,9 +82,7 @@ export function parseEuroToCent(roh) {
 }
 
 /* Die Servicegebühr bemisst sich am Artikelpreis, nicht am Gesamtbetrag. */
-export function kleinanzeigenGebuehr(preisCent) {
-  return GEBUEHR_FIX_CENT + Math.round((preisCent * GEBUEHR_PROMILLE) / 1000);
-}
+export const kleinanzeigenGebuehr = gebuehrAus(KLEINANZEIGEN.gebuehr);
 
 /* Alle Rechnungen liefern dieselbe Form, damit Beleg, Text und Bild einen
    Weg wie den anderen behandeln können. */
@@ -94,52 +103,6 @@ export function berechne(preisCent, versandCent, paketstation) {
 }
 
 /* ---------- Direktkauf ---------- */
-
-export const PAYPAL_FIX_CENT = 35;      // 0,35 € je Zahlung
-export const PAYPAL_BASISPUNKTE = 249;  // 2,49 % = 249/10000
-
-/* Anders als Kleinanzeigen bemisst PayPal die Gebühr am gesamten
-   überwiesenen Betrag, also einschließlich Versand. */
-export function paypalGebuehr(betragCent) {
-  return PAYPAL_FIX_CENT + Math.round((betragCent * PAYPAL_BASISPUNKTE) / 10000);
-}
-
-export const ZAHLWEGE = [
-  {
-    id: 'ueberweisung',
-    name: 'Banküberweisung',
-    gebuehrName: 'Gebühr',
-    gebuehr: () => 0,
-    schutz: false
-  },
-  {
-    id: 'paypal-wd',
-    name: 'PayPal Waren und Dienstleistungen',
-    gebuehrName: 'PayPal-Gebühr',
-    schutzName: 'PayPal-Käuferschutz',
-    gebuehr: paypalGebuehr,
-    schutz: true,
-    traeger: true            // nur hier gibt es etwas zu verteilen
-  },
-  {
-    id: 'paypal-ff',
-    name: 'PayPal Freunde und Familie',
-    gebuehrName: 'PayPal-Gebühr',
-    gebuehr: () => 0,
-    schutz: false,
-    warnung: 'Für Verkäufe verstößt das gegen die PayPal-Nutzungsbedingungen und kann zur Kontosperrung führen.'
-  },
-  {
-    id: 'bar',
-    name: 'Barzahlung bei Abholung',
-    gebuehrName: 'Gebühr',
-    gebuehr: () => 0,
-    schutz: false,
-    ohneVersand: true
-  }
-];
-
-export const findeZahlweg = id => ZAHLWEGE.find(z => z.id === id) || ZAHLWEGE[0];
 
 /* Kleinster Betrag, von dem nach Abzug der Gebühr mindestens `ziel` übrig
    bleibt. Die geschlossene Formel ziel/(1−satz) trifft wegen der
@@ -237,7 +200,6 @@ export function breakeven({ versandKleinanzeigen, versandDirekt, paketstation, z
 
 /* ---------- Ergebnis als schlichtes Objekt ---------- */
 
-export const STAND_DER_WERTE = '2026-09-23';
 export const FASSUNG = 1;
 
 const HINWEIS = 'Richtwerte ohne Gewähr. Kein Angebot der Kleinanzeigen GmbH.';

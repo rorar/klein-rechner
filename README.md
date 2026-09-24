@@ -112,6 +112,27 @@ Komma und Punkt werden beide gelesen. Beim Tippen schreibt die Seite den
 aktuellen Stand per `replaceState` zurück in die Adresse, die damit jederzeit
 teilbar ist.
 
+## Werte pflegen
+
+Preise, Gebührensätze und Bezeichnungen stehen vollständig in
+[`js/daten.js`](js/daten.js). Eine Gebühr ist dort ein Deskriptor, keine
+Funktion:
+
+```js
+gebuehr: { festCent: 35, basispunkte: 249, grundlage: 'gesamtbetrag' }
+```
+
+`basispunkte` sind Zehntausendstel – 450 sind 4,5 %. `grundlage` unterscheidet,
+ob der Satz auf den Artikelpreis oder auf den gesamten Betrag einschließlich
+Versand wirkt. Ein neuer Zahlweg oder ein geänderter Satz ist damit eine reine
+Datenänderung; `rechnen.js` bleibt unberührt, und die angezeigte Formel
+(„0,50 € + 4,5 %“) entsteht aus demselben Deskriptor.
+
+Bewusst ein Modul und keine `.json`: eine Gebühr als Funktion ließe sich in JSON
+nicht abbilden, eine abzurufende Datei kostete auf einer statischen Seite einen
+zweiten Umlauf vor der ersten Rechnung, und JSON kennt keine Kommentare – die
+Herkunft der Preise stünde dann nirgends.
+
 ## Externe Anbindung
 
 Die Seite liegt auf GitHub Pages und liefert nur Dateien aus. **Einen Endpunkt,
@@ -128,7 +149,7 @@ als Modulquelle ohne Weiteres ab; dort holt man die Datei per `fetch` oder legt
 sie ins eigene Projekt.
 
 ```js
-const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=16');
+const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=17');
 
 berechneAlles({
   artikelpreisCent: 4500,
@@ -209,7 +230,8 @@ PNG an die Teilen-Funktion des Systems. Beides kommt ohne Bibliothek aus.
 | --- | --- |
 | `index.html` | Struktur der Seite |
 | `styles.css` | Gestaltung, Beleg-Optik |
-| `js/rechnen.js` | Gebührenmodelle, Schwellensuche, JSON – ohne DOM, damit prüfbar und importierbar |
+| `js/daten.js` | **Alle Preise, Gebührensätze und Bezeichnungen.** Wer Werte pflegt, fasst nur diese Datei an |
+| `js/rechnen.js` | Die Formeln: Gebührenmodelle, Schwellensuche, JSON – ohne DOM, damit prüfbar und importierbar |
 | `js/texte.js` | Textbausteine, einzeln und im Vergleich |
 | `js/beleg-bild.js` | Der Beleg als PNG, ein- oder zweispaltig |
 | `js/ui.js` | Verdrahtung: Eingaben, Combobox, Knöpfe, Adresse |
@@ -226,12 +248,12 @@ npm test         # node --test, ohne Browser
 Dann http://localhost:8765 öffnen. Über `file://` läuft die Seite nicht: ES-Module
 brauchen HTTP. Auch die Kopierfunktion will HTTPS oder localhost.
 
-Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=16`). Ohne sie
+Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=17`). Ohne sie
 könnte ein Browser ein frisches `ui.js` mit einem veralteten `rechnen.js` mischen.
 Beim Ändern alle Vorkommen gemeinsam hochzählen:
 
 ```sh
-sed -i 's/?v=16/?v=16/g' index.html js/*.js test/*.js
+sed -i 's/?v=17/?v=17/g' index.html js/*.js test/*.js
 ```
 
 ## Rechtliches

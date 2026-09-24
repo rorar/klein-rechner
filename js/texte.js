@@ -1,7 +1,7 @@
 /* Fertige Nachrichten zum Verschicken. Kein DOM, damit sich die Texte
    ohne Browser prüfen lassen. */
 
-import { fmt, GEBUEHR_FIX_CENT } from './rechnen.js?v=16';
+import { fmt, KLEINANZEIGEN_FORMEL } from './rechnen.js?v=17';
 
 export function versandText(r) {
   if (r.versand === 0) return 'entfällt';
@@ -18,7 +18,7 @@ export function aufstellung(r) {
 }
 
 export function gebuehrSatz(r) {
-  return `Über „Sicher bezahlen“ kommt eine Servicegebühr von ${fmt(r.gebuehr)} dazu – das sind ${fmt(GEBUEHR_FIX_CENT)} plus 4,5 % vom Artikelpreis.`;
+  return `Über „Sicher bezahlen“ kommt eine Servicegebühr von ${fmt(r.gebuehr)} dazu – das sind ${KLEINANZEIGEN_FORMEL} vom Artikelpreis.`;
 }
 
 /* Die Aufstellung ist in allen Fassungen gleich, nur die Anrede und der

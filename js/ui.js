@@ -2,12 +2,12 @@
    Alles, was hier steht, braucht ein DOM. Gerechnet wird in rechnen.js. */
 
 import {
-  GEBUEHR_FIX_CENT, ZAHLWEGE, findeZahlweg, versandartenFuer,
+  KLEINANZEIGEN_FORMEL, zahlwegFormel, ZAHLWEGE, findeZahlweg, versandartenFuer,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=16';
-import { textDu, textSie, textNeutral } from './texte.js?v=16';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=16';
+} from './rechnen.js?v=17';
+import { textDu, textSie, textNeutral } from './texte.js?v=17';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=17';
 
 const el = id => document.getElementById(id);
 
@@ -18,7 +18,7 @@ const paketstationFeld = el('paketstation');
 const vergleichFeld = el('vergleich');
 const sheet = document.querySelector('.sheet');
 
-const kopien = { summe: '', du: '', sie: '', neutral: '', link: '', json: '' };
+const kopien = { summe: '', dsumme: '', du: '', sie: '', neutral: '', link: '', json: '' };
 let letzteRechnung = null;      // Kleinanzeigen-Weg, für das Bild
 let letzteDirekt = null;
 let letzterBreakeven = null;
@@ -86,7 +86,7 @@ function zeigeKleinanzeigen(r) {
   el('out-versand-note').textContent = r.paketstation ? 'Zustellung an eine Paketstation' : '';
   el('out-gebuehr-label').textContent = r.gebuehrName;
   el('out-gebuehr').textContent = fmt(r.gebuehr);
-  el('out-gebuehr-formel').textContent = `${fmt(GEBUEHR_FIX_CENT)} + 4,5 % von ${fmt(r.preis)}`;
+  el('out-gebuehr-formel').textContent = `${KLEINANZEIGEN_FORMEL} von ${fmt(r.preis)}`;
   el('out-summe').textContent = fmt(r.kaeuferZahlt);
   el('out-behaelt').textContent = fmt(r.verkaeuferBehaelt);
   el('out-schutz').textContent = `Der ${r.schutzName} greift.`;
@@ -101,7 +101,7 @@ function zeigeDirekt(d) {
   el('d-gebuehr-label').textContent = d.gebuehrName;
   el('d-gebuehr').textContent = d.gebuehr > 0 ? fmt(d.gebuehr) : '—';
   el('d-gebuehr-formel').textContent = d.gebuehr > 0
-    ? `2,49 % + 0,35 € vom Gesamtbetrag, getragen ${d.gebuehrTraeger === 'kaeufer' ? 'vom Käufer' : 'vom Verkäufer'}`
+    ? `${zahlwegFormel(d.zahlweg)} vom Gesamtbetrag, getragen ${d.gebuehrTraeger === 'kaeufer' ? 'vom Käufer' : 'vom Verkäufer'}`
     : '';
   el('d-summe').textContent = fmt(d.kaeuferZahlt);
   el('d-behaelt').textContent = fmt(d.verkaeuferBehaelt);
@@ -244,6 +244,7 @@ function aktualisiere() {
   }
 
   kopien.summe = fmt(ka.kaeuferZahlt);
+  kopien.dsumme = di ? fmt(di.kaeuferZahlt) : '';
   kopien.link = location.href;   // schreibeUrl lief oben, die Adresse stimmt
   kopien.du = textDu(ka, di);
   kopien.sie = textSie(ka, di);
