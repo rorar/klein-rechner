@@ -2,7 +2,8 @@
    Alles, was hier steht, braucht ein DOM. Gerechnet wird in rechnen.js. */
 
 import {
-  KLEINANZEIGEN_FORMEL, KLEINANZEIGEN_GEBUEHR_NAME, ZAHLWEGE, findeZahlweg, versandartenFuer, imRahmen,
+  KLEINANZEIGEN_FORMEL, KLEINANZEIGEN_GEBUEHR_NAME, ZAHLWEGE, findeZahlweg,
+  versandartenFuer, versandartZu, imRahmen,
   kleinanzeigenGebuehr, STAND_DER_WERTE, sendungBeschreibung,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
@@ -40,12 +41,10 @@ const sheet = document.querySelector('.sheet');
 
 const kopien = { summe: '', dsumme: '', du: '', sie: '', neutral: '', link: '', json: '' };
 /* Der Name der Versandart und ihre Zustellbedingung gehören in die
-   Nachricht an den Käufer; ein Betrag allein sagt beides nicht. Die Art
-   wird bei jeder Rechnung aus dem Betrag abgeleitet statt als Zustand
-   mitgeschleppt: eine gemerkte Auswahl klebte sonst an einem Betrag, der
-   von Hand geändert wurde und gar nicht mehr zu ihr passt. */
-const artZu = (quelle, cent) =>
-  cent === null || Number.isNaN(cent) ? null : (versandartenFuer(quelle).find(a => a.cent === cent) || null);
+   Nachricht an den Käufer; ein Betrag allein sagt beides nicht. Wie aus
+   dem Betrag die Art wird, steht in rechnen.js – mitsamt der Bedingung,
+   dass ein Betrag, den sich zwei Arten teilen, keine von beiden benennt. */
+const artZu = (quelle, cent) => (cent === null ? null : versandartZu(quelle, cent));
 
 let letzteRechnung = null;      // Kleinanzeigen-Weg, für das Bild
 let letzteDirekt = null;

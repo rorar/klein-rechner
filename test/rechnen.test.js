@@ -8,7 +8,8 @@ import assert from 'node:assert/strict';
 import {
   parseEuroToCent, kleinanzeigenGebuehr, berechne, fmt,
   paypalGebuehr, berechneDirekt, betragMitAufschlag, breakeven, ZAHLWEGE,
-  berechneAlles, MAX_PREIS_CENT, imRahmen, versandartenFuer
+  berechneAlles, MAX_PREIS_CENT, imRahmen, versandartenFuer,
+  versandartZu, haftungSatz, sendungBeschreibung
 } from '../js/rechnen.js?v=28';
 
 test('parseEuroToCent nimmt die Schreibweisen an, die Leute tippen', () => {
@@ -287,4 +288,73 @@ test('Pakete ohne Aktion behalten ihren Preis', () => {
     .find(a => a.name === 'DHL Paket 10 kg');
   assert.equal(dhl('2026-09-24').cent, 1049);
   assert.equal(dhl('2030-01-01').cent, 1049);
+});
+
+/* ---------- Versandarten als Beschreibung der Sendung ---------- */
+
+test('jede Versandart außer der Abholung beschreibt ihre Sendung', () => {
+  for (const quelle of ['kleinanzeigen', 'direkt']) {
+    for (const art of versandartenFuer(quelle)) {
+      if (art.cent === 0) continue;             // Abholung, es gibt keine Sendung
+      const wo = `${quelle}: ${art.name}`;
+      assert.ok(['klein', 'mittel', 'gross'].includes(art.groesse), wo);
+      assert.ok(art.mass && art.gewicht, wo);
+      assert.equal(typeof art.haftungCent, 'number', wo);
+      assert.ok(art.haftungCent >= 0, wo);
+      assert.ok(art.zustellung, wo);
+    }
+  }
+});
+
+test('die Beschreibung nennt alle vier Angaben in fester Reihenfolge', () => {
+  const art = versandartenFuer('direkt').find(a => a.name === 'DHL Paket bis 5 kg');
+  /* fmt setzt zwischen Betrag und Währungszeichen ein geschütztes
+     Leerzeichen. Der erwartete Satz wird deshalb aus fmt gebaut, nicht
+     abgetippt. */
+  assert.equal(sendungBeschreibung(art),
+    `mittel · höchstens 120 × 60 × 60 cm · bis 5 kg · Haftung bis ${fmt(50000)}`);
+});
+
+test('ohne Haftung wird gesagt, unbekannte Haftung nicht behauptet', () => {
+  /* DHL schließt für Päckchen Haftung und Sendungsverfolgung aus. Das ist
+     eine Angabe und gehört in die Nachricht; „Haftung bis 0,00 €" wäre
+     dagegen eine Aussage, die so nirgends steht. */
+  assert.equal(haftungSatz({ haftungCent: 0 }), 'ohne Haftung');
+  assert.equal(haftungSatz({ haftungCent: 50000 }), `Haftung bis ${fmt(50000)}`);
+  assert.equal(haftungSatz({}), null);
+  const paeckchen = versandartenFuer('direkt').find(a => a.name === 'DHL Päckchen S');
+  assert.equal(haftungSatz(paeckchen), 'ohne Haftung');
+});
+
+test('ein Betrag, den zwei Arten teilen, benennt keine von beiden', () => {
+  /* DHL Päckchen M und das Hermes Päckchen an die Haustür kosten beide
+     5,19 €, haften aber verschieden. Der Adressparameter trägt nur den
+     Betrag – welche Sendung gemeint ist, weiß er nicht. */
+  const doppelt = versandartenFuer('direkt').filter(a => a.cent === 519);
+  assert.equal(doppelt.length, 2, 'Voraussetzung des Tests');
+  assert.notEqual(doppelt[0].haftungCent, doppelt[1].haftungCent);
+  assert.equal(versandartZu('direkt', 519), null);
+});
+
+test('ein eindeutiger Betrag benennt seine Art', () => {
+  assert.equal(versandartZu('direkt', 769).name, 'DHL Paket bis 5 kg');
+  assert.equal(versandartZu('kleinanzeigen', 99).name, 'Hermes Päckchen');
+  assert.equal(versandartZu('direkt', 12345), null, 'ein Betrag ohne Art');
+  assert.equal(versandartZu('direkt', null), null);
+});
+
+test('die Rechnung verschweigt Namen und Haftung bei mehrdeutigem Betrag', () => {
+  const art = versandartZu('direkt', 519);
+  const r = berechneDirekt(4500, 519, 'paypal-wd', 'kaeufer', art);
+  assert.equal(r.versandName, null);
+  assert.equal(r.versandHaftung, null);
+  assert.equal(r.versandZustellung, null);
+  assert.equal(r.kaeuferZahlt, 5183, 'der Betrag selbst zählt weiter mit');
+});
+
+test('die Kleinanzeigen-Beträge bleiben eindeutig, auch nach dem Aktionsende', () => {
+  for (const heute of ['2026-09-24', '2027-01-01']) {
+    const cents = versandartenFuer('kleinanzeigen', heute).map(a => a.cent);
+    assert.equal(new Set(cents).size, cents.length, heute);
+  }
 });

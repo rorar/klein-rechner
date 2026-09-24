@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { berechne, berechneDirekt, fmt } from '../js/rechnen.js?v=28';
+import { berechne, berechneDirekt, fmt, versandartZu } from '../js/rechnen.js?v=28';
 import { VERSANDARTEN } from '../js/daten.js?v=28';
 import {
   textDu, textSie, textNeutral, aufstellung, schutzSatz,
@@ -200,6 +200,26 @@ test('die Nachricht nennt die Haftung, nicht Maß und Gewicht', () => {
   const text = aufstellung(KA);
   assert.match(text, /Haftung bis 500,00\s?€/);
   assert.doesNotMatch(text, /80 cm|25 kg|mittel/);
+});
+
+/* DHL schließt für Päckchen Haftung und Sendungsverfolgung aus. Das ist
+   eine Angabe und gehört in die Nachricht – „Haftung bis 0,00 €" wäre
+   dagegen eine Aussage, die so nirgends steht. */
+test('die Nachricht sagt es, wenn der Dienstleister nicht haftet', () => {
+  const art = versandartZu('direkt', 419);
+  assert.equal(art.name, 'DHL Päckchen S', 'Voraussetzung des Tests');
+  const text = aufstellung(berechneDirekt(4500, 419, 'ueberweisung', 'verkaeufer', art));
+  assert.match(text, /ohne Haftung/);
+  assert.doesNotMatch(text, /bis 0,00/);
+  assert.doesNotMatch(text, /Haftung bis/);
+});
+
+test('bei mehrdeutigem Betrag nennt die Nachricht keine Versandart', () => {
+  /* 5,19 € tragen zwei Arten mit verschiedener Haftung. */
+  const text = aufstellung(berechneDirekt(4500, 519, 'ueberweisung', 'verkaeufer',
+    versandartZu('direkt', 519)));
+  assert.doesNotMatch(text, /Haftung|Päckchen|Zustellung/);
+  assert.match(text, /5,19\s?€ Versand$/m);
 });
 
 /* Der Grund: im Bild stand links „4,5 %“ ohne Bezug neben rechts

@@ -77,10 +77,30 @@ export function sendungBeschreibung(art) {
 }
 
 /* Ohne Angabe wird nichts behauptet: „Haftung bis 0 €" wäre eine Aussage,
-   die so nirgends steht. */
+   die so nirgends steht. Null dagegen ist eine Angabe – DHL schließt für
+   Päckchen Haftung und Sendungsverfolgung ausdrücklich aus –, und die
+   gehört in die Nachricht an den Käufer. */
 export function haftungSatz(art) {
   if (typeof art.haftungCent !== 'number') return null;
+  if (art.haftungCent === 0) return 'ohne Haftung';
   return `Haftung bis ${fmt(art.haftungCent)}`;
+}
+
+/* Welche Versandart zu einem Betrag gehört. Die Auswahl wird nicht als
+   Zustand mitgeschleppt, sondern bei jeder Rechnung aus dem Betrag
+   abgeleitet: eine gemerkte Auswahl klebte sonst an einem Betrag, der von
+   Hand geändert wurde und gar nicht mehr zu ihr passt. Auch der
+   Adressparameter `?direktversand=5,19` trägt nur den Betrag.
+
+   Deshalb die Bedingung: Trägt mehr als eine Art denselben Betrag, ist die
+   Art unbekannt und es wird keine genannt. DHL Päckchen M und das Hermes
+   Päckchen an die Haustür kosten beide 5,19 €, haften aber verschieden –
+   die erste in der Sortierung zu nehmen hieße, dem Käufer eine Haftung zu
+   versprechen, die seine Sendung vielleicht nicht hat. */
+export function versandartZu(quelle, cent, heute = heuteIso()) {
+  if (typeof cent !== 'number' || Number.isNaN(cent)) return null;
+  const treffer = versandartenFuer(quelle, heute).filter(a => a.cent === cent);
+  return treffer.length === 1 ? treffer[0] : null;
 }
 
 /* Anders als Kleinanzeigen bemisst PayPal die Gebühr am gesamten

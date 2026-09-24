@@ -63,13 +63,13 @@ Schalter „legt der Käufer drauf“.
 ## Ab wann lohnt der Direktkauf?
 
 Der Balken nennt die Schwelle für beide Seiten. Bei 2,99 € Kleinanzeigen-Versand
-gegen 5,19 € direkt:
+gegen 5,79 € direkt:
 
 | Zahlweg | Käufer zahlt direkt weniger ab | Verkäufer behält direkt mehr ab |
 | --- | --- | --- |
-| Banküberweisung, Freunde und Familie | 37,89 € | gleich |
-| PayPal W&D, Verkäufer trägt | 37,89 € | nie |
-| PayPal W&D, Käufer legt drauf | 112,78 € | gleich |
+| Banküberweisung, Freunde und Familie | 51,23 € | gleich |
+| PayPal W&D, Verkäufer trägt | 51,23 € | nie |
+| PayPal W&D, Käufer legt drauf | 144,34 € | gleich |
 
 Für den Verkäufer gibt es keine Schwelle. Über Kleinanzeigen behält er entweder
 genau so viel wie direkt oder mehr, nie weniger – die Servicegebühr trägt der
@@ -92,7 +92,7 @@ Beide Felder lassen sich über die Adresse vorbelegen:
 https://rorar.github.io/klein-rechner/?preis=45,00&versand=5,49
 https://rorar.github.io/klein-rechner/?preis=12.34
 https://rorar.github.io/klein-rechner/?preis=30,00&versand=2,99&paketstation=1
-https://rorar.github.io/klein-rechner/?preis=45,00&versand=2,99&vergleich=1&direktversand=5,19&zahlweg=paypal-wd&traeger=kaeufer
+https://rorar.github.io/klein-rechner/?preis=45,00&versand=2,99&vergleich=1&direktversand=5,79&zahlweg=paypal-wd&traeger=kaeufer
 ```
 
 Im Vergleichsmodus kommen `vergleich=1`, `direktversand`, `zahlweg`
@@ -149,10 +149,21 @@ wird `name` genommen.
 Bei den Versandarten beschreiben `groesse`, `mass`, `gewicht` und `haftungCent`
 die Sendung. Sie stehen vollständig in der Auswahlliste, weil der Verkäufer dort
 die passende Größe sucht; in die Nachricht an den Käufer geht davon nur die
-Haftungsgrenze. `cent` ist der heute gültige Preis, `regulaerCent` der reguläre;
-ohne Aktion sind beide gleich. `aktionBis` hält den letzten Aktionstag fest –
-`versandartenFuer()` vergleicht ihn mit dem heutigen Datum und liefert danach
-wieder den regulären Preis.
+Haftungsgrenze. `haftungCent: 0` heißt ausdrücklich *ohne Haftung* – DHL
+schließt sie für Päckchen aus –, ein fehlendes Feld dagegen heißt *unbekannt*,
+und dann wird nichts behauptet. `cent` ist der heute gültige Preis,
+`regulaerCent` der reguläre; ohne Aktion sind beide gleich. `aktionBis` hält den
+letzten Aktionstag fest – `versandartenFuer()` vergleicht ihn mit dem heutigen
+Datum und liefert danach wieder den regulären Preis.
+
+Welche Art zu einem Betrag gehört, beantwortet `versandartZu(quelle, cent)`. Die
+Auswahl wird nicht als Zustand mitgeschleppt, sondern bei jeder Rechnung aus dem
+Betrag abgeleitet – eine gemerkte Auswahl klebte sonst an einem von Hand
+geänderten Betrag. Teilen sich zwei Arten denselben Betrag, liefert die Funktion
+`null`: DHL Päckchen M und das Hermes Päckchen an die Haustür kosten beide
+5,19 €, haften aber verschieden, und `?direktversand=5,19` sagt nicht, welches
+gemeint ist. Dann stehen Betrag und Summe da, aber kein Name und keine
+Haftungszusage – lieber nichts als etwas Geratenes.
 
 `basispunkte` sind Zehntausendstel – 450 sind 4,5 %. `grundlage` unterscheidet,
 ob der Satz auf den Artikelpreis oder auf den gesamten Betrag einschließlich
@@ -257,6 +268,12 @@ PNG an die Teilen-Funktion des Systems. Beides kommt ohne Bibliothek aus.
   Hand ändern. Steht er, taucht die
   Zustellung in der Aufstellung, in allen drei Texten, im Bild und in der
   Adresse auf.
+* Die Liste für den selbst gebuchten Versand folgt der
+  [DHL-Preisübersicht](https://shop.deutschepost.de/dhl-paketpreise) und der
+  Hermes-Preisliste gültig ab 02.03.2026, beide abgelesen am 24.09.2026. Sie
+  enthält nur, was sich hier vergleichen lässt: national, quaderförmig, ohne
+  Zuschläge. Draußen bleiben DHL Pluspäckchen (nur über die Filiale), Hermes XL,
+  XXL, Reisegepäck und die Abholpreise.
 * Maßgeblich ist immer, was die Kleinanzeigen-App beim Kauf anzeigt.
 
 ## Aufbau

@@ -98,12 +98,18 @@ export const PAKETSTATION_ZUSTELLUNG = 'von Shop zu Shop';
    Preis. Sie entscheiden nichts, sie helfen beim Auswählen:
 
      groesse     'klein', 'mittel' oder 'gross' - die Gruppen, in die
-                 Kleinanzeigen die Optionen im Versanddialog einteilt.
+                 Kleinanzeigen die Optionen im Versanddialog einteilt. Für
+                 den selbst gebuchten Versand steht die Einteilung in
+                 keiner Quelle; dort ist sie nach denselben Maßen gebildet,
+                 nach denen der Dialog dieselben Pakete einordnet.
      mass        Wortlaut aus dem Dialog. Hermes misst längste plus
                  kürzeste Seite, DHL misst Länge × Breite × Höhe; ein
                  gemeinsames Zahlenfeld gäbe es für beide nicht.
      gewicht     Höchstgewicht.
-     haftungCent Bis wohin der Dienstleister bei Verlust haftet.
+     haftungCent Bis wohin der Dienstleister bei Verlust haftet. Null heißt
+                 ausdrücklich ohne Haftung – das steht so bei den
+                 DHL-Päckchen. Fehlt das Feld, ist nichts bekannt, und
+                 dann wird auch nichts behauptet.
 
    Preise:
 
@@ -126,11 +132,22 @@ export const PAKETSTATION_ZUSTELLUNG = 'von Shop zu Shop';
    steht der Wert aus der App, weil er das ist, was der Verkäufer beim
    Einstellen sieht.
 
-   Hermes-Preise für den selbst gebuchten Versand laut Preisliste gültig ab
-   02.03.2026 (https://www.myhermes.de/content/pdf/preise-ab-02032026.pdf),
-   DHL laut Onlinefrankierung
-   (https://www.dhl.de/de/privatkunden/pakete-versenden.html).
-   Online gebucht ist durchweg billiger als im Shop. */
+   Hermes-Preise für den selbst gebuchten Versand laut Preis- und
+   Serviceübersicht gültig ab 02.03.2026
+   (https://www.myhermes.de/content/pdf/preise-ab-02032026.pdf), abgelesen
+   am 24.09.2026. Hermes staffelt nach Zustellart: an einen PaketShop oder
+   eine Paketstation ist es billiger als an die Haustür, und dort ist der
+   online erstellte Paketschein billiger als der im PaketShop erstellte.
+   Gewicht überall bis 25 kg, Haftung 500 € je Paket und 50 € je Päckchen.
+
+   DHL-Preise laut https://shop.deutschepost.de/dhl-paketpreise, abgelesen
+   am 24.09.2026, Spalten „Filiale/Versandmarke“ und „Online Frankierung“.
+   Für Päckchen schließt die dortige Fußnote 2 Haftung und
+   Sendungsverfolgung aus; das Paket haftet bis 500 €.
+
+   Nicht aufgenommen, weil sie hier nichts zu vergleichen haben: DHL
+   Pluspäckchen (nur über die Filiale), Hermes XL, XXL, Reisegepäck und die
+   Abholpreise, dazu alles Internationale. */
 export const VERSANDARTEN = [
   { name: 'Abholung, kein Versand', cent: 0, regulaerCent: 0, quelle: 'beide' },
 
@@ -190,24 +207,115 @@ export const VERSANDARTEN = [
 
   /* ----- selbst beim Dienstleister gebucht ----- */
 
-  { name: 'Hermes Shop-to-Shop Päckchen', cent: 399, regulaerCent: 399, quelle: 'direkt',
+  /* Hermes, Zustellung an einen PaketShop oder eine Paketstation. */
+  { groesse: 'klein', name: 'Hermes Shop-to-Shop Päckchen', cent: 399, regulaerCent: 399,
+    quelle: 'direkt',
+    mass: 'längste und kürzeste Seite zusammen höchstens 37 cm', gewicht: 'bis 25 kg',
+    haftungCent: 5000,
     hinweis: 'nur online buchbar', zustellung: 'von Shop zu Shop' },
-  { name: 'DHL Päckchen S', cent: 419, regulaerCent: 419, quelle: 'direkt',
-    hinweis: 'nur online buchbar', zustellung: 'Zustellung an die Haustür' },
-  { name: 'Hermes Shop-to-Shop Paket S', cent: 489, regulaerCent: 489, quelle: 'direkt',
+
+  { groesse: 'klein', name: 'Hermes Shop-to-Shop Paket S', cent: 489, regulaerCent: 489,
+    quelle: 'direkt',
+    mass: 'längste und kürzeste Seite zusammen höchstens 50 cm', gewicht: 'bis 25 kg',
+    haftungCent: 50000,
     hinweis: 'nur online buchbar', zustellung: 'von Shop zu Shop' },
-  { name: 'Hermes Päckchen, online gebucht', kurz: 'Hermes Päckchen', cent: 519, regulaerCent: 519, quelle: 'direkt',
-    hinweis: 'online gebucht', zustellung: 'Zustellung an die Haustür' },
-  { name: 'Hermes Päckchen, im Shop gebucht', kurz: 'Hermes Päckchen', cent: 525, regulaerCent: 525, quelle: 'direkt',
-    hinweis: 'im PaketShop gebucht', zustellung: 'Zustellung an die Haustür' },
-  { name: 'Hermes Paket S, online gebucht', kurz: 'Hermes Paket S', cent: 579, regulaerCent: 579, quelle: 'direkt',
-    hinweis: 'online gebucht', zustellung: 'Zustellung an die Haustür' },
-  { name: 'Hermes Paket M', cent: 590, regulaerCent: 590, quelle: 'direkt',
+
+  { groesse: 'mittel', name: 'Hermes Paket M', cent: 590, regulaerCent: 590,
+    quelle: 'direkt',
+    mass: 'längste und kürzeste Seite zusammen höchstens 80 cm', gewicht: 'bis 25 kg',
+    haftungCent: 50000,
     hinweis: 'nur online buchbar', zustellung: 'Zustellung an einen PaketShop' },
-  { name: 'DHL Paket bis 2 kg', cent: 619, regulaerCent: 619, quelle: 'direkt',
-    hinweis: 'nur online buchbar', zustellung: 'Zustellung an die Haustür' },
-  { name: 'Hermes Paket S, im Shop gebucht', kurz: 'Hermes Paket S', cent: 679, regulaerCent: 679, quelle: 'direkt',
+
+  { groesse: 'gross', name: 'Hermes Paket L', cent: 990, regulaerCent: 990,
+    quelle: 'direkt',
+    mass: 'längste und kürzeste Seite zusammen höchstens 120 cm', gewicht: 'bis 25 kg',
+    haftungCent: 50000,
+    hinweis: 'nur online buchbar', zustellung: 'Zustellung an einen PaketShop' },
+
+  /* Hermes, Zustellung an die Haustür. Der online erstellte Paketschein
+     ist billiger als der im PaketShop erstellte. */
+  { groesse: 'klein', name: 'Hermes Päckchen, online gebucht', kurz: 'Hermes Päckchen',
+    cent: 519, regulaerCent: 519, quelle: 'direkt',
+    mass: 'längste und kürzeste Seite zusammen höchstens 37 cm', gewicht: 'bis 25 kg',
+    haftungCent: 5000,
+    hinweis: 'online gebucht', zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'klein', name: 'Hermes Päckchen, im Shop gebucht', kurz: 'Hermes Päckchen',
+    cent: 525, regulaerCent: 525, quelle: 'direkt',
+    mass: 'längste und kürzeste Seite zusammen höchstens 37 cm', gewicht: 'bis 25 kg',
+    haftungCent: 5000,
     hinweis: 'im PaketShop gebucht', zustellung: 'Zustellung an die Haustür' },
-  { name: 'Hermes Paket L', cent: 990, regulaerCent: 990, quelle: 'direkt',
-    hinweis: 'nur online buchbar', zustellung: 'Zustellung an einen PaketShop' }
+
+  { groesse: 'klein', name: 'Hermes Paket S, online gebucht', kurz: 'Hermes Paket S',
+    cent: 579, regulaerCent: 579, quelle: 'direkt',
+    mass: 'längste und kürzeste Seite zusammen höchstens 50 cm', gewicht: 'bis 25 kg',
+    haftungCent: 50000,
+    hinweis: 'online gebucht', zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'klein', name: 'Hermes Paket S, im Shop gebucht', kurz: 'Hermes Paket S',
+    cent: 679, regulaerCent: 679, quelle: 'direkt',
+    mass: 'längste und kürzeste Seite zusammen höchstens 50 cm', gewicht: 'bis 25 kg',
+    haftungCent: 50000,
+    hinweis: 'im PaketShop gebucht', zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'mittel', name: 'Hermes Paket M, online gebucht', kurz: 'Hermes Paket M',
+    cent: 699, regulaerCent: 699, quelle: 'direkt',
+    mass: 'längste und kürzeste Seite zusammen höchstens 80 cm', gewicht: 'bis 25 kg',
+    haftungCent: 50000,
+    hinweis: 'online gebucht', zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'mittel', name: 'Hermes Paket M, im Shop gebucht', kurz: 'Hermes Paket M',
+    cent: 795, regulaerCent: 795, quelle: 'direkt',
+    mass: 'längste und kürzeste Seite zusammen höchstens 80 cm', gewicht: 'bis 25 kg',
+    haftungCent: 50000,
+    hinweis: 'im PaketShop gebucht', zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'gross', name: 'Hermes Paket L, online gebucht', kurz: 'Hermes Paket L',
+    cent: 1099, regulaerCent: 1099, quelle: 'direkt',
+    mass: 'längste und kürzeste Seite zusammen höchstens 120 cm', gewicht: 'bis 25 kg',
+    haftungCent: 50000,
+    hinweis: 'online gebucht', zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'gross', name: 'Hermes Paket L, im Shop gebucht', kurz: 'Hermes Paket L',
+    cent: 1195, regulaerCent: 1195, quelle: 'direkt',
+    mass: 'längste und kürzeste Seite zusammen höchstens 120 cm', gewicht: 'bis 25 kg',
+    haftungCent: 50000,
+    hinweis: 'im PaketShop gebucht', zustellung: 'Zustellung an die Haustür' },
+
+  /* DHL. Für Päckchen sind Haftung und Sendungsverfolgung ausgeschlossen,
+     deshalb haftungCent: 0 – das ist eine Angabe, kein fehlender Wert. */
+  { groesse: 'klein', name: 'DHL Päckchen S', cent: 419, regulaerCent: 419,
+    quelle: 'direkt',
+    mass: 'höchstens 35 × 25 × 10 cm', gewicht: 'bis 2 kg', haftungCent: 0,
+    hinweis: 'ohne Sendungsverfolgung', zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'klein', name: 'DHL Päckchen M', cent: 519, regulaerCent: 519,
+    quelle: 'direkt',
+    mass: 'höchstens 60 × 30 × 15 cm', gewicht: 'bis 2 kg', haftungCent: 0,
+    hinweis: 'ohne Sendungsverfolgung', zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'klein', name: 'DHL Paket bis 2 kg', cent: 619, regulaerCent: 619,
+    quelle: 'direkt',
+    mass: 'höchstens 60 × 30 × 15 cm', gewicht: 'bis 2 kg', haftungCent: 50000,
+    hinweis: 'nur online buchbar', zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'mittel', name: 'DHL Paket bis 5 kg', cent: 769, regulaerCent: 769,
+    quelle: 'direkt',
+    mass: 'höchstens 120 × 60 × 60 cm', gewicht: 'bis 5 kg', haftungCent: 50000,
+    zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'gross', name: 'DHL Paket bis 10 kg', cent: 1049, regulaerCent: 1049,
+    quelle: 'direkt',
+    mass: 'höchstens 120 × 60 × 60 cm', gewicht: 'bis 10 kg', haftungCent: 50000,
+    zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'gross', name: 'DHL Paket bis 20 kg', cent: 1899, regulaerCent: 1899,
+    quelle: 'direkt',
+    mass: 'höchstens 120 × 60 × 60 cm', gewicht: 'bis 20 kg', haftungCent: 50000,
+    zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'gross', name: 'DHL Paket bis 31,5 kg', cent: 2399, regulaerCent: 2399,
+    quelle: 'direkt',
+    mass: 'höchstens 120 × 60 × 60 cm', gewicht: 'bis 31,5 kg', haftungCent: 50000,
+    zustellung: 'Zustellung an die Haustür' }
 ];
