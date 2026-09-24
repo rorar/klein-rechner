@@ -2,13 +2,13 @@
    Alles, was hier steht, braucht ein DOM. Gerechnet wird in rechnen.js. */
 
 import {
-  KLEINANZEIGEN_FORMEL, zahlwegFormel, ZAHLWEGE, findeZahlweg, versandartenFuer,
+  KLEINANZEIGEN_FORMEL, zahlwegFormel, ZAHLWEGE, findeZahlweg, versandartenFuer, imRahmen,
   kleinanzeigenGebuehr, STAND_DER_WERTE,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=20';
-import { textDu, textSie, textNeutral, breakevenSaetze } from './texte.js?v=20';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=20';
+} from './rechnen.js?v=21';
+import { textDu, textSie, textNeutral, breakevenSaetze } from './texte.js?v=21';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=21';
 
 /* Steht ganz oben, vor jedem Zugriff aufs Dokument: auf einer fremden
    Seite gäbe es die Knöpfe nicht, das Modul bräche beim Laden ab, und die
@@ -201,8 +201,12 @@ function aktualisiere() {
   const direktversand = parseEuroToCent(direktversandInput.value);
   const vergleich = vergleichFeld.checked;
 
-  const preisKaputt = Number.isNaN(preis);
-  const versandKaputt = Number.isNaN(versand);
+  /* Nicht nur NaN: auch ein Betrag jenseits der Obergrenze ist unbrauchbar.
+     Über die Adresse kam sonst ein Preis herein, an dem die Rechnung
+     hängenblieb. */
+  const unbrauchbar = w => Number.isNaN(w) || (w !== null && !imRahmen(w));
+  const preisKaputt = unbrauchbar(preis);
+  const versandKaputt = unbrauchbar(versand);
   /* Nur im Vergleich zählt das Direktfeld. Sonst sperrte ein Tippfehler
      darin die ganze Anzeige, während die dazugehörige Fehlermeldung im
      ausgeblendeten Feld steckt und niemand den Grund zu sehen bekäme. */
@@ -211,7 +215,7 @@ function aktualisiere() {
      sonst die gesamte Anzeige gesperrt, mitsamt der Kleinanzeigen-Seite,
      und die Begründung steckte im ausgeblendeten Feld. */
   const direktZaehlt = vergleich && !findeZahlweg(zahlwegAktuell()).ohneVersand;
-  const direktKaputt = direktZaehlt && Number.isNaN(direktversand);
+  const direktKaputt = direktZaehlt && unbrauchbar(direktversand);
   el('preis-fehler').hidden = !preisKaputt;
   el('versand-fehler').hidden = !versandKaputt;
   el('direktversand-fehler').hidden = !direktKaputt;

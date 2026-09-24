@@ -11,7 +11,7 @@
 
 import {
   KLEINANZEIGEN, ZAHLWEGE as ZAHLWEGE_BESCHREIBUNG, VERSANDARTEN, STAND_DER_WERTE
-} from './daten.js?v=20';
+} from './daten.js?v=21';
 
 export { VERSANDARTEN, STAND_DER_WERTE };
 
@@ -114,6 +114,14 @@ export function berechne(preisCent, versandCent, paketstation) {
    über hundert Millionen Runden und oberhalb von 2^53 überhaupt nicht
    mehr weiter, weil betrag + 1 dort denselben Wert ergibt. */
 export function betragMitAufschlag(zielCent, gebuehrFn) {
+  /* Oberhalb von 2^53 liegen ganze Zahlen nicht mehr lückenlos: mitte + 1
+     ergibt dort wieder mitte, und auch die Bisektion käme nicht zum Ende.
+     Solche Beträge sind kein Anwendungsfall, aber sie waren über die
+     Adresse erreichbar. */
+  if (!Number.isSafeInteger(zielCent) || zielCent < 0) {
+    throw new RangeError('zielCent muss eine sichere ganze Zahl ab 0 sein');
+  }
+
   const reicht = betrag => betrag - gebuehrFn(betrag) >= zielCent;
 
   let lo = zielCent;
@@ -170,6 +178,12 @@ export function berechneDirekt(preisCent, versandCent, zahlwegId, gebuehrTraeger
 /* ---------- Schwellen ---------- */
 
 export const MAX_PREIS_CENT = 100000000;   // 1.000.000 €, weit jenseits jeder Anzeige
+
+/* Die Grenze gilt für jede Eingabe, nicht nur für die JSON-Schnittstelle.
+   Darüber liefen Suche und Aufschlag über Beträge, bei denen ganze Zahlen
+   nicht mehr lückenlos darstellbar sind - die Seite stand beim Laden. */
+export const imRahmen = cent =>
+  Number.isInteger(cent) && cent >= 0 && cent <= MAX_PREIS_CENT;
 
 /* Wie weit unter dem Fund der Bisektion noch nach einer früheren Stelle
    gesucht wird. Die Cent-Rundung in beiden Gebührenmodellen lässt den
@@ -256,11 +270,7 @@ export function berechneAlles(roheEingabe) {
     gebuehrTraeger = 'verkaeufer'
   } = eingabe;
 
-  /* Obergrenze nicht aus Bequemlichkeit: ohne sie liefen Suche und
-     Aufschlag über absurd große Beträge und die Seite stand. */
-  const imRahmen = w => Number.isInteger(w) && w >= 0 && w <= MAX_PREIS_CENT;
-
-  if (!imRahmen(artikelpreisCent)) {
+    if (!imRahmen(artikelpreisCent)) {
     return { fehler: `artikelpreisCent muss eine ganze Zahl in Cent zwischen 0 und ${MAX_PREIS_CENT} sein` };
   }
   if (!imRahmen(versandKleinanzeigenCent) || !imRahmen(versandDirektCent)) {

@@ -8,8 +8,8 @@ import assert from 'node:assert/strict';
 import {
   parseEuroToCent, kleinanzeigenGebuehr, berechne, fmt,
   paypalGebuehr, berechneDirekt, betragMitAufschlag, breakeven, ZAHLWEGE,
-  berechneAlles, MAX_PREIS_CENT
-} from '../js/rechnen.js?v=20';
+  berechneAlles, MAX_PREIS_CENT, imRahmen
+} from '../js/rechnen.js?v=21';
 
 test('parseEuroToCent nimmt die Schreibweisen an, die Leute tippen', () => {
   assert.equal(parseEuroToCent('45'), 4500);
@@ -235,4 +235,22 @@ test('berechneAlles liefert die dokumentierte Form', () => {
 test('unbekannter Zahlweg fällt auf den Standard zurück statt zu scheitern', () => {
   const e = berechneAlles({ artikelpreisCent: 4500, versandDirektCent: 519, vergleich: true, zahlweg: 'gibtesnicht' });
   assert.equal(e.direkt.zahlweg, ZAHLWEGE[0].id);
+});
+
+test('die Obergrenze gilt für jede Eingabe, nicht nur für die Schnittstelle', () => {
+  assert.equal(imRahmen(0), true);
+  assert.equal(imRahmen(MAX_PREIS_CENT), true);
+  assert.equal(imRahmen(MAX_PREIS_CENT + 1), false);
+  assert.equal(imRahmen(1e19), false);
+  assert.equal(imRahmen(-1), false);
+  assert.equal(imRahmen(1.5), false);
+  assert.equal(imRahmen(NaN), false);
+});
+
+test('betragMitAufschlag verweigert Beträge jenseits der sicheren Ganzzahlen', () => {
+  /* Dort ergibt mitte + 1 wieder mitte, auch die Bisektion käme nicht zum
+     Ende. Vorher hing die Seite an einem Link mit großem Preis. */
+  assert.throws(() => betragMitAufschlag(1e19, paypalGebuehr), RangeError);
+  assert.throws(() => betragMitAufschlag(-1, paypalGebuehr), RangeError);
+  assert.doesNotThrow(() => betragMitAufschlag(Number.MAX_SAFE_INTEGER - 1, paypalGebuehr));
 });
