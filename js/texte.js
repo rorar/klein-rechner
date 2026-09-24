@@ -1,7 +1,7 @@
 /* Fertige Nachrichten zum Verschicken. Kein DOM, damit sich die Texte
    ohne Browser prüfen lassen. */
 
-import { fmt, KLEINANZEIGEN_FORMEL } from './rechnen.js?v=17';
+import { fmt, KLEINANZEIGEN_FORMEL } from './rechnen.js?v=18';
 
 export function versandText(r) {
   if (r.versand === 0) return 'entfällt';

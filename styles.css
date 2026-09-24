@@ -206,7 +206,7 @@ body {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 2.6rem;
+  width: 2.75rem;   /* 44 px, das Mindestmaß für ein Touchziel */
   align-self: stretch;
   border: 0;
   border-left: 1px solid var(--rule);
@@ -751,8 +751,10 @@ body {
 }
 
 @media (max-width: 32rem) {
-  .skala-koepfe { font-size: 0.75rem; }
-  .skala-fuss { font-size: 0.75rem; }
+  /* 0,8125rem sind 13 px und damit so klein wie der kleinste Text
+     sonst auf der Seite. Darunter wird es auf dem Handy mühsam. */
+  .skala-koepfe { font-size: 0.8125rem; }
+  .skala-fuss { font-size: 0.8125rem; }
   .skala-marke-wert { font-size: 0.875rem; }
 }
 
@@ -775,4 +777,29 @@ body {
   font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, monospace;
   font-size: 0.8125rem;
   line-height: 1.5;
+}
+
+
+/* ---------- Fingerbedienung ---------- */
+
+/* Gebunden an den Zeiger, nicht an die Fensterbreite: entscheidend ist,
+   ob jemand mit dem Finger trifft, nicht wie breit sein Fenster ist.
+   44 px ist das Mindestmaß, unter dem Treffer unzuverlässig werden. */
+@media (pointer: coarse) {
+  .zahlweg label,
+  .traeger label,
+  .schalter {
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .copy,
+  .neben {
+    min-height: 44px;
+  }
+
+  .combo-list li {
+    min-height: 44px;
+    align-content: center;
+  }
 }

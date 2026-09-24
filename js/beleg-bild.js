@@ -1,7 +1,7 @@
 /* Der Beleg wird von Hand auf ein Canvas gezeichnet. Das sind wenige
    Zeilen je Spalte – dafür lohnt keine Bibliothek, die das DOM nachbaut. */
 
-import { fmt, KLEINANZEIGEN_FORMEL, zahlwegFormel, findeZahlweg } from './rechnen.js?v=17';
+import { fmt, KLEINANZEIGEN_FORMEL, zahlwegFormel, findeZahlweg } from './rechnen.js?v=18';
 
 const REPO = 'github.com/rorar/klein-rechner';
 const SEITE = 'rorar.github.io/klein-rechner';
