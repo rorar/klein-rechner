@@ -3,17 +3,55 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sicher-bezahlen-Rechner – was kostet der Kauf wirklich?</title>
-<meta name="description" content="Rechner für die Kleinanzeigen-Bezahlfunktion: Artikelpreis und Versand eingeben, Servicegebühr und Endsumme ablesen, Text zum Kopieren erhalten.">
+<title>Kleinanzeigen-Gebührenrechner für „Sicher bezahlen“ – Klein-Rechner</title>
+<meta name="description" content="Was kostet „Sicher bezahlen“ bei Kleinanzeigen? Artikelpreis und Versand eingeben – Servicegebühr für den Käuferschutz, Endsumme und Vergleich mit dem Direktkauf.">
+<link rel="canonical" href="https://rorar.github.io/klein-rechner/">
 <meta name="color-scheme" content="light">
+<meta name="theme-color" content="#2C6A4F">
+<meta name="application-name" content="Klein-Rechner">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Klein-Rechner">
+<meta property="og:locale" content="de_DE">
+<meta property="og:url" content="https://rorar.github.io/klein-rechner/">
+<meta property="og:title" content="Kleinanzeigen-Gebührenrechner für „Sicher bezahlen“ – Klein-Rechner">
+<meta property="og:description" content="Artikelpreis und Versand eingeben, Servicegebühr des Käuferschutzes und Endsumme ablesen, Direktkauf vergleichen, fertigen Text für den Chat kopieren.">
+<meta property="og:image" content="https://rorar.github.io/klein-rechner/og.png?v=27">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Klein-Rechner – rechnet nichts klein. Die Gebühr bei „Sicher bezahlen“, nachgerechnet.">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="fonts/Newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css?v=26">
+<link rel="stylesheet" href="styles.css?v=27">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232C6A4F'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' fill='%23FBFBF7' text-anchor='middle'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
+
+<!-- Strukturierte Angaben für Suchmaschinen. Bewusst ohne Gebührensätze: die
+     stehen in js/daten.js und würden hier still veralten. Ohne Person als
+     Anbieter und ohne Bewertungen, die es nicht gibt. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Klein-Rechner",
+  "alternateName": "Sicher-bezahlen-Rechner",
+  "url": "https://rorar.github.io/klein-rechner/",
+  "description": "Gebührenrechner für die Kleinanzeigen-Bezahlfunktion „Sicher bezahlen“: Servicegebühr des Käuferschutzes, Endsumme und Vergleich mit dem Direktkauf.",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Webbrowser",
+  "browserRequirements": "JavaScript",
+  "inLanguage": "de",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "license": "https://github.com/rorar/klein-rechner/blob/main/LICENSE"
+}
+</script>
 </head>
 <body>
 
 <header class="masthead">
+  <p class="wortmarke">Klein-Rechner <span>rechnet nichts klein</span></p>
   <h1>Was kostet der Kauf mit&nbsp;„Sicher&nbsp;bezahlen“?</h1>
   <p class="standfirst">Artikelpreis und Versand eintragen. Der Rechner zeigt die Servicegebühr, die Endsumme und einen fertigen Text für den Chat.</p>
 </header>
@@ -301,6 +339,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script type="module" src="js/ui.js?v=26"></script>
+<script type="module" src="js/ui.js?v=27"></script>
 </body>
 </html>

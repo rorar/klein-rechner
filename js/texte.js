@@ -1,8 +1,8 @@
 /* Fertige Nachrichten zum Verschicken. Kein DOM, damit sich die Texte
    ohne Browser prüfen lassen. */
 
-import { fmt } from './rechnen.js?v=26';
-import { PAKETSTATION_ZUSTELLUNG } from './daten.js?v=26';
+import { fmt } from './rechnen.js?v=27';
+import { PAKETSTATION_ZUSTELLUNG } from './daten.js?v=27';
 
 const TRENNER = '------';
 

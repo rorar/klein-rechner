@@ -77,6 +77,27 @@ body {
   margin: 0 auto clamp(2rem, 1rem + 3vw, 3.25rem);
 }
 
+/* Der Name steht als Zeile über der Überschrift, nicht als Überschrift:
+   gesucht wird nach der Frage, nicht nach dem Namen. */
+.wortmarke {
+  margin: 0 0 0.5rem;
+  color: var(--pine);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wortmarke span {
+  color: var(--muted);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.wortmarke span::before {
+  content: "· ";
+}
+
 .masthead h1 {
   margin: 0 0 0.6rem;
   max-width: 18ch;

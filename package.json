@@ -2,7 +2,7 @@
   "name": "klein-rechner",
   "version": "1.0.0",
   "private": true,
-  "description": "Rechner für die Kleinanzeigen-Bezahlfunktion \"Sicher bezahlen\"",
+  "description": "Klein-Rechner: Gebühr und Endsumme der Kleinanzeigen-Bezahlfunktion \"Sicher bezahlen\"",
   "homepage": "https://rorar.github.io/klein-rechner/",
   "license": "MIT",
   "type": "module",
