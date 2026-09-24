@@ -114,25 +114,41 @@ test('og:image verweist auf die vorhandene Datei in ihrer wahren Größe', () =>
 /* fmt setzt zwischen Betrag und Währungszeichen ein geschütztes Leerzeichen.
    Im Quelltext der Seite steht ein gewöhnliches; beides meint dasselbe. */
 const glatt = (t) => t.replace(/ /g, ' ');
-const seite = glatt(index);
+
+/* Nur der Abschnitt selbst, nicht die ganze Seite: die Quelle steht auch in
+   der Fußzeile, und ein Test, der bei gelöschtem Abschnitt grün bleibt,
+   prüft nichts. */
+const abschnitt = (() => {
+  const anfang = index.indexOf('<section class="panel prosa erklaerung"');
+  assert.notEqual(anfang, -1, 'Abschnitt „Wie hoch ist die Gebühr“ fehlt');
+  return glatt(index.slice(anfang, index.indexOf('</section>', anfang)));
+})();
 
 test('der erklärende Abschnitt nennt die Sätze aus den Daten', () => {
   const satz = glatt(KLEINANZEIGEN_AUFSCHLUESSELUNG);
-  assert.ok(seite.includes(satz), `erwartet im Text: ${satz}`);
+  assert.ok(abschnitt.includes(satz), `erwartet im Text: ${satz}`);
 });
 
 test('das Beispiel im Abschnitt ist nachgerechnet', () => {
   for (const preisCent of [4500, 9900]) {
     const gebuehr = kleinanzeigenGebuehr(preisCent);
     for (const betrag of [preisCent, gebuehr, preisCent + gebuehr]) {
-      assert.ok(seite.includes(glatt(fmt(betrag))),
+      assert.ok(abschnitt.includes(glatt(fmt(betrag))),
         `fehlt im Beispiel: ${glatt(fmt(betrag))}`);
     }
   }
 });
 
 test('der Abschnitt verweist auf die Quelle der Gebühr', () => {
-  assert.ok(index.includes(KLEINANZEIGEN.quelle), KLEINANZEIGEN.quelle);
+  assert.ok(abschnitt.includes(KLEINANZEIGEN.quelle), KLEINANZEIGEN.quelle);
+});
+
+test('der Abschnitt behauptet nichts über fremde Gebühren', () => {
+  /* Der Direktkauf hat je nach Zahlweg eigene Gebühren – siehe ZAHLWEGE in
+     js/daten.js. Ein Satz, der hier einzelne Zahlwege als gebührenfrei
+     aufzählt, widerspräche dem Vergleich und führte zu PayPal Freunde und
+     Familie, wovor die Seite an anderer Stelle warnt. */
+  assert.equal(/PayPal|Überweisung|Barzahlung/.test(abschnitt), false, abschnitt);
 });
 
 test('die Versionsangabe ist in allen Adressen dieselbe', () => {

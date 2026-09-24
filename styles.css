@@ -130,6 +130,12 @@ body {
 
 .texts { grid-column: 1 / -1; }
 
+/* Über die ganze Breite wie die Textkarten. Ohne die Angabe landet der
+   Abschnitt in einer Spalte, sobald die Belege daneben ausgeblendet sind –
+   dann stand er auf halber Breite neben einem Loch. Die Zeilenlänge deckelt
+   .prosa p, nicht die Spur. */
+.erklaerung { grid-column: 1 / -1; }
+
 .panel-title {
   margin: 0 0 1.25rem;
   padding-bottom: 0.55rem;
