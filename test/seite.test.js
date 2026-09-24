@@ -8,8 +8,8 @@ import { readFileSync } from 'node:fs';
 
 import {
   fmt, kleinanzeigenGebuehr, KLEINANZEIGEN_AUFSCHLUESSELUNG
-} from '../js/rechnen.js?v=27';
-import { KLEINANZEIGEN } from '../js/daten.js?v=27';
+} from '../js/rechnen.js?v=28';
+import { KLEINANZEIGEN } from '../js/daten.js?v=28';
 
 const BASIS = 'https://rorar.github.io/klein-rechner/';
 
@@ -149,6 +149,37 @@ test('der Abschnitt behauptet nichts über fremde Gebühren', () => {
      aufzählt, widerspräche dem Vergleich und führte zu PayPal Freunde und
      Familie, wovor die Seite an anderer Stelle warnt. */
   assert.equal(/PayPal|Überweisung|Barzahlung/.test(abschnitt), false, abschnitt);
+});
+
+test('beide Skalenköpfe tragen eine Anstreichung, keine davon vorgelesen', () => {
+  const koepfe = index.slice(index.indexOf('<div class="skala-koepfe"'),
+    index.indexOf('</div>', index.indexOf('<div class="skala-koepfe"')));
+  const svgs = [...koepfe.matchAll(/<svg class="kringel"[^>]*>/g)].map((t) => t[0]);
+  assert.equal(svgs.length, 2, koepfe);
+  for (const svg of svgs) {
+    /* Welche Seite gilt, sagt der Befund unter der Skala als Satz. Die
+       Anstreichung wiederholt ihn nur für das Auge. */
+    assert.ok(svg.includes('aria-hidden="true"'), svg);
+    /* Die Beschriftung bricht schmal auf zwei Zeilen um; der Kringel folgt
+       dem Kasten, der Strich darf dabei nicht mitverzerren. */
+    assert.ok(svg.includes('preserveAspectRatio="none"'), svg);
+  }
+  assert.equal((koepfe.match(/vector-effect="non-scaling-stroke"/g) || []).length, 2);
+  /* Der Ausgangszustand streicht nichts an: ohne Vergleich gibt es keine
+     günstigere Seite, und der Abschnitt steht ohnehin auf hidden. */
+  assert.ok(koepfe.includes('data-guenstiger="keins"'), koepfe);
+});
+
+test('der Fließtext-Abschnitt bleibt vom Spaltenraster ausgenommen', () => {
+  /* Im Vergleichsmodus macht eine Regel aus dem Eingabefeld-Panel ein
+     dreispaltiges Raster. Der erklärende Abschnitt heißt auch `panel` und
+     erbte sie: Überschrift und zugehöriger Absatz standen in verschiedenen
+     Spalten. Beide Hälften der Kopplung werden hier festgehalten. */
+  const css = lies('styles.css');
+  assert.ok(css.includes('.sheet[data-vergleich="an"] > .panel:not(.prosa)'),
+    'Ausnahme im Spaltenraster fehlt');
+  assert.ok(index.includes('<section class="panel prosa erklaerung"'),
+    'Abschnitt trägt die Klasse nicht mehr, über die er ausgenommen wird');
 });
 
 test('die Versionsangabe ist in allen Adressen dieselbe', () => {

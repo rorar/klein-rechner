@@ -1,8 +1,8 @@
 /* Der Beleg wird von Hand auf ein Canvas gezeichnet. Das sind wenige
    Zeilen je Spalte – dafür lohnt keine Bibliothek, die das DOM nachbaut. */
 
-import { fmt, KLEINANZEIGEN_AUFSCHLUESSELUNG } from './rechnen.js?v=27';
-import { ausgerichtetePosten, breakevenSaetze, kostenPosten, schutzSatz } from './texte.js?v=27';
+import { fmt, KLEINANZEIGEN_AUFSCHLUESSELUNG } from './rechnen.js?v=28';
+import { ausgerichtetePosten, breakevenSaetze, kostenPosten, schutzSatz } from './texte.js?v=28';
 
 const REPO = 'github.com/rorar/klein-rechner';
 const SEITE = 'rorar.github.io/klein-rechner';

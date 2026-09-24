@@ -11,7 +11,7 @@
 
 import {
   KLEINANZEIGEN, ZAHLWEGE as ZAHLWEGE_BESCHREIBUNG, VERSANDARTEN, STAND_DER_WERTE
-} from './daten.js?v=27';
+} from './daten.js?v=28';
 
 export { VERSANDARTEN, STAND_DER_WERTE };
 

@@ -6,11 +6,11 @@ import {
   kleinanzeigenGebuehr, STAND_DER_WERTE, sendungBeschreibung,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=27';
+} from './rechnen.js?v=28';
 import {
   textDu, textSie, textNeutral, breakevenSaetze, kostenPosten
-} from './texte.js?v=27';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=27';
+} from './texte.js?v=28';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=28';
 
 /* Steht ganz oben, vor jedem Zugriff aufs Dokument: auf einer fremden
    Seite gäbe es die Knöpfe nicht, das Modul bräche beim Laden ab, und die
@@ -254,6 +254,15 @@ function zeigeBreakeven(b, ka, di) {
   preisLabel.textContent = fmt(ka.preis);
   setzeLabel(preisLabel, markePos);
   el('skala-bis').textContent = fmt(ende);
+
+  /* Angestrichen wird, was beim eingetragenen Preis gilt - abgelesen an den
+     beiden Summen, nicht aus der Schwelle abgeleitet. kaeuferAb ist der
+     kleinste Preis, ab dem direkt echt günstiger ist; darunter kann es
+     gleich teuer sein, und dann ist keine Seite die günstigere. */
+  el('skala-koepfe').dataset.guenstiger =
+    ka.kaeuferZahlt < di.kaeuferZahlt ? 'links'
+    : di.kaeuferZahlt < ka.kaeuferZahlt ? 'rechts'
+    : 'keins';
 
   const saetze = breakevenSaetze(b, ka, di, { persoenlich: true });
   el('befund-kaeufer').textContent = saetze.kaeufer;

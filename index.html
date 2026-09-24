@@ -16,7 +16,7 @@
 <meta property="og:url" content="https://rorar.github.io/klein-rechner/">
 <meta property="og:title" content="Kleinanzeigen-Gebührenrechner für „Sicher bezahlen“ – Klein-Rechner">
 <meta property="og:description" content="Artikelpreis und Versand eingeben, Servicegebühr des Käuferschutzes und Endsumme ablesen, Direktkauf vergleichen, fertigen Text für den Chat kopieren.">
-<meta property="og:image" content="https://rorar.github.io/klein-rechner/og.png?v=27">
+<meta property="og:image" content="https://rorar.github.io/klein-rechner/og.png?v=28">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -24,7 +24,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="fonts/Newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css?v=27">
+<link rel="stylesheet" href="styles.css?v=28">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232C6A4F'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' fill='%23FBFBF7' text-anchor='middle'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
 
 <!-- Strukturierte Angaben für Suchmaschinen. Bewusst ohne Gebührensätze: die
@@ -238,9 +238,14 @@
     <h2 id="breakeven-titel" class="panel-title">Ab wann lohnt der Direktkauf?</h2>
 
     <div class="skala" id="skala">
-      <div class="skala-koepfe">
-        <span class="skala-kopf skala-kopf-links">Kleinanzeigen günstiger</span>
-        <span class="skala-kopf skala-kopf-rechts">Direktkauf günstiger</span>
+      <!-- Der Kringel ist Beiwerk: Welche Seite gilt, steht als Satz unter der
+           Skala. Deshalb aria-hidden - vorgelesen würde er nichts beitragen,
+           was der Befund nicht schon sagt. Er liegt in beiden Köpfen und wird
+           über data-guenstiger eingeblendet; die Bahnen unterscheiden sich
+           leicht, damit die beiden nicht gestempelt wirken. -->
+      <div class="skala-koepfe" id="skala-koepfe" data-guenstiger="keins">
+        <span class="skala-kopf skala-kopf-links">Kleinanzeigen günstiger<svg class="kringel" viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true"><path d="M18,33 C18,15 60,6 103,6 C151,6 191,15 191,32 C191,51 146,57 99,57 C52,57 10,50 10,34 C10,21 33,11 66,8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg></span>
+        <span class="skala-kopf skala-kopf-rechts">Direktkauf günstiger<svg class="kringel" viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true"><path d="M12,29 C14,13 58,5 101,6 C149,7 189,17 188,34 C187,52 141,58 95,56 C49,54 11,46 13,31 C15,19 40,10 72,7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg></span>
       </div>
       <!-- Beide Beschriftungen stehen über der Bahn, untereinander: oben
            die Schwelle, darunter der aktuelle Preis an seiner Marke. Unter
@@ -383,6 +388,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script type="module" src="js/ui.js?v=27"></script>
+<script type="module" src="js/ui.js?v=28"></script>
 </body>
 </html>
