@@ -6,9 +6,9 @@ import {
   kleinanzeigenGebuehr, STAND_DER_WERTE,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=21';
-import { textDu, textSie, textNeutral, breakevenSaetze } from './texte.js?v=21';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=21';
+} from './rechnen.js?v=22';
+import { textDu, textSie, textNeutral, breakevenSaetze } from './texte.js?v=22';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=22';
 
 /* Steht ganz oben, vor jedem Zugriff aufs Dokument: auf einer fremden
    Seite gäbe es die Knöpfe nicht, das Modul bräche beim Laden ab, und die
@@ -37,6 +37,14 @@ const vergleichFeld = el('vergleich');
 const sheet = document.querySelector('.sheet');
 
 const kopien = { summe: '', dsumme: '', du: '', sie: '', neutral: '', link: '', json: '' };
+/* Der Name der Versandart und ihre Zustellbedingung gehören in die
+   Nachricht an den Käufer; ein Betrag allein sagt beides nicht. Die Art
+   wird bei jeder Rechnung aus dem Betrag abgeleitet statt als Zustand
+   mitgeschleppt: eine gemerkte Auswahl klebte sonst an einem Betrag, der
+   von Hand geändert wurde und gar nicht mehr zu ihr passt. */
+const artZu = (quelle, cent) =>
+  cent === null || Number.isNaN(cent) ? null : (versandartenFuer(quelle).find(a => a.cent === cent) || null);
+
 let letzteRechnung = null;      // Kleinanzeigen-Weg, für das Bild
 let letzteDirekt = null;
 let letzterBreakeven = null;
@@ -238,14 +246,15 @@ function aktualisiere() {
     return;
   }
 
-  const ka = berechne(preis, versand === null ? 0 : versand, paketstationFeld.checked);
+  const ka = berechne(preis, versand === null ? 0 : versand, paketstationFeld.checked,
+                      artZu('kleinanzeigen', versand));
   letzteRechnung = ka;
   zeigeKleinanzeigen(ka);
 
   let di = null;
   if (vergleich) {
     di = berechneDirekt(preis, direktversand === null ? 0 : direktversand,
-                        zahlwegAktuell(), traegerAktuell());
+                        zahlwegAktuell(), traegerAktuell(), artZu('direkt', direktversand));
     letzteDirekt = di;
     letzterBreakeven = breakeven({
       versandKleinanzeigen: ka.versand,
@@ -558,6 +567,20 @@ window.addEventListener('message', ev => {
   ev.source?.postMessage({ typ: 'klein-rechner:ergebnis', ergebnis }, ev.origin);
 });
 
+/* ---------- Eingaben beim Verlassen aufräumen ---------- */
+
+/* „78“ wird zu „78,00“, „78,3“ zu „78,30“. Erst beim Verlassen, nicht
+   beim Tippen: sonst schöbe die Ergänzung den Eingabezeiger weg. */
+function fuelleNachkommastellen(feld) {
+  const cent = parseEuroToCent(feld.value);
+  if (cent === null || Number.isNaN(cent) || !imRahmen(cent)) return;
+  const sauber = (cent / 100).toFixed(2).replace('.', ',');
+  if (feld.value !== sauber) {
+    feld.value = sauber;
+    aktualisiere();
+  }
+}
+
 /* ---------- Adresse als Zustand ---------- */
 
 function leseUrl() {
@@ -634,9 +657,10 @@ function fuelleDatenTexte() {
 /* ---------- Start ---------- */
 
 if (aufDerEigenenSeite) {
-  preisInput.addEventListener('input', aktualisiere);
-  versandInput.addEventListener('input', aktualisiere);
-  direktversandInput.addEventListener('input', aktualisiere);
+  for (const feld of [preisInput, versandInput, direktversandInput]) {
+    feld.addEventListener('input', aktualisiere);
+    feld.addEventListener('blur', () => fuelleNachkommastellen(feld));
+  }
   paketstationFeld.addEventListener('change', aktualisiere);
   vergleichFeld.addEventListener('change', aktualisiere);
 

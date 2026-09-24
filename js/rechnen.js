@@ -11,7 +11,7 @@
 
 import {
   KLEINANZEIGEN, ZAHLWEGE as ZAHLWEGE_BESCHREIBUNG, VERSANDARTEN, STAND_DER_WERTE
-} from './daten.js?v=21';
+} from './daten.js?v=22';
 
 export { VERSANDARTEN, STAND_DER_WERTE };
 
@@ -59,6 +59,19 @@ export function gebuehrFormel(deskriptor) {
 
 export const KLEINANZEIGEN_FORMEL = gebuehrFormel(KLEINANZEIGEN.gebuehr);
 
+/* Ausführlicher, für die Nachricht an den Käufer: dort soll erkennbar
+   sein, woraus die Gebühr besteht und worauf der Anteil sich bezieht. */
+export function gebuehrAufschluesselung(deskriptor) {
+  if (!deskriptor) return null;
+  const bezug = deskriptor.grundlage === 'gesamtbetrag' ? ' vom Gesamtbetrag' : '';
+  return `${fmt(deskriptor.festCent)} Pauschal + ${prozent.format(deskriptor.basispunkte / 100)}\u00a0%${bezug}`;
+}
+
+export const KLEINANZEIGEN_AUFSCHLUESSELUNG = gebuehrAufschluesselung(KLEINANZEIGEN.gebuehr);
+
+export const zahlwegAufschluesselung = id =>
+  gebuehrAufschluesselung(ZAHLWEGE_BESCHREIBUNG.find(z => z.id === id)?.gebuehr);
+
 export const zahlwegFormel = id =>
   gebuehrFormel(ZAHLWEGE_BESCHREIBUNG.find(z => z.id === id)?.gebuehr);
 
@@ -86,7 +99,7 @@ export const kleinanzeigenGebuehr = gebuehrAus(KLEINANZEIGEN.gebuehr);
 
 /* Alle Rechnungen liefern dieselbe Form, damit Beleg, Text und Bild einen
    Weg wie den anderen behandeln können. */
-export function berechne(preisCent, versandCent, paketstation) {
+export function berechne(preisCent, versandCent, paketstation, versandart = null) {
   const gebuehr = kleinanzeigenGebuehr(preisCent);
   return {
     weg: 'kleinanzeigen',
@@ -94,11 +107,14 @@ export function berechne(preisCent, versandCent, paketstation) {
     versand: versandCent,
     gebuehr,
     gebuehrName: KLEINANZEIGEN_GEBUEHR_NAME,
+    gebuehrAufschluesselung: KLEINANZEIGEN_AUFSCHLUESSELUNG,
     kaeuferZahlt: preisCent + versandCent + gebuehr,
     verkaeuferBehaelt: preisCent,     // die Gebühr trägt der Käufer
     schutz: true,
     schutzName: KLEINANZEIGEN_SCHUTZ_NAME,
-    paketstation: paketstation && versandCent > 0
+    paketstation: paketstation && versandCent > 0,
+    versandName: versandart ? (versandart.kurz || versandart.name) : null,
+    versandZustellung: versandart?.zustellung || null
   };
 }
 
@@ -138,7 +154,7 @@ export function betragMitAufschlag(zielCent, gebuehrFn) {
 /* gebuehrTraeger: 'verkaeufer' – die Gebühr geht vom Erlös ab.
                    'kaeufer'    – der Käufer überweist so viel mehr,
                                   dass der Erlös unberührt bleibt. */
-export function berechneDirekt(preisCent, versandCent, zahlwegId, gebuehrTraeger = 'verkaeufer') {
+export function berechneDirekt(preisCent, versandCent, zahlwegId, gebuehrTraeger = 'verkaeufer', versandart = null) {
   const zahlweg = findeZahlweg(zahlwegId);
   const versand = zahlweg.ohneVersand ? 0 : versandCent;
   const ziel = preisCent + versand;
@@ -170,8 +186,12 @@ export function berechneDirekt(preisCent, versandCent, zahlwegId, gebuehrTraeger
     verkaeuferBehaelt,
     schutz: zahlweg.schutz,
     schutzName: zahlweg.schutzName || null,
+    gebuehrAufschluesselung: gebuehrAufschluesselung(
+      ZAHLWEGE_BESCHREIBUNG.find(z => z.id === zahlweg.id)?.gebuehr),
     warnung: zahlweg.warnung || null,
-    paketstation: false
+    paketstation: false,
+    versandName: zahlweg.ohneVersand || !versandart ? null : (versandart.kurz || versandart.name),
+    versandZustellung: zahlweg.ohneVersand ? null : (versandart?.zustellung || null)
   };
 }
 

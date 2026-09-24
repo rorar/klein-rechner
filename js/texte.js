@@ -1,85 +1,87 @@
 /* Fertige Nachrichten zum Verschicken. Kein DOM, damit sich die Texte
    ohne Browser prüfen lassen. */
 
-import { fmt, KLEINANZEIGEN_FORMEL } from './rechnen.js?v=21';
+import { fmt } from './rechnen.js?v=22';
 
-export function versandText(r) {
-  if (r.versand === 0) return 'entfällt';
-  return r.paketstation ? `${fmt(r.versand)} (Zustellung an eine Paketstation)` : fmt(r.versand);
+const TRENNER = '------';
+
+/* Was in Klammern hinter dem Versand steht: die gewählte Versandart und
+   die Bedingung, die den Käufer betrifft. Wie der Verkäufer den Schein
+   bucht, steht bewusst nicht dabei – das ist in daten.js das Feld
+   `hinweis` und geht den Empfänger nichts an. */
+function versandZusatz(r) {
+  const teile = [r.versandName, r.versandZustellung].filter(Boolean);
+  return teile.length ? ` (${teile.join(', ')})` : '';
 }
+
+/* Betrag zuerst, dann wofür. Wer eine Aufstellung überfliegt, sucht die
+   Zahlen, nicht die Wörter. */
+const posten = (betragCent, beschreibung) => `${fmt(betragCent)} ${beschreibung}`;
+
+/* Die Gebühr gehört nur in die Summe, wenn der Käufer sie auch zahlt.
+   Trägt der Verkäufer sie, steht sie als Satz unter dem Strich. */
+const kaeuferTraegtGebuehr = r =>
+  r.gebuehr > 0 && (r.weg === 'kleinanzeigen' || r.gebuehrTraeger === 'kaeufer');
 
 export function aufstellung(r) {
-  return [
-    `Artikel: ${fmt(r.preis)}`,
-    `Versand: ${versandText(r)}`,
-    `${r.gebuehrName}: ${fmt(r.gebuehr)}`,
-    `Gesamt: ${fmt(r.kaeuferZahlt)}`
-  ].join('\n');
+  const zeilen = [posten(r.preis, 'Angebotspreis')];
+
+  if (kaeuferTraegtGebuehr(r)) {
+    zeilen.push(posten(r.gebuehr, `${r.gebuehrName} (${r.gebuehrAufschluesselung})`));
+  }
+
+  if (r.versand > 0) {
+    zeilen.push(posten(r.versand, `Versand${versandZusatz(r)}`));
+  } else {
+    zeilen.push('ohne Versand, Abholung');
+  }
+
+  zeilen.push(TRENNER);
+  zeilen.push(posten(r.kaeuferZahlt, 'zusammen'));
+
+  if (r.gebuehr > 0 && !kaeuferTraegtGebuehr(r)) {
+    zeilen.push(`Die ${r.gebuehrName} von ${fmt(r.gebuehr)} (${r.gebuehrAufschluesselung}) trägt der Verkäufer.`);
+  }
+
+  return zeilen.join('\n');
 }
 
-export function gebuehrSatz(r) {
-  return `Über „Sicher bezahlen“ kommt eine Servicegebühr von ${fmt(r.gebuehr)} dazu – das sind ${KLEINANZEIGEN_FORMEL} vom Artikelpreis.`;
+export function schutzSatz(r) {
+  return r.schutz ? `Der ${r.schutzName} greift.` : 'Ohne Käuferschutz.';
 }
+
+function warnungSatz(r) {
+  return r.warnung ? `\n${r.warnung}` : '';
+}
+
+/* ---------- Die drei Fassungen ---------- */
 
 /* Die Aufstellung ist in allen Fassungen gleich, nur die Anrede und der
    Schlusssatz unterscheiden sich. Du- und Sie-Text stehen trotzdem
    getrennt: ein Austausch einzelner Wörter fiele an "zahlst du" /
    "zahlen Sie" auseinander. */
-function rumpf(r) {
+function einzeln(ka, schluss) {
   return `Hallo,
 
-der Artikel kostet ${fmt(r.preis)}. ${gebuehrSatz(r)}
+${aufstellung(ka)}
 
-${aufstellung(r)}
-`;
+${schluss} ${schutzSatz(ka)}`;
 }
 
-/* ---------- Vergleich beider Wege ---------- */
-
-function block(titel, zeilen, schutzsatz) {
-  return `${titel}\n${zeilen.join(', ')}\n${schutzsatz}`;
+function block(titel, r) {
+  return `${titel}\n${aufstellung(r)}\n${schutzSatz(r)}${warnungSatz(r)}`;
 }
 
-function schutzsatzDirekt(di) {
-  /* Nicht jeder Direktweg ist ungeschützt: PayPal Waren und Dienstleistungen
-     trägt `schutz: true`. Beleg und Bild lesen dasselbe Feld, der Text tat
-     es bisher nicht und behauptete auch dort „Ohne Käuferschutz“. */
-  const satz = di.schutz ? `Der ${di.schutzName} greift.` : 'Ohne Käuferschutz.';
-  if (di.warnung) return `${satz} ${di.warnung}`;
-  return satz;
-}
-
-function vergleichRumpf(ka, di) {
-  const kaBlock = block(
-    'über „Sicher bezahlen“',
-    [
-      `Versand ${versandText(ka)}`,
-      `${ka.gebuehrName} ${fmt(ka.gebuehr)}`,
-      `zusammen ${fmt(ka.kaeuferZahlt)}`
-    ],
-    `Der ${ka.schutzName} greift.`
-  );
-
-  const diZeilen = [di.versand > 0 ? `Versand ${fmt(di.versand)}` : 'ohne Versand'];
-  if (di.gebuehr > 0 && di.gebuehrTraeger === 'kaeufer') {
-    diZeilen.push(`${di.gebuehrName} ${fmt(di.gebuehr)} obendrauf`);
-  } else if (di.gebuehr > 0) {
-    diZeilen.push(`${di.gebuehrName} trägt der Verkäufer`);
-  } else {
-    diZeilen.push('keine Gebühr');
-  }
-  diZeilen.push(`zusammen ${fmt(di.kaeuferZahlt)}`);
-
-  const diBlock = block(`per ${di.zahlwegName}`, diZeilen, schutzsatzDirekt(di));
-
+function vergleich(ka, di, schluss) {
   return `Hallo,
 
 für den Artikel zu ${fmt(ka.preis)} gibt es zwei Wege:
 
-${kaBlock}
+${block('über „Sicher bezahlen“', ka)}
 
-${diBlock}
-`;
+${block(`per ${di.zahlwegName}`, di)}
+
+${schluss}`;
 }
 
 /* Der Schlusssatz nennt die Differenz und lässt die Wahl offen. */
@@ -87,31 +89,29 @@ function differenzSatz(ka, di, form) {
   const d = Math.abs(ka.kaeuferZahlt - di.kaeuferZahlt);
   if (d === 0) return 'Beide Wege kosten gleich viel.';
 
-  const direktBilliger = di.kaeuferZahlt < ka.kaeuferZahlt;
-  const weg = direktBilliger ? `per ${di.zahlwegName}` : 'über „Sicher bezahlen“';
+  const weg = di.kaeuferZahlt < ka.kaeuferZahlt ? `per ${di.zahlwegName}` : 'über „Sicher bezahlen“';
+  const gross = `${weg[0].toUpperCase()}${weg.slice(1)}`;
 
-  if (form === 'du') return `${weg[0].toUpperCase()}${weg.slice(1)} zahlst du ${fmt(d)} weniger.`;
-  if (form === 'sie') return `${weg[0].toUpperCase()}${weg.slice(1)} zahlen Sie ${fmt(d)} weniger.`;
-  return `${weg[0].toUpperCase()}${weg.slice(1)} sind es ${fmt(d)} weniger.`;
+  if (form === 'du') return `${gross} zahlst du ${fmt(d)} weniger.`;
+  if (form === 'sie') return `${gross} zahlen Sie ${fmt(d)} weniger.`;
+  return `${gross} sind es ${fmt(d)} weniger.`;
 }
 
-function baue(ka, di, form, schluss) {
-  if (!di) return `${rumpf(ka)}\n${schluss}`;
-  return `${vergleichRumpf(ka, di)}\n${differenzSatz(ka, di, form)}`;
-}
+const baue = (ka, di, form, schluss) =>
+  di ? vergleich(ka, di, differenzSatz(ka, di, form)) : einzeln(ka, schluss);
 
 export function textDu(ka, di) {
-  return baue(ka, di, 'du', `Du zahlst damit insgesamt ${fmt(ka.kaeuferZahlt)}.`);
+  return baue(ka, di, 'du', `Du zahlst damit ${fmt(ka.kaeuferZahlt)} über „Sicher bezahlen“.`);
 }
 
 export function textSie(ka, di) {
-  return baue(ka, di, 'sie', `Sie zahlen damit insgesamt ${fmt(ka.kaeuferZahlt)}.`);
+  return baue(ka, di, 'sie', `Sie zahlen damit ${fmt(ka.kaeuferZahlt)} über „Sicher bezahlen“.`);
 }
 
 /* Kommt ohne "du" und ohne "Sie" aus und passt damit auch, solange die
    Anrede zwischen zwei Leuten noch nicht geklärt ist. */
 export function textNeutral(ka, di) {
-  return baue(ka, di, 'neutral', `Insgesamt sind das ${fmt(ka.kaeuferZahlt)}.`);
+  return baue(ka, di, 'neutral', `Insgesamt sind das ${fmt(ka.kaeuferZahlt)} über „Sicher bezahlen“.`);
 }
 
 /* ---------- Befunde zum Breakeven ---------- */
@@ -122,13 +122,13 @@ export function textNeutral(ka, di) {
 export function breakevenSaetze(b, ka, di, { persoenlich = false } = {}) {
   const verkaeufer = persoenlich ? 'Für dich als Verkäufer' : 'Für den Verkäufer';
 
-  let kaeuferSatz;
+  let kaeufer;
   if (typeof b.kaeuferAb === 'number') {
-    kaeuferSatz = `Für den Käufer dreht es sich bei ${fmt(b.kaeuferAb)}: darunter ist „Sicher bezahlen“ günstiger, darüber der Direktkauf.`;
+    kaeufer = `Für den Käufer dreht es sich bei ${fmt(b.kaeuferAb)}: darunter ist „Sicher bezahlen“ günstiger, darüber der Direktkauf.`;
   } else if (b.kaeuferAb === 'immer') {
-    kaeuferSatz = 'Für den Käufer ist der Direktkauf bei jedem Preis günstiger.';
+    kaeufer = 'Für den Käufer ist der Direktkauf bei jedem Preis günstiger.';
   } else {
-    kaeuferSatz = 'Für den Käufer ist „Sicher bezahlen“ bei jedem Preis günstiger.';
+    kaeufer = 'Für den Käufer ist „Sicher bezahlen“ bei jedem Preis günstiger.';
   }
 
   let verkaeuferSatz;
@@ -144,5 +144,5 @@ export function breakevenSaetze(b, ka, di, { persoenlich = false } = {}) {
     verkaeuferSatz = `${verkaeufer} ab ${fmt(b.verkaeuferAb)}.`;
   }
 
-  return { kaeufer: kaeuferSatz, verkaeufer: verkaeuferSatz };
+  return { kaeufer, verkaeufer: verkaeuferSatz };
 }

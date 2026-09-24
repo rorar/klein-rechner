@@ -122,6 +122,20 @@ Funktion:
 gebuehr: { festCent: 35, basispunkte: 249, grundlage: 'gesamtbetrag' }
 ```
 
+Die Versandarten tragen zwei getrennte Hinweisfelder, weil zwei
+verschiedene Leute gemeint sind:
+
+```js
+{ name: 'Hermes Päckchen, online gebucht',   // in der Auswahlliste
+  kurz: 'Hermes Päckchen',                   // in der Nachricht an den Käufer
+  hinweis: 'online gebucht',                 // geht den Verkäufer an
+  zustellung: 'Zustellung an die Haustür' }  // geht den Käufer an
+```
+
+Wie der Verkäufer den Schein bucht, interessiert den Käufer nicht und
+bleibt deshalb aus der Nachricht heraus. `kurz` ist freiwillig; fehlt es,
+wird `name` genommen.
+
 `basispunkte` sind Zehntausendstel – 450 sind 4,5 %. `grundlage` unterscheidet,
 ob der Satz auf den Artikelpreis oder auf den gesamten Betrag einschließlich
 Versand wirkt. Ein neuer Zahlweg oder ein geänderter Satz ist damit eine reine
@@ -150,7 +164,7 @@ Projekt. `rechnen.js` importiert `daten.js`, eine einzelne Datei zu holen reicht
 also nicht.
 
 ```js
-const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=21');
+const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=22');
 
 berechneAlles({
   artikelpreisCent: 4500,
@@ -249,12 +263,12 @@ npm test         # node --test, ohne Browser
 Dann http://localhost:8765 öffnen. Über `file://` läuft die Seite nicht: ES-Module
 brauchen HTTP. Auch die Kopierfunktion will HTTPS oder localhost.
 
-Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=21`). Ohne sie
+Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=22`). Ohne sie
 könnte ein Browser ein frisches `ui.js` mit einem veralteten `rechnen.js` mischen.
 Beim Ändern alle Vorkommen gemeinsam hochzählen:
 
 ```sh
-alt=21; neu=22
+alt=22; neu=23
 sed -i "s/?v=$alt/?v=$neu/g" index.html js/*.js test/*.js README.md
 ```
 

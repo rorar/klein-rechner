@@ -72,7 +72,19 @@ export const ZAHLWEGE = [
 
 /* ---------- Versandkosten ---------- */
 
-/* quelle: 'kleinanzeigen' erscheint nur im Kleinanzeigen-Feld,
+/* Zwei verschiedene Leser, zwei Felder:
+
+     name        steht in der Auswahlliste und darf unterscheiden, wie
+                 der Schein gebucht wird - der Preis hängt daran.
+     kurz        steht in der Nachricht an den Käufer, wo die Buchungsart
+                 nichts zu suchen hat. Fehlt sie, wird `name` genommen.
+     hinweis     geht den Verkäufer an und steht in der Auswahlliste
+                 ("nur online buchbar").
+     zustellung  geht den Käufer an und wandert in die Nachricht an ihn
+                 ("von Shop zu Shop"). Wie der Verkäufer den Schein bucht,
+                 interessiert den Käufer nicht.
+
+   quelle: 'kleinanzeigen' erscheint nur im Kleinanzeigen-Feld,
            'direkt' nur im Feld für den selbst gebuchten Versand,
            'beide' in beiden.
 
@@ -88,19 +100,28 @@ export const ZAHLWEGE = [
 export const VERSANDARTEN = [
   { name: 'Abholung, kein Versand', cent: 0, quelle: 'beide' },
 
-  { name: 'Hermes über Kleinanzeigen, kleinste Größe', cent: 299, quelle: 'kleinanzeigen',
-    hinweis: 'Aktionspreis nur bei Zustellung an eine Paketstation', paketstation: true },
+  { name: 'Hermes über Kleinanzeigen, kleinste Größe', kurz: 'Hermes über Kleinanzeigen', cent: 299, quelle: 'kleinanzeigen',
+    hinweis: 'Aktionspreis nur bei Zustellung an eine Paketstation',
+    zustellung: 'Zustellung an eine Paketstation', paketstation: true },
 
   { name: 'Hermes Shop-to-Shop Päckchen', cent: 399, quelle: 'direkt',
-    hinweis: 'nur online, von Shop zu Shop' },
-  { name: 'DHL Päckchen S', cent: 419, quelle: 'direkt', hinweis: 'nur online' },
+    hinweis: 'nur online buchbar', zustellung: 'von Shop zu Shop' },
+  { name: 'DHL Päckchen S', cent: 419, quelle: 'direkt',
+    hinweis: 'nur online buchbar', zustellung: 'Zustellung an die Haustür' },
   { name: 'Hermes Shop-to-Shop Paket S', cent: 489, quelle: 'direkt',
-    hinweis: 'nur online, von Shop zu Shop' },
-  { name: 'Hermes Päckchen, online', cent: 519, quelle: 'direkt', hinweis: 'an die Haustür' },
-  { name: 'Hermes Päckchen, im Shop gebucht', cent: 525, quelle: 'direkt', hinweis: 'an die Haustür' },
-  { name: 'Hermes Paket S, online', cent: 579, quelle: 'direkt', hinweis: 'an die Haustür' },
-  { name: 'Hermes Paket M an PaketShop', cent: 590, quelle: 'direkt', hinweis: 'nur online' },
-  { name: 'DHL Paket bis 2 kg', cent: 619, quelle: 'direkt', hinweis: 'nur online' },
-  { name: 'Hermes Paket S, im Shop gebucht', cent: 679, quelle: 'direkt', hinweis: 'an die Haustür' },
-  { name: 'Hermes Paket L an PaketShop', cent: 990, quelle: 'direkt', hinweis: 'nur online' }
+    hinweis: 'nur online buchbar', zustellung: 'von Shop zu Shop' },
+  { name: 'Hermes Päckchen, online gebucht', kurz: 'Hermes Päckchen', cent: 519, quelle: 'direkt',
+    hinweis: 'online gebucht', zustellung: 'Zustellung an die Haustür' },
+  { name: 'Hermes Päckchen, im Shop gebucht', kurz: 'Hermes Päckchen', cent: 525, quelle: 'direkt',
+    hinweis: 'im PaketShop gebucht', zustellung: 'Zustellung an die Haustür' },
+  { name: 'Hermes Paket S, online gebucht', kurz: 'Hermes Paket S', cent: 579, quelle: 'direkt',
+    hinweis: 'online gebucht', zustellung: 'Zustellung an die Haustür' },
+  { name: 'Hermes Paket M', cent: 590, quelle: 'direkt',
+    hinweis: 'nur online buchbar', zustellung: 'Zustellung an einen PaketShop' },
+  { name: 'DHL Paket bis 2 kg', cent: 619, quelle: 'direkt',
+    hinweis: 'nur online buchbar', zustellung: 'Zustellung an die Haustür' },
+  { name: 'Hermes Paket S, im Shop gebucht', kurz: 'Hermes Paket S', cent: 679, quelle: 'direkt',
+    hinweis: 'im PaketShop gebucht', zustellung: 'Zustellung an die Haustür' },
+  { name: 'Hermes Paket L', cent: 990, quelle: 'direkt',
+    hinweis: 'nur online buchbar', zustellung: 'Zustellung an einen PaketShop' }
 ];
