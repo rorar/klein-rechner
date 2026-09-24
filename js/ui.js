@@ -7,11 +7,12 @@ import {
   kleinanzeigenGebuehr, STAND_DER_WERTE, sendungBeschreibung,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=28';
+} from './rechnen.js?v=29';
 import {
-  textDu, textSie, textNeutral, breakevenSaetze, kostenPosten
-} from './texte.js?v=28';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=28';
+  textDu, textSie, textNeutral, breakevenSaetze, kostenPosten,
+  passtZurSuche, suchtextFuer
+} from './texte.js?v=29';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=29';
 
 /* Steht ganz oben, vor jedem Zugriff aufs Dokument: auf einer fremden
    Seite gäbe es die Knöpfe nicht, das Modul bräche beim Laden ab, und die
@@ -430,7 +431,10 @@ if (aufDerEigenenSeite) document.querySelectorAll('.copy').forEach(btn => {
    kommt an die übrigen Einträge nicht mehr heran. */
 function bauCombo({ feld, listeId, arten, nachWahl }) {
   const wrap = feld.closest('.combo');
+  const popup = wrap.querySelector('.combo-popup');
   const liste = el(listeId);
+  const suche = wrap.querySelector('.combo-suche');
+  const leer = wrap.querySelector('.combo-leer');
   const toggle = wrap.querySelector('.combo-toggle');
   let aktiv = -1;
 
@@ -441,12 +445,16 @@ function bauCombo({ feld, listeId, arten, nachWahl }) {
     li.setAttribute('aria-selected', 'false');
     li.innerHTML = '<span class="opt-name"></span><span class="opt-value"></span>'
       + '<span class="opt-sendung"></span><span class="opt-hinweis"></span>';
+    const beschreibung = sendungBeschreibung(art);
     li.querySelector('.opt-name').textContent = art.name;
     /* Größe, Maß, Gewicht und Haftung stehen über dem Hinweis: sie
        beschreiben die Sendung, der Hinweis betrifft die Buchung. */
-    li.querySelector('.opt-sendung').textContent = sendungBeschreibung(art);
+    li.querySelector('.opt-sendung').textContent = beschreibung;
     li.querySelector('.opt-hinweis').textContent = art.hinweis || '';
     li.querySelector('.opt-value').textContent = fmt(art.cent);
+    /* Einmal gebaut, nicht bei jedem Tastendruck: der Text ändert sich
+       nicht, die Anfrage schon. */
+    li.dataset.suchtext = suchtextFuer(art, beschreibung);
     li.addEventListener('mousedown', ev => {
       ev.preventDefault();          // Fokus bleibt im Eingabefeld
       waehle(i);
@@ -455,62 +463,115 @@ function bauCombo({ feld, listeId, arten, nachWahl }) {
   });
 
   const optionen = [...liste.children];
+  const sichtbare = () => optionen.filter(li => !li.hidden);
 
-  function markiere(i) {
-    optionen.forEach((li, n) => li.setAttribute('aria-selected', String(n === i)));
-    aktiv = i;
-    if (i >= 0) {
-      feld.setAttribute('aria-activedescendant', optionen[i].id);
-      optionen[i].scrollIntoView({ block: 'nearest' });
-    } else {
-      feld.removeAttribute('aria-activedescendant');
+  /* Die Markierung hängt an dem Feld, das gerade den Fokus hat - ein
+     aria-activedescendant auf einem unfokussierten Feld liest niemand
+     vor. */
+  const fokusTraeger = () => (document.activeElement === suche ? suche : feld);
+
+  function markiere(li) {
+    optionen.forEach(o => o.setAttribute('aria-selected', String(o === li)));
+    aktiv = li ? optionen.indexOf(li) : -1;
+    for (const f of [feld, suche]) f.removeAttribute('aria-activedescendant');
+    if (li) {
+      fokusTraeger().setAttribute('aria-activedescendant', li.id);
+      li.scrollIntoView({ block: 'nearest' });
     }
   }
 
+  /* Blättert um `schritt` weiter, aber nur über das, was der Filter
+     übrig gelassen hat. */
+  function ruecke(schritt) {
+    const sicht = sichtbare();
+    if (!sicht.length) return;
+    const jetzt = aktiv >= 0 ? sicht.indexOf(optionen[aktiv]) : -1;
+    const ziel = (jetzt + schritt + sicht.length + (jetzt < 0 && schritt < 0 ? 1 : 0)) % sicht.length;
+    markiere(sicht[ziel]);
+  }
+
+  function filtere() {
+    const anfrage = suche.value;
+    for (const li of optionen) li.hidden = !passtZurSuche(li.dataset.suchtext, anfrage);
+    const sicht = sichtbare();
+    leer.textContent = sicht.length ? '' : 'Nichts gefunden.';
+    /* Bleibt genau einer übrig, ist er gemeint: Enter genügt. */
+    markiere(sicht.length === 1 ? sicht[0] : null);
+  }
+
   function oeffne() {
-    liste.hidden = false;
+    popup.hidden = false;
     wrap.dataset.open = 'true';
     feld.setAttribute('aria-expanded', 'true');
   }
 
   function schliesse() {
-    liste.hidden = true;
+    popup.hidden = true;
     wrap.dataset.open = 'false';
     feld.setAttribute('aria-expanded', 'false');
-    markiere(-1);
+    markiere(null);
+    /* Zurücksetzen, sonst steht der alte Filter beim nächsten Öffnen
+       noch da und die Liste wirkt halb leer. */
+    suche.value = '';
+    for (const li of optionen) li.hidden = false;
+    leer.textContent = '';
   }
 
   function waehle(i) {
     feld.value = (arten[i].cent / 100).toFixed(2).replace('.', ',');
     schliesse();
+    feld.focus();
     nachWahl?.(arten[i]);
     aktualisiere();
   }
 
   toggle.addEventListener('mousedown', ev => {
     ev.preventDefault();
-    if (liste.hidden) { oeffne(); feld.focus(); } else { schliesse(); }
-  });
-
-  feld.addEventListener('keydown', ev => {
-    if (ev.key === 'ArrowDown') {
-      ev.preventDefault();
-      if (liste.hidden) oeffne();
-      markiere(aktiv + 1 >= optionen.length ? 0 : aktiv + 1);
-    } else if (ev.key === 'ArrowUp') {
-      ev.preventDefault();
-      if (liste.hidden) oeffne();
-      markiere(aktiv <= 0 ? optionen.length - 1 : aktiv - 1);
-    } else if (ev.key === 'Enter' && !liste.hidden && aktiv >= 0) {
-      ev.preventDefault();
-      waehle(aktiv);
-    } else if (ev.key === 'Escape' || ev.key === 'Tab') {
+    if (popup.hidden) {
+      oeffne();
+      feld.focus();
+    } else {
+      /* Nur hier, nicht in schliesse(): Das läuft auch aus focusout, und
+         dort zöge ein focus() den Fokus wieder zurück. */
+      const drin = popup.contains(document.activeElement);
       schliesse();
+      if (drin) feld.focus();
     }
   });
 
-  feld.addEventListener('blur', schliesse);
-  feld.addEventListener('input', () => { if (!liste.hidden) markiere(-1); });
+  /* Dieselben Tasten in beiden Feldern. Im Betragsfeld öffnet ein Pfeil
+     die Liste, im Suchfeld ist sie ohnehin offen. */
+  const tasten = ev => {
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+      ev.preventDefault();
+      if (popup.hidden) oeffne();
+      ruecke(ev.key === 'ArrowDown' ? 1 : -1);
+    } else if (ev.key === 'Enter' && !popup.hidden && aktiv >= 0) {
+      ev.preventDefault();
+      waehle(aktiv);
+    } else if (ev.key === 'Escape') {
+      ev.preventDefault();
+      schliesse();
+      feld.focus();
+    }
+    /* Tab bleibt unbehandelt: Hier zu schließen liefe vor dem Sprung des
+       Browsers und versteckte das Suchfeld, bevor es den Fokus bekommen
+       kann - mit der Tastatur wäre die Suche dann unerreichbar. Verlässt
+       der Fokus die Combobox wirklich, schließt focusout. */
+  };
+
+  feld.addEventListener('keydown', tasten);
+  suche.addEventListener('keydown', tasten);
+  suche.addEventListener('input', filtere);
+
+  /* focusout statt blur auf dem Betragsfeld: sonst klappte die Liste zu,
+     sobald jemand ins Suchfeld klickt. Geschlossen wird nur, wenn der
+     Fokus die Combobox ganz verlässt. */
+  wrap.addEventListener('focusout', ev => {
+    if (!wrap.contains(ev.relatedTarget)) schliesse();
+  });
+
+  feld.addEventListener('input', () => { if (!popup.hidden) markiere(null); });
 }
 
 /* ---------- Bild speichern und teilen ---------- */

@@ -3,12 +3,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { berechne, berechneDirekt, fmt, versandartZu } from '../js/rechnen.js?v=28';
-import { VERSANDARTEN } from '../js/daten.js?v=28';
+import {
+  berechne, berechneDirekt, fmt, versandartZu, versandartenFuer, sendungBeschreibung
+} from '../js/rechnen.js?v=29';
+import { VERSANDARTEN } from '../js/daten.js?v=29';
 import {
   textDu, textSie, textNeutral, aufstellung, schutzSatz,
-  kostenPosten, ausgerichtetePosten, POSTEN_ARTEN
-} from '../js/texte.js?v=28';
+  kostenPosten, ausgerichtetePosten, POSTEN_ARTEN,
+  passtZurSuche, suchtextFuer
+} from '../js/texte.js?v=29';
 
 const art = cent => VERSANDARTEN.find(a => a.cent === cent);
 const KA_ART = art(299);                 // Hermes M-Paket über Kleinanzeigen, von Shop zu Shop
@@ -230,4 +233,64 @@ test('jede Gebühr nennt ihre Grundlage', () => {
 
   const pp = kostenPosten(berechneDirekt(7800, 399, 'paypal-wd', 'kaeufer', S2S));
   assert.match(pp.zeilen.find(z => z.art === 'gebuehr').notiz, /vom Gesamtbetrag$/);
+});
+
+/* ---------- Suche in der Auswahlliste ---------- */
+
+const suchbar = art => suchtextFuer(art, sendungBeschreibung(art));
+const finde = (quelle, anfrage) => versandartenFuer(quelle)
+  .filter(a => passtZurSuche(suchbar(a), anfrage))
+  .map(a => a.name);
+
+test('gesucht wird in allem, was die Zeile anzeigt', () => {
+  const art = versandartenFuer('direkt').find(a => a.name === 'DHL Paket bis 5 kg');
+  const text = suchbar(art);
+  for (const teil of [art.name, art.zustellung, 'bis 5 kg', 'höchstens 120 × 60 × 60 cm']) {
+    assert.ok(text.includes(teil), teil);
+  }
+  assert.ok(text.includes(fmt(art.cent)), 'der Betrag fehlt');
+});
+
+test('Umlaute finden sich in allen drei Schreibweisen', () => {
+  const erwartet = finde('direkt', 'päckchen');
+  assert.ok(erwartet.length >= 4, erwartet.join());
+  assert.deepEqual(finde('direkt', 'paeckchen'), erwartet);
+  assert.deepEqual(finde('direkt', 'packchen'), erwartet);
+  assert.deepEqual(finde('direkt', 'PÄCKCHEN'), erwartet);
+});
+
+test('der Betrag lässt sich mit gewöhnlichem Leerzeichen tippen', () => {
+  /* fmt setzt ein geschütztes; wer tippt, tippt ein gewöhnliches. */
+  assert.deepEqual(finde('direkt', '5,19 €'), finde('direkt', `5,19${' '}€`));
+  assert.ok(finde('direkt', '5,19 €').length === 2);
+});
+
+test('eine Zahl trifft nur eine ganze Zahl, nicht einen Teil davon', () => {
+  /* Als Teilstring fände „2 kg" auch jedes Paket „bis 25 kg". */
+  const zwei = finde('direkt', '2 kg');
+  assert.ok(zwei.length > 0);
+  assert.ok(zwei.every(n => n.startsWith('DHL')), zwei.join());
+  assert.ok(!finde('direkt', '2 kg').includes('Hermes Paket M'), 'bis 25 kg ist kein Treffer');
+});
+
+test('Zahl und Einheit müssen im Text zusammenstehen', () => {
+  /* Ohne diese Regel fände „10 kg" auch ein Päckchen, dessen Maß
+     „35 × 25 × 10 cm" lautet und das irgendwo „kg" trägt. */
+  assert.deepEqual(finde('direkt', '10 kg'), ['DHL Paket bis 10 kg']);
+  assert.deepEqual(finde('direkt', '31,5 kg'), ['DHL Paket bis 31,5 kg']);
+});
+
+test('mehrere Wörter müssen alle zutreffen', () => {
+  const haus = finde('direkt', 'hermes haus');
+  assert.ok(haus.length > 0);
+  assert.ok(haus.every(n => n.startsWith('Hermes')), haus.join());
+  assert.ok(finde('direkt', 'hermes dhl').length === 0, 'kein Eintrag ist beides');
+});
+
+test('eine leere Anfrage lässt alles stehen, eine sinnlose nichts', () => {
+  const alle = versandartenFuer('direkt').length;
+  assert.equal(finde('direkt', '').length, alle);
+  assert.equal(finde('direkt', '   ').length, alle);
+  assert.equal(finde('direkt', undefined).length, alle);
+  assert.equal(finde('direkt', 'zzz').length, 0);
 });

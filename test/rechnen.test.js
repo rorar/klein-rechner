@@ -10,7 +10,7 @@ import {
   paypalGebuehr, berechneDirekt, betragMitAufschlag, breakeven, ZAHLWEGE,
   berechneAlles, MAX_PREIS_CENT, imRahmen, versandartenFuer,
   versandartZu, haftungSatz, sendungBeschreibung
-} from '../js/rechnen.js?v=28';
+} from '../js/rechnen.js?v=29';
 
 test('parseEuroToCent nimmt die Schreibweisen an, die Leute tippen', () => {
   assert.equal(parseEuroToCent('45'), 4500);

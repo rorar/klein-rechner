@@ -156,6 +156,25 @@ und dann wird nichts behauptet. `cent` ist der heute gültige Preis,
 letzten Aktionstag fest – `versandartenFuer()` vergleicht ihn mit dem heutigen
 Datum und liefert danach wieder den regulären Preis.
 
+Die Auswahlliste lässt sich durchsuchen. Das Suchfeld sitzt in der
+aufgeklappten Liste, nicht im Betragsfeld: Dort zeigt `inputmode="decimal"`
+einen Ziffernblock ohne Buchstaben, und jeder Tastendruck rechnet die Seite neu
+– eine Suche nach `2 kg` hätte mit der ersten Ziffer 2,00 € eingetragen und den
+vorherigen Betrag überschrieben. So bleibt der Betragspfad unberührt.
+
+Gesucht wird in `passtZurSuche()` (`js/texte.js`), und zwar in genau dem Text,
+den die Zeile anzeigt – eine eigene Feldliste liefe mit der Zeit auseinander.
+Drei Regeln, die nicht selbstverständlich sind:
+
+* Umlaute stehen in beiden Faltungen im durchsuchten Text, `paeckchen` und
+  `packchen` finden also beide „Päckchen". NFD allein macht aus `ä` nur `a` und
+  ließe die erste Schreibweise durchfallen.
+* Das geschützte Leerzeichen aus `fmt` fällt auf ein gewöhnliches, sonst fände
+  `5,19 €` nichts.
+* Eine Zahl trifft nur eine ganze Zahl, und folgt ihr eine Einheit, müssen beide
+  im Text zusammenstehen. Als Teilstring fände `2 kg` auch jedes Paket „bis
+  25 kg", und `10 kg` ein Päckchen mit dem Maß „25 × 10 cm".
+
 Welche Art zu einem Betrag gehört, beantwortet `versandartZu(quelle, cent)`. Die
 Auswahl wird nicht als Zustand mitgeschleppt, sondern bei jeder Rechnung aus dem
 Betrag abgeleitet – eine gemerkte Auswahl klebte sonst an einem von Hand
@@ -193,7 +212,7 @@ Projekt. `rechnen.js` importiert `daten.js`, eine einzelne Datei zu holen reicht
 also nicht.
 
 ```js
-const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=28');
+const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=29');
 
 berechneAlles({
   artikelpreisCent: 4500,
@@ -301,12 +320,12 @@ npm test         # node --test, ohne Browser
 Dann http://localhost:8765 öffnen. Über `file://` läuft die Seite nicht: ES-Module
 brauchen HTTP. Auch die Kopierfunktion will HTTPS oder localhost.
 
-Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=28`). Ohne sie
+Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=29`). Ohne sie
 könnte ein Browser ein frisches `ui.js` mit einem veralteten `rechnen.js` mischen.
 Beim Ändern alle Vorkommen gemeinsam hochzählen:
 
 ```sh
-alt=28; neu=29
+alt=29; neu=30
 sed -i "s/?v=$alt/?v=$neu/g" *.html js/*.js test/*.js README.md
 ```
 

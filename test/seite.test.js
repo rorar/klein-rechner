@@ -8,8 +8,8 @@ import { readFileSync } from 'node:fs';
 
 import {
   fmt, kleinanzeigenGebuehr, KLEINANZEIGEN_AUFSCHLUESSELUNG
-} from '../js/rechnen.js?v=28';
-import { KLEINANZEIGEN } from '../js/daten.js?v=28';
+} from '../js/rechnen.js?v=29';
+import { KLEINANZEIGEN } from '../js/daten.js?v=29';
 
 const BASIS = 'https://rorar.github.io/klein-rechner/';
 

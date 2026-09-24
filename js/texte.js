@@ -1,8 +1,8 @@
 /* Fertige Nachrichten zum Verschicken. Kein DOM, damit sich die Texte
    ohne Browser prüfen lassen. */
 
-import { fmt } from './rechnen.js?v=28';
-import { PAKETSTATION_ZUSTELLUNG } from './daten.js?v=28';
+import { fmt } from './rechnen.js?v=29';
+import { PAKETSTATION_ZUSTELLUNG } from './daten.js?v=29';
 
 const TRENNER = '------';
 
@@ -183,4 +183,70 @@ export function breakevenSaetze(b, ka, di, { persoenlich = false } = {}) {
   }
 
   return { kaeufer, verkaeufer: verkaeuferSatz };
+}
+
+/* ---------- Suche in der Auswahlliste ---------- */
+
+/* Wonach gesucht wird, ist genau das, was die Zeile anzeigt. Eine eigene
+   Feldliste liefe mit der Zeit auseinander. */
+export const suchtextFuer = (art, beschreibung) =>
+  [art.name, beschreibung, art.hinweis, art.zustellung, fmt(art.cent)]
+    .filter(Boolean).join(' ');
+
+/* „ä" wird mal „ae", mal „a" getippt. Beides muss finden, also steht der
+   Text in beiden Fassungen im Heuhaufen; NFD allein reichte nicht, das
+   macht aus „ä" nur „a" und ließe „paeckchen" durchfallen.
+   Das geschützte Leerzeichen aus fmt fällt auf ein gewöhnliches, sonst
+   fände „5,19 €" nichts. */
+const falte = (s, lang) => s
+  .toLowerCase()
+  .replace(/ /g, ' ')
+  .replace(/ä/g, lang ? 'ae' : 'a')
+  .replace(/ö/g, lang ? 'oe' : 'o')
+  .replace(/ü/g, lang ? 'ue' : 'u')
+  .replace(/ß/g, lang ? 'ss' : 's');
+
+/* Zahlen in der Anfrage treffen nur ganze Zahlen im Text. Als Teilstring
+   fände „2 kg" auch jedes Paket „bis 25 kg" – das ist keine Antwort auf
+   die Frage, die jemand stellt, wenn er 2 kg verschicken will. */
+const istZahl = wort => /^\d+(?:[.,]\d+)?$/.test(wort);
+const gleicheZahl = w => w.replace(',', '.');
+
+const zahlenIn = text =>
+  new Set((text.match(/\d+(?:[.,]\d+)?/g) || []).map(gleicheZahl));
+
+/* Folgt der Zahl eine Einheit, müssen beide im Text zusammenstehen.
+   Sonst fände „10 kg" auch ein Päckchen, dessen Maß „25 × 10 cm" lautet
+   und dessen Gewicht irgendwo „kg" enthält – zwei Treffer, die nichts
+   miteinander zu tun haben. */
+const EINHEITEN = ['kg', 'g', 'cm', 'mm', '€'];
+
+/* Alle Wörter müssen zutreffen: „hermes haus" meint beides, nicht eines
+   von beidem. */
+export function passtZurSuche(suchtext, anfrage) {
+  const worte = (anfrage || '').trim().split(/\s+/).filter(Boolean);
+  if (!worte.length) return true;
+
+  const lang = falte(suchtext, true);
+  const kurz = falte(suchtext, false);
+  const zahlen = zahlenIn(suchtext);
+  const steht = wort => lang.includes(falte(wort, true)) || kurz.includes(falte(wort, false));
+
+  for (let i = 0; i < worte.length; i++) {
+    const wort = worte[i];
+    if (!istZahl(wort)) {
+      if (!steht(wort)) return false;
+      continue;
+    }
+    const einheit = worte[i + 1] && EINHEITEN.includes(worte[i + 1].toLowerCase())
+      ? worte[i + 1].toLowerCase() : null;
+    if (einheit) {
+      i++;                              // die Einheit ist mit dem Wort erledigt
+      const zahl = wort.replace('.', ',').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (!new RegExp(`(?:^|[^\\d,.])${zahl}\\s*${einheit}`).test(lang)) return false;
+    } else if (!zahlen.has(gleicheZahl(wort))) {
+      return false;
+    }
+  }
+  return true;
 }

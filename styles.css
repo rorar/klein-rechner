@@ -251,19 +251,53 @@ body {
 .combo-toggle:hover { color: var(--pine); }
 .combo[data-open="true"] .combo-toggle svg { transform: rotate(180deg); }
 
-.combo-list {
+/* Der Rahmen sitzt am Behälter, nicht mehr an der Liste: über der Liste
+   steht das Suchfeld, und beide sollen in einem Kasten stecken. */
+.combo-popup {
   position: absolute;
   z-index: 20;
   inset-inline: 0;
   top: calc(100% + 4px);
+  background: #fff;
+  border: 1px solid var(--pine);
+  box-shadow: 0 10px 24px rgba(20, 32, 26, 0.13);
+}
+
+.combo-suche {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  color: inherit;
+  font: inherit;
+  /* Nicht kleiner: Unter 16 px zoomt iOS Safari beim Hineintippen in das
+     Feld und bleibt danach gezoomt. */
+  font-size: 1rem;
+}
+
+.combo-suche:focus { outline: 2px solid var(--pine); outline-offset: -2px; }
+
+/* Nur die Liste scrollt. Stünde das Suchfeld im Scrollbereich, schöbe
+   scrollIntoView den markierten Eintrag darunter. */
+.combo-list {
   margin: 0;
   padding: 0.3rem 0;
   max-height: 17rem;
   overflow-y: auto;
   list-style: none;
-  background: #fff;
-  border: 1px solid var(--pine);
-  box-shadow: 0 10px 24px rgba(20, 32, 26, 0.13);
+}
+
+/* Steht immer im Baum und wechselt nur seinen Text: Ein Element, das von
+   hidden auf sichtbar springt, liest kaum ein Screenreader vor. */
+.combo-leer:empty { display: none; }
+
+.combo-leer {
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  color: var(--muted);
+  font-size: 0.875rem;
 }
 
 .combo-list li {
