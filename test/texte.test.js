@@ -3,9 +3,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { berechne, berechneDirekt, fmt } from '../js/rechnen.js?v=22';
-import { VERSANDARTEN } from '../js/daten.js?v=22';
-import { textDu, textSie, textNeutral, aufstellung, schutzSatz } from '../js/texte.js?v=22';
+import { berechne, berechneDirekt, fmt } from '../js/rechnen.js?v=23';
+import { VERSANDARTEN } from '../js/daten.js?v=23';
+import { textDu, textSie, textNeutral, aufstellung, schutzSatz } from '../js/texte.js?v=23';
 
 const art = cent => VERSANDARTEN.find(a => a.cent === cent);
 const KA_ART = art(299);                 // Hermes über Kleinanzeigen, Paketstation
@@ -114,4 +114,42 @@ test('mit Vergleich nennen alle drei Fassungen beide Wege und die Differenz', ()
     assert.match(text, new RegExp(fmt(Math.abs(KA.kaeuferZahlt - di.kaeuferZahlt)).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' weniger'));
   }
   assert.doesNotMatch(textNeutral(KA, di), /\bdu\b|\bDu\b|\bSie\b/);
+});
+
+/* ---------- Die Spalte muss aufgehen ---------- */
+
+/* Der Grund für diesen Test: das Bild stellte die PayPal-Gebühr über den
+   Strich, obwohl der Verkäufer sie trägt. 78,00 + 3,99 + 2,39 stand dort
+   über „Käufer zahlt 81,99 €“ - eine Spalte, die sich nicht nachrechnen
+   ließ. Nachricht und Bild lesen jetzt dieselben Posten, und die müssen
+   zur Summe passen. */
+import { kostenPosten } from '../js/texte.js?v=23';
+
+test('die Posten über dem Strich ergeben genau die Summe', () => {
+  const faelle = [
+    berechne(7800, 299, true, KA_ART),
+    berechne(7800, 0, true, art(0)),
+    berechne(7800, 450, false, null)
+  ];
+  for (const zahlweg of ['ueberweisung', 'paypal-wd', 'paypal-ff', 'bar']) {
+    for (const traeger of ['verkaeufer', 'kaeufer']) {
+      faelle.push(berechneDirekt(7800, 399, zahlweg, traeger, S2S));
+    }
+  }
+
+  for (const r of faelle) {
+    const { zeilen, summe } = kostenPosten(r);
+    const addiert = zeilen.reduce((s, z) => s + (z.betrag ?? 0), 0);
+    assert.equal(addiert, summe.betrag,
+      `${r.weg}/${r.zahlweg ?? '-'}/${r.gebuehrTraeger ?? '-'}: ${addiert} statt ${summe.betrag}`);
+    assert.equal(summe.betrag, r.kaeuferZahlt, 'die Summe muss der Rechnung entsprechen');
+  }
+});
+
+test('jeder Posten hat entweder einen Betrag oder keinen, nie undefined', () => {
+  const { zeilen } = kostenPosten(berechne(7800, 0, false, art(0)));
+  for (const z of zeilen) {
+    assert.ok(z.betrag === null || Number.isInteger(z.betrag), `${z.label}: ${z.betrag}`);
+    assert.ok(typeof z.label === 'string' && z.label.length > 0);
+  }
 });

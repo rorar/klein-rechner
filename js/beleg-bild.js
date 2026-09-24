@@ -1,8 +1,8 @@
 /* Der Beleg wird von Hand auf ein Canvas gezeichnet. Das sind wenige
    Zeilen je Spalte – dafür lohnt keine Bibliothek, die das DOM nachbaut. */
 
-import { fmt, KLEINANZEIGEN_FORMEL, zahlwegFormel, findeZahlweg } from './rechnen.js?v=22';
-import { breakevenSaetze } from './texte.js?v=22';
+import { fmt, KLEINANZEIGEN_AUFSCHLUESSELUNG, findeZahlweg } from './rechnen.js?v=23';
+import { breakevenSaetze, kostenPosten, schutzSatz } from './texte.js?v=23';
 
 const REPO = 'github.com/rorar/klein-rechner';
 const SEITE = 'rorar.github.io/klein-rechner';
@@ -32,8 +32,12 @@ async function schriftenBereit() {
   ]);
 }
 
-/* Zeichnet eine Spalte und liefert die Höhe zurück, die sie gebraucht hat. */
-function zeichneSpalte(g, { x, breite, titel, farbe, r, gebuehrLabel, gebuehrNotiz, fussnote, notizPlatz }) {
+/* Zeichnet eine Spalte und liefert die Höhe zurück, die sie gebraucht hat.
+   Welche Posten das sind, entscheidet kostenPosten aus texte.js - dieselbe
+   Quelle wie für die Nachricht. Vorher hatte das Bild eine eigene
+   Reihenfolge, nannte die Versandart nicht und stellte die Gebühr des
+   Verkäufers über den Strich: die Spalte ging nicht auf. */
+function zeichneSpalte(g, { x, breite, titel, farbe, r, zeilenPlatz }) {
   const rechts = x + breite;
 
   const zeile = (y, label, betrag) => {
@@ -41,6 +45,8 @@ function zeichneSpalte(g, { x, breite, titel, farbe, r, gebuehrLabel, gebuehrNot
     g.font = '400 16px "IBM Plex Sans", sans-serif';
     g.fillText(label, x, y);
     const lb = g.measureText(label).width;
+
+    if (betrag === null) return;
 
     g.font = '400 18px Newsreader, Georgia, serif';
     const bb = g.measureText(betrag).width;
@@ -52,46 +58,49 @@ function zeichneSpalte(g, { x, breite, titel, farbe, r, gebuehrLabel, gebuehrNot
     }
   };
 
-  const notiz = (y, text) => {
+  const notiz = (y, text, maxBreite = breite) => {
     g.fillStyle = GRAU;
     g.font = '400 13px "IBM Plex Sans", sans-serif';
-    g.fillText(text, x, y);
+    for (const stueck of umbrich(g, text, maxBreite)) {
+      g.fillText(stueck, x, y);
+      y += 17;
+    }
+    return y - 17;
   };
+
+  const { zeilen, summe, fussnoten } = kostenPosten(r);
 
   let y = 0;
 
-  g.fillStyle = farbe;
-  g.font = '500 17px "IBM Plex Sans", sans-serif';
-  g.fillText(titel, x, y);
-  y += 34;
-
-  zeile(y, 'Artikelpreis', fmt(r.preis));
-  y += 36;
-
-  zeile(y, 'Versand', r.versand > 0 ? fmt(r.versand) : 'entfällt');
-  /* Der Platz für die Notiz wird in beiden Spalten reserviert, auch wenn
-     nur eine sie braucht. Sonst stünden die Summen auf verschiedener Höhe. */
-  if (notizPlatz) {
-    y += 19;
-    if (r.paketstation) notiz(y, 'Zustellung an eine Paketstation');
+  if (titel) {
+    g.fillStyle = farbe;
+    g.font = '500 17px "IBM Plex Sans", sans-serif';
+    g.fillText(titel, x, y);
+    y += 34;
   }
-  y += 36;
 
-  zeile(y, gebuehrLabel, r.gebuehr > 0 ? fmt(r.gebuehr) : '—');
-  y += 20;
-  notiz(y, gebuehrNotiz);
-  y += 28;
+  /* Alle Spalten bekommen gleich viele Zeilen und gleich viel Platz für
+     Notizen, sonst stünden die Summen auf verschiedener Höhe. */
+  for (let i = 0; i < zeilenPlatz.length; i++) {
+    const z = zeilen[i];
+    if (z) zeile(y, z.label, z.betrag === null ? null : fmt(z.betrag));
+    if (zeilenPlatz[i] > 0) {
+      if (z?.notiz) notiz(y + 19, z.notiz);
+      y += 19 * zeilenPlatz[i];
+    }
+    y += 34;
+  }
 
   g.fillStyle = TINTE;
-  g.fillRect(x, y, breite, 2);
-  y += 40;
+  g.fillRect(x, y - 12, breite, 2);
+  y += 28;
 
   g.font = '500 15px "IBM Plex Sans", sans-serif';
   g.fillText('Käufer zahlt', x, y);
   g.fillStyle = farbe;
   g.font = '500 34px Newsreader, Georgia, serif';
-  const summe = fmt(r.kaeuferZahlt);
-  g.fillText(summe, rechts - g.measureText(summe).width, y + 4);
+  const betrag = fmt(summe.betrag);
+  g.fillText(betrag, rechts - g.measureText(betrag).width, y + 4);
   y += 40;
 
   g.fillStyle = GRAU;
@@ -103,18 +112,37 @@ function zeichneSpalte(g, { x, breite, titel, farbe, r, gebuehrLabel, gebuehrNot
   g.fillText(behaelt, rechts - g.measureText(behaelt).width, y);
   y += 26;
 
+  for (const satz of fussnoten) {
+    y = notiz(y, satz) + 21;
+  }
+
   g.fillStyle = r.schutz ? POL_KA : GRAU;
   g.font = '400 14px "IBM Plex Sans", sans-serif';
-  g.fillText(r.schutz ? `✓ Der ${r.schutzName} greift.` : '○ Ohne Käuferschutz.', x, y);
-  y += fussnote ? 22 : 0;
+  g.fillText(`${r.schutz ? '✓' : '○'} ${schutzSatz(r)}`, x, y);
 
-  if (fussnote) {
-    g.fillStyle = GRAU;
-    g.font = '400 13px "IBM Plex Sans", sans-serif';
-    g.fillText(fussnote, x, y);
+  if (r.warnung) {
+    y = notiz(y + 21, r.warnung);
   }
 
   return y;
+}
+
+/* Canvas bricht nicht von selbst um. */
+function umbrich(g, text, maxBreite) {
+  const woerter = String(text).split(' ');
+  const zeilen = [];
+  let aktuell = '';
+  for (const wort of woerter) {
+    const versuch = aktuell ? `${aktuell} ${wort}` : wort;
+    if (g.measureText(versuch).width > maxBreite && aktuell) {
+      zeilen.push(aktuell);
+      aktuell = wort;
+    } else {
+      aktuell = versuch;
+    }
+  }
+  if (aktuell) zeilen.push(aktuell);
+  return zeilen;
 }
 
 function befundZeilen(b, ka, di) {
@@ -136,37 +164,31 @@ export async function zeichneBeleg(ka, di = null, b = null) {
   /* Erst rechnen, dann malen: die Leinwand muss ihre Höhe kennen, bevor
      der Kontext existiert. Gemessen wird deshalb auf einem Wegwerf-Canvas. */
   const befund = vergleich ? befundZeilen(b, ka, di) : [];
-  const notizPlatz = ka.paketstation || Boolean(di?.paketstation);
 
-  const spalten = [
-    {
-      x: 0, breite: spaltenBreite, notizPlatz,
-      titel: 'über „Sicher bezahlen“',
-      farbe: vergleich ? POL_KA : '#2c6a4f',
-      r: ka,
-      gebuehrLabel: ka.gebuehrName,
-      gebuehrNotiz: `${KLEINANZEIGEN_FORMEL} von ${fmt(ka.preis)}`
-    }
-  ];
+  const rechnungen = vergleich ? [ka, di] : [ka];
+  const postenJeSpalte = rechnungen.map(kostenPosten);
 
-  if (vergleich) {
-    const zahlweg = findeZahlweg(di.zahlweg);
-    spalten.push({
-      x: spaltenBreite + SPALT, breite: spaltenBreite, notizPlatz,
-      titel: `direkt, ${zahlweg.name}`,
-      farbe: POL_DIREKT,
-      r: di,
-      gebuehrLabel: di.gebuehrName,
-      gebuehrNotiz: di.gebuehr > 0
-        ? `${zahlwegFormel(di.zahlweg)}, getragen ${di.gebuehrTraeger === 'kaeufer' ? 'vom Käufer' : 'vom Verkäufer'}`
-        : 'keine Gebühr',
-      fussnote: di.warnung ? 'Verstößt bei Verkäufen gegen die PayPal-Bedingungen.' : null
-    });
+  /* Wie viele Notizzeilen jede Posten-Zeile braucht, über alle Spalten
+     hinweg. Dieselbe Höhe für alle, sonst stünden die Summen versetzt. */
+  const mass = document.createElement('canvas').getContext('2d');
+  mass.font = '400 13px "IBM Plex Sans", sans-serif';
+  const zeilenAnzahl = Math.max(...postenJeSpalte.map(p => p.zeilen.length));
+  const zeilenPlatz = [];
+  for (let i = 0; i < zeilenAnzahl; i++) {
+    zeilenPlatz.push(Math.max(0, ...postenJeSpalte.map(p =>
+      p.zeilen[i]?.notiz ? umbrich(mass, p.zeilen[i].notiz, spaltenBreite).length : 0)));
   }
 
-  /* Die Leinwand muss ihre Höhe kennen, bevor der Kontext existiert.
-     Also erst auf einem Wegwerf-Canvas messen, dann auf dem echten malen. */
-  const mass = document.createElement('canvas').getContext('2d');
+  const spalten = rechnungen.map((r, i) => ({
+    x: i === 0 ? 0 : spaltenBreite + SPALT,
+    breite: spaltenBreite,
+    zeilenPlatz,
+    /* Ohne Vergleich wiederholte die Spaltenüberschrift nur den Titel. */
+    titel: i === 0 ? (vergleich ? 'über „Sicher bezahlen“' : null) : `direkt, ${findeZahlweg(di.zahlweg).name}`,
+    farbe: i === 0 ? (vergleich ? POL_KA : '#2c6a4f') : POL_DIREKT,
+    r
+  }));
+
   const spaltenHoehe = Math.max(...spalten.map(s => zeichneSpalte(mass, s)));
   const H = 170 + spaltenHoehe + 40 + (vergleich ? befund.length * 22 + 12 : 0) + 130;
 
@@ -209,7 +231,7 @@ export async function zeichneBeleg(ka, di = null, b = null) {
 
   g.fillStyle = GRAU;
   g.font = '400 14px "IBM Plex Sans", sans-serif';
-  g.fillText(`Servicegebühr laut Kleinanzeigen: ${KLEINANZEIGEN_FORMEL} vom Artikelpreis.`, RAND, y);
+  g.fillText(`Servicegebühr laut Kleinanzeigen: ${KLEINANZEIGEN_AUFSCHLUESSELUNG} vom Artikelpreis.`, RAND, y);
   g.fillText('Halbe Cent gehen nach oben. Alle Angaben ohne Gewähr.', RAND, y + 22);
   y += 52;
 

@@ -1,7 +1,7 @@
 /* Fertige Nachrichten zum Verschicken. Kein DOM, damit sich die Texte
    ohne Browser prüfen lassen. */
 
-import { fmt } from './rechnen.js?v=22';
+import { fmt } from './rechnen.js?v=23';
 
 const TRENNER = '------';
 
@@ -11,7 +11,7 @@ const TRENNER = '------';
    `hinweis` und geht den Empfänger nichts an. */
 function versandZusatz(r) {
   const teile = [r.versandName, r.versandZustellung].filter(Boolean);
-  return teile.length ? ` (${teile.join(', ')})` : '';
+  return teile.length ? teile.join(', ') : null;
 }
 
 /* Betrag zuerst, dann wofür. Wer eine Aufstellung überfliegt, sucht die
@@ -23,27 +23,36 @@ const posten = (betragCent, beschreibung) => `${fmt(betragCent)} ${beschreibung}
 const kaeuferTraegtGebuehr = r =>
   r.gebuehr > 0 && (r.weg === 'kleinanzeigen' || r.gebuehrTraeger === 'kaeufer');
 
-export function aufstellung(r) {
-  const zeilen = [posten(r.preis, 'Angebotspreis')];
+/* Die Aufstellung als Struktur, nicht als Text. Nachricht und Bild
+   zeichnen dieselben Posten - zweimal dieselbe Logik zu schreiben hat in
+   diesem Projekt schon einmal dazu geführt, dass eine der beiden Fassungen
+   etwas anderes behauptet hat. */
+export function kostenPosten(r) {
+  const zeilen = [{ label: 'Angebotspreis', betrag: r.preis }];
 
   if (kaeuferTraegtGebuehr(r)) {
-    zeilen.push(posten(r.gebuehr, `${r.gebuehrName} (${r.gebuehrAufschluesselung})`));
+    zeilen.push({ label: r.gebuehrName, betrag: r.gebuehr, notiz: r.gebuehrAufschluesselung });
   }
 
   if (r.versand > 0) {
-    zeilen.push(posten(r.versand, `Versand${versandZusatz(r)}`));
+    zeilen.push({ label: 'Versand', betrag: r.versand, notiz: versandZusatz(r) });
   } else {
-    zeilen.push('ohne Versand, Abholung');
+    zeilen.push({ label: 'ohne Versand, Abholung', betrag: null });
   }
 
-  zeilen.push(TRENNER);
-  zeilen.push(posten(r.kaeuferZahlt, 'zusammen'));
-
+  const fussnoten = [];
   if (r.gebuehr > 0 && !kaeuferTraegtGebuehr(r)) {
-    zeilen.push(`Die ${r.gebuehrName} von ${fmt(r.gebuehr)} (${r.gebuehrAufschluesselung}) trägt der Verkäufer.`);
+    fussnoten.push(`Die ${r.gebuehrName} von ${fmt(r.gebuehr)} (${r.gebuehrAufschluesselung}) trägt der Verkäufer.`);
   }
 
-  return zeilen.join('\n');
+  return { zeilen, summe: { label: 'zusammen', betrag: r.kaeuferZahlt }, fussnoten };
+}
+
+export function aufstellung(r) {
+  const { zeilen, summe, fussnoten } = kostenPosten(r);
+  const text = zeilen.map(z =>
+    z.betrag === null ? z.label : posten(z.betrag, z.notiz ? `${z.label} (${z.notiz})` : z.label));
+  return [...text, TRENNER, posten(summe.betrag, summe.label), ...fussnoten].join('\n');
 }
 
 export function schutzSatz(r) {

@@ -6,9 +6,9 @@ import {
   kleinanzeigenGebuehr, STAND_DER_WERTE,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=22';
-import { textDu, textSie, textNeutral, breakevenSaetze } from './texte.js?v=22';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=22';
+} from './rechnen.js?v=23';
+import { textDu, textSie, textNeutral, breakevenSaetze } from './texte.js?v=23';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=23';
 
 /* Steht ganz oben, vor jedem Zugriff aufs Dokument: auf einer fremden
    Seite gäbe es die Knöpfe nicht, das Modul bräche beim Laden ab, und die
