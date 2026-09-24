@@ -11,7 +11,7 @@ import {
 } from '../js/texte.js?v=24';
 
 const art = cent => VERSANDARTEN.find(a => a.cent === cent);
-const KA_ART = art(299);                 // Hermes über Kleinanzeigen, Paketstation
+const KA_ART = art(299);                 // Hermes M-Paket über Kleinanzeigen, von Shop zu Shop
 const S2S = art(399);                    // Hermes Shop-to-Shop, von Shop zu Shop
 const KA = berechne(7800, 299, true, KA_ART);
 
@@ -22,7 +22,7 @@ test('der Kostenblock nennt Beträge zuerst und in fester Reihenfolge', () => {
   assert.equal(zeilen.length, 5);
   assert.match(zeilen[0], /^78,00\s?€ Artikelpreis$/);
   assert.match(zeilen[1], /^4,01\s?€ Servicegebühr Kleinanzeigen \(0,50\s?€ Pauschal \+ 4,5\s?% vom Artikelpreis\)$/);
-  assert.match(zeilen[2], /^2,99\s?€ Versand \(Hermes über Kleinanzeigen, Zustellung an eine Paketstation\)$/);
+  assert.match(zeilen[2], /^2,99\s?€ Versand \(Hermes M-Paket, von Shop zu Shop\)$/);
   assert.equal(zeilen[3], '------');
   assert.match(zeilen[4], /^85,00\s?€ zusammen$/);
 });
@@ -34,8 +34,8 @@ test('die Gebühr ist aufgeschlüsselt, nicht nur beziffert', () => {
 });
 
 test('die gewählte Versandart und ihre Bedingung stehen im Text', () => {
-  assert.match(aufstellung(KA), /Hermes über Kleinanzeigen/);
-  assert.match(aufstellung(KA), /Zustellung an eine Paketstation/);
+  assert.match(aufstellung(KA), /Hermes M-Paket/);
+  assert.match(aufstellung(KA), /von Shop zu Shop/);
 
   const s2s = berechneDirekt(7800, 399, 'ueberweisung', 'verkaeufer', S2S);
   assert.match(aufstellung(s2s), /Hermes Shop-to-Shop Päckchen, von Shop zu Shop/);

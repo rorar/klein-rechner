@@ -658,7 +658,7 @@ body {
 /* Eine Spalte, auch auf breiten Schirmen: das zweispaltige Raster des
    Rechners setzt die Abschnitte sonst nebeneinander, und ein Text, den man
    von links nach rechts und wieder zurück lesen muss, ist keiner. */
-.blatt, .masthead.blatt-kopf, .colophon.blatt-fuss {
+.blatt, .masthead.blatt-kopf {
   max-width: 46rem;
 }
 

@@ -13,7 +13,7 @@
 
    Die Rechenformeln stehen in rechnen.js und bleiben davon unberührt. */
 
-export const STAND_DER_WERTE = '2026-09-23';
+export const STAND_DER_WERTE = '2026-09-24';
 
 /* ---------- Gebühren ---------- */
 
@@ -89,44 +89,120 @@ export const PAKETSTATION_ZUSTELLUNG = 'Zustellung an eine Paketstation';
                  ("von Shop zu Shop"). Wie der Verkäufer den Schein bucht,
                  interessiert den Käufer nicht.
 
+   Größe, Maß, Gewicht und Haftung beschreiben die Sendung, nicht den
+   Preis. Sie entscheiden nichts, sie helfen beim Auswählen:
+
+     groesse     'klein', 'mittel' oder 'gross' - die Gruppen, in die
+                 Kleinanzeigen die Optionen im Versanddialog einteilt.
+     mass        Wortlaut aus dem Dialog. Hermes misst längste plus
+                 kürzeste Seite, DHL misst Länge × Breite × Höhe; ein
+                 gemeinsames Zahlenfeld gäbe es für beide nicht.
+     gewicht     Höchstgewicht.
+     haftungCent Bis wohin der Dienstleister bei Verlust haftet.
+
+   Preise:
+
+     cent         was heute zu zahlen ist.
+     regulaerCent der reguläre Preis. Ohne Aktion ist er gleich `cent`.
+     aktionBis    Tag, an dem die Aktion endet. Fehlt er, gibt es keine.
+
    quelle: 'kleinanzeigen' erscheint nur im Kleinanzeigen-Feld,
            'direkt' nur im Feld für den selbst gebuchten Versand,
            'beide' in beiden.
 
-   Hermes-Preise laut Preisliste gültig ab 02.03.2026
-   (https://www.myhermes.de/content/pdf/preise-ab-02032026.pdf),
+   Die Kleinanzeigen-Optionen stehen so im Versanddialog der App
+   (abgelesen am 24.09.2026). Die ermäßigten Hermes-Preise laufen über die
+   Aktion unter https://themen.kleinanzeigen.de/reduzierter-hermes-versand/;
+   deren Teilnahmebedingungen nennen als Bedingung die Bezahlfunktion in
+   Verbindung mit Hermes Shop-to-Shop, nicht die Paketstation.
+
+   Achtung, die beiden Quellen widersprechen sich beim M-Paket: der Dialog
+   in der App zeigt 2,99 €, die Teilnahmebedingungen nennen 2,49 €. Hier
+   steht der Wert aus der App, weil er das ist, was der Verkäufer beim
+   Einstellen sieht.
+
+   Hermes-Preise für den selbst gebuchten Versand laut Preisliste gültig ab
+   02.03.2026 (https://www.myhermes.de/content/pdf/preise-ab-02032026.pdf),
    DHL laut Onlinefrankierung
    (https://www.dhl.de/de/privatkunden/pakete-versenden.html).
-   Online gebucht ist durchweg billiger als im Shop.
-
-   Die 2,99 € laufen über Hermes und stehen so in Anzeigen mit
-   Kleinanzeigen-Versand; die Preise pro Paketgröße zeigt erst der
-   Kaufvorgang. */
+   Online gebucht ist durchweg billiger als im Shop. */
 export const VERSANDARTEN = [
-  { name: 'Abholung, kein Versand', cent: 0, quelle: 'beide' },
+  { name: 'Abholung, kein Versand', cent: 0, regulaerCent: 0, quelle: 'beide' },
 
-  { name: 'Hermes über Kleinanzeigen, kleinste Größe', kurz: 'Hermes über Kleinanzeigen', cent: 299, quelle: 'kleinanzeigen',
-    hinweis: 'Aktionspreis nur bei Zustellung an eine Paketstation',
-    zustellung: PAKETSTATION_ZUSTELLUNG, paketstation: true },
+  /* ----- über Kleinanzeigen gebucht ----- */
 
-  { name: 'Hermes Shop-to-Shop Päckchen', cent: 399, quelle: 'direkt',
+  { groesse: 'klein', name: 'Hermes Päckchen', cent: 99, regulaerCent: 399,
+    aktionBis: '2026-12-31', quelle: 'kleinanzeigen',
+    mass: 'längste und kürzeste Seite zusammen höchstens 37 cm', gewicht: 'bis 25 kg',
+    haftungCent: 5000,
+    hinweis: 'Aktionspreis, nur mit Bezahlfunktion und Hermes Shop-to-Shop',
+    zustellung: 'von Shop zu Shop' },
+
+  { groesse: 'klein', name: 'Hermes S-Paket', cent: 199, regulaerCent: 489,
+    aktionBis: '2026-12-31', quelle: 'kleinanzeigen',
+    mass: 'längste und kürzeste Seite zusammen höchstens 50 cm', gewicht: 'bis 25 kg',
+    haftungCent: 50000,
+    hinweis: 'Aktionspreis, nur mit Bezahlfunktion und Hermes Shop-to-Shop',
+    zustellung: 'von Shop zu Shop' },
+
+  { groesse: 'mittel', name: 'Hermes M-Paket', cent: 299, regulaerCent: 590,
+    aktionBis: '2026-12-31', quelle: 'kleinanzeigen',
+    mass: 'längste und kürzeste Seite zusammen höchstens 80 cm', gewicht: 'bis 25 kg',
+    haftungCent: 50000,
+    hinweis: 'Aktionspreis, nur mit Bezahlfunktion und Hermes Shop-to-Shop',
+    zustellung: 'von Shop zu Shop' },
+
+  { groesse: 'klein', name: 'DHL Paket 2 kg', cent: 619, regulaerCent: 619,
+    quelle: 'kleinanzeigen',
+    mass: 'höchstens 60 × 30 × 15 cm', gewicht: 'bis 2 kg', haftungCent: 50000,
+    zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'mittel', name: 'DHL Paket 5 kg', cent: 769, regulaerCent: 769,
+    quelle: 'kleinanzeigen',
+    mass: 'höchstens 120 × 60 × 60 cm', gewicht: 'bis 5 kg', haftungCent: 50000,
+    zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'gross', name: 'Hermes L-Paket', cent: 990, regulaerCent: 990,
+    quelle: 'kleinanzeigen',
+    mass: 'längste und kürzeste Seite zusammen höchstens 120 cm', gewicht: 'bis 25 kg',
+    haftungCent: 50000,
+    zustellung: 'von Shop zu Shop' },
+
+  { groesse: 'gross', name: 'DHL Paket 10 kg', cent: 1049, regulaerCent: 1049,
+    quelle: 'kleinanzeigen',
+    mass: 'höchstens 120 × 60 × 60 cm', gewicht: 'bis 10 kg', haftungCent: 50000,
+    zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'gross', name: 'DHL Paket 20 kg', cent: 1899, regulaerCent: 1899,
+    quelle: 'kleinanzeigen',
+    mass: 'höchstens 120 × 60 × 60 cm', gewicht: 'bis 20 kg', haftungCent: 50000,
+    zustellung: 'Zustellung an die Haustür' },
+
+  { groesse: 'gross', name: 'DHL Paket 31,5 kg', cent: 2399, regulaerCent: 2399,
+    quelle: 'kleinanzeigen',
+    mass: 'höchstens 120 × 60 × 60 cm', gewicht: 'bis 31,5 kg', haftungCent: 50000,
+    zustellung: 'Zustellung an die Haustür' },
+
+  /* ----- selbst beim Dienstleister gebucht ----- */
+
+  { name: 'Hermes Shop-to-Shop Päckchen', cent: 399, regulaerCent: 399, quelle: 'direkt',
     hinweis: 'nur online buchbar', zustellung: 'von Shop zu Shop' },
-  { name: 'DHL Päckchen S', cent: 419, quelle: 'direkt',
+  { name: 'DHL Päckchen S', cent: 419, regulaerCent: 419, quelle: 'direkt',
     hinweis: 'nur online buchbar', zustellung: 'Zustellung an die Haustür' },
-  { name: 'Hermes Shop-to-Shop Paket S', cent: 489, quelle: 'direkt',
+  { name: 'Hermes Shop-to-Shop Paket S', cent: 489, regulaerCent: 489, quelle: 'direkt',
     hinweis: 'nur online buchbar', zustellung: 'von Shop zu Shop' },
-  { name: 'Hermes Päckchen, online gebucht', kurz: 'Hermes Päckchen', cent: 519, quelle: 'direkt',
+  { name: 'Hermes Päckchen, online gebucht', kurz: 'Hermes Päckchen', cent: 519, regulaerCent: 519, quelle: 'direkt',
     hinweis: 'online gebucht', zustellung: 'Zustellung an die Haustür' },
-  { name: 'Hermes Päckchen, im Shop gebucht', kurz: 'Hermes Päckchen', cent: 525, quelle: 'direkt',
+  { name: 'Hermes Päckchen, im Shop gebucht', kurz: 'Hermes Päckchen', cent: 525, regulaerCent: 525, quelle: 'direkt',
     hinweis: 'im PaketShop gebucht', zustellung: 'Zustellung an die Haustür' },
-  { name: 'Hermes Paket S, online gebucht', kurz: 'Hermes Paket S', cent: 579, quelle: 'direkt',
+  { name: 'Hermes Paket S, online gebucht', kurz: 'Hermes Paket S', cent: 579, regulaerCent: 579, quelle: 'direkt',
     hinweis: 'online gebucht', zustellung: 'Zustellung an die Haustür' },
-  { name: 'Hermes Paket M', cent: 590, quelle: 'direkt',
+  { name: 'Hermes Paket M', cent: 590, regulaerCent: 590, quelle: 'direkt',
     hinweis: 'nur online buchbar', zustellung: 'Zustellung an einen PaketShop' },
-  { name: 'DHL Paket bis 2 kg', cent: 619, quelle: 'direkt',
+  { name: 'DHL Paket bis 2 kg', cent: 619, regulaerCent: 619, quelle: 'direkt',
     hinweis: 'nur online buchbar', zustellung: 'Zustellung an die Haustür' },
-  { name: 'Hermes Paket S, im Shop gebucht', kurz: 'Hermes Paket S', cent: 679, quelle: 'direkt',
+  { name: 'Hermes Paket S, im Shop gebucht', kurz: 'Hermes Paket S', cent: 679, regulaerCent: 679, quelle: 'direkt',
     hinweis: 'im PaketShop gebucht', zustellung: 'Zustellung an die Haustür' },
-  { name: 'Hermes Paket L', cent: 990, quelle: 'direkt',
+  { name: 'Hermes Paket L', cent: 990, regulaerCent: 990, quelle: 'direkt',
     hinweis: 'nur online buchbar', zustellung: 'Zustellung an einen PaketShop' }
 ];
