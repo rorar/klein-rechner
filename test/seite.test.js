@@ -6,6 +6,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
+import {
+  fmt, kleinanzeigenGebuehr, KLEINANZEIGEN_AUFSCHLUESSELUNG
+} from '../js/rechnen.js?v=27';
+import { KLEINANZEIGEN } from '../js/daten.js?v=27';
+
 const BASIS = 'https://rorar.github.io/klein-rechner/';
 
 const lies = (datei) => readFileSync(new URL('../' + datei, import.meta.url), 'utf8');
@@ -100,6 +105,34 @@ test('og:image verweist auf die vorhandene Datei in ihrer wahren Größe', () =>
   assert.equal(png.readUInt32BE(20), Number(hoehe));
   /* Unter 1200 × 630 zeigen Netze statt des großen Bildes eine kleine Kachel. */
   assert.ok(png.readUInt32BE(16) >= 1200 && png.readUInt32BE(20) >= 630);
+});
+
+/* Der Abschnitt „Wie hoch ist die Gebühr“ steht als Text im HTML, damit ihn
+   auch liest, wer kein JavaScript ausführt. Damit gibt es die Zahlen zweimal:
+   einmal in js/daten.js und einmal als Satz. Diese Tests rechnen den Satz
+   gegen die Daten nach – laufen beide auseinander, schlägt der Test an. */
+/* fmt setzt zwischen Betrag und Währungszeichen ein geschütztes Leerzeichen.
+   Im Quelltext der Seite steht ein gewöhnliches; beides meint dasselbe. */
+const glatt = (t) => t.replace(/ /g, ' ');
+const seite = glatt(index);
+
+test('der erklärende Abschnitt nennt die Sätze aus den Daten', () => {
+  const satz = glatt(KLEINANZEIGEN_AUFSCHLUESSELUNG);
+  assert.ok(seite.includes(satz), `erwartet im Text: ${satz}`);
+});
+
+test('das Beispiel im Abschnitt ist nachgerechnet', () => {
+  for (const preisCent of [4500, 9900]) {
+    const gebuehr = kleinanzeigenGebuehr(preisCent);
+    for (const betrag of [preisCent, gebuehr, preisCent + gebuehr]) {
+      assert.ok(seite.includes(glatt(fmt(betrag))),
+        `fehlt im Beispiel: ${glatt(fmt(betrag))}`);
+    }
+  }
+});
+
+test('der Abschnitt verweist auf die Quelle der Gebühr', () => {
+  assert.ok(index.includes(KLEINANZEIGEN.quelle), KLEINANZEIGEN.quelle);
 });
 
 test('die Versionsangabe ist in allen Adressen dieselbe', () => {
