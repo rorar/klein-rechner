@@ -244,6 +244,7 @@ PNG an die Teilen-Funktion des Systems. Beides kommt ohne Bibliothek aus.
 | Datei | Inhalt |
 | --- | --- |
 | `index.html` | Struktur der Seite |
+| `datenschutz.html` | Datenschutzerklärung, aus der Fußzeile verlinkt |
 | `styles.css` | Gestaltung, Beleg-Optik |
 | `js/daten.js` | **Alle Preise, Gebührensätze und Bezeichnungen.** Wer Werte pflegt, fasst nur diese Datei an |
 | `js/rechnen.js` | Die Formeln: Gebührenmodelle, Schwellensuche, JSON – ohne DOM, damit prüfbar und importierbar |
@@ -269,7 +270,7 @@ Beim Ändern alle Vorkommen gemeinsam hochzählen:
 
 ```sh
 alt=24; neu=25
-sed -i "s/?v=$alt/?v=$neu/g" index.html js/*.js test/*.js README.md
+sed -i "s/?v=$alt/?v=$neu/g" *.html js/*.js test/*.js README.md
 ```
 
 ## Rechtliches

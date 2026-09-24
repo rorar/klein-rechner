@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Datenschutz – Sicher-bezahlen-Rechner</title>
+<meta name="description" content="Was der Sicher-bezahlen-Rechner verarbeitet: nichts auf einem Server, keine Cookies, kein Tracking. Was beim Hoster GitHub Pages anfällt und welche Rechte du hast.">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="index, follow">
+<link rel="preload" href="fonts/Newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css?v=24">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232C6A4F'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' fill='%23FBFBF7' text-anchor='middle'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+<header class="masthead blatt-kopf">
+  <h1>Datenschutz</h1>
+  <p class="standfirst">Der Rechner läuft vollständig in deinem Browser. Er schickt nichts an einen Server, setzt keine Cookies und misst nichts.</p>
+</header>
+
+<main class="sheet blatt">
+
+  <section class="panel prosa" aria-labelledby="kurz-titel">
+    <h2 id="kurz-titel" class="panel-title">Kurz gefasst</h2>
+
+    <ul>
+      <li>Was du eingibst, bleibt in deinem Browser. Es wird nirgendwohin übertragen.</li>
+      <li>Keine Cookies, kein <span lang="en">Tracking</span>, keine Reichweitenmessung, keine Einbindung von Dritten.</li>
+      <li>Die Schriften liegen auf demselben Server wie die Seite, nicht bei Google.</li>
+      <li>Beim Aufruf der Seite fällt beim Hoster GitHub eine Server-Protokollzeile mit deiner IP-Adresse an. Darauf hat der Betreiber dieser Seite keinen Zugriff.</li>
+    </ul>
+  </section>
+
+  <section class="panel prosa" aria-labelledby="verantwortlich-titel">
+    <h2 id="verantwortlich-titel" class="panel-title">Verantwortlich</h2>
+
+    <!-- Vor der Veröffentlichung ausfüllen: Art. 13 Abs. 1 Buchst. a und b
+         DSGVO verlangt Namen und Kontaktdaten der verantwortlichen Person.
+         Solange hier Platzhalter stehen, ist die Erklärung unvollständig. -->
+    <p>
+      [Name der verantwortlichen Person]<br>
+      [Anschrift, falls du sie angeben willst]<br>
+      E-Mail: [E-Mail-Adresse]
+    </p>
+
+    <p>
+      Ein Datenschutzbeauftragter ist nicht bestellt; die Voraussetzungen des
+      Art. 37 DSGVO liegen für ein privates Hilfsprojekt dieser Größe nicht vor.
+    </p>
+  </section>
+
+  <section class="panel prosa" aria-labelledby="seite-titel">
+    <h2 id="seite-titel" class="panel-title">Was die Seite selbst tut</h2>
+
+    <h3>Deine Eingaben</h3>
+    <p>
+      Artikelpreis, Versandkosten, Zahlweg und die Schalter rechnet ausschließlich
+      JavaScript in deinem Browser aus. Es gibt keine Schnittstelle, an die etwas
+      geschickt würde, und keinen Server, der etwas entgegennähme. Lädst du die
+      Seite neu oder schließt sie, sind die Eingaben weg.
+    </p>
+
+    <h3>Die Adresszeile</h3>
+    <p>
+      Der Rechner schreibt deinen Stand laufend in die Adresse, damit du sie
+      weitergeben kannst – etwa
+      <code>?preis=45,00&amp;versand=5,49</code>. Zwei Folgen: Die Beträge stehen im
+      Verlauf deines Browsers, und wer einen solchen Link von dir bekommt, sieht
+      die Beträge darin. Die Adresse wird dabei nicht abgerufen, sondern nur
+      ersetzt; der Server erfährt davon nichts.
+    </p>
+
+    <h3>Kopieren, Teilen, Bild speichern</h3>
+    <p>
+      „Text kopieren“ und „Link kopieren“ schreiben in die Zwischenablage deines
+      Geräts. „Als Bild speichern“ zeichnet den Beleg im Browser und legt eine
+      PNG-Datei zum Herunterladen an. Auf Geräten mit Teilen-Funktion reicht
+      „Teilen“ Text oder Bild an das System weiter, das dich dann fragt, wohin.
+      Alle drei laufen nur, wenn du den Knopf drückst, und nur auf deinem Gerät.
+      Wohin du das Ergebnis anschließend gibst, entscheidest du.
+    </p>
+
+    <h3>Kein Speicher, keine Cookies</h3>
+    <p>
+      Die Seite setzt keine Cookies und legt nichts in
+      <span lang="en">Local Storage</span> oder <span lang="en">Session Storage</span>
+      ab. Eine Einwilligung nach § 25 TDDG ist deshalb nicht nötig – es gibt nichts,
+      wozu einzuwilligen wäre.
+    </p>
+
+    <h3>Einbindung in fremde Seiten</h3>
+    <p>
+      Der Rechner lässt sich von anderen Seiten einbinden und über
+      <code>postMessage</code> befragen. Er antwortet dann nur dem Fenster, das
+      gefragt hat, und nur mit dem Rechenergebnis. Gespeichert oder weitergegeben
+      wird dabei nichts.
+    </p>
+  </section>
+
+  <section class="panel prosa" aria-labelledby="hoster-titel">
+    <h2 id="hoster-titel" class="panel-title">Hosting: GitHub Pages</h2>
+
+    <p>
+      Die Seite liegt auf GitHub Pages, einem Dienst der GitHub, Inc., 88 Colin P.
+      Kelly Jr. Street, San Francisco, CA 94107, USA, und der GitHub B.V., Prins
+      Bernhardplein 200, Amsterdam, Niederlande.
+    </p>
+
+    <p>
+      GitHub schreibt dazu selbst: Wird eine GitHub-Pages-Seite aufgerufen, wird die
+      IP-Adresse des Besuchers zu Sicherheitszwecken protokolliert und gespeichert –
+      unabhängig davon, ob er bei GitHub angemeldet ist oder nicht
+      (<a href="https://docs.github.com/de/pages/getting-started-with-github-pages/what-is-github-pages" rel="noopener">Dokumentation zu GitHub Pages</a>).
+      Der Betreiber dieser Seite hat auf diese Protokolle keinen Zugriff und
+      bekommt von ihnen nichts zu sehen. GitHub verarbeitet sie nach eigener
+      Darstellung als eigener Verantwortlicher.
+    </p>
+
+    <p>
+      Rechtsgrundlage für das Ausliefern der Seite und die dabei anfallenden
+      Protokolle ist das berechtigte Interesse an einem erreichbaren und gegen
+      Missbrauch geschützten Angebot, Art. 6 Abs. 1 Buchst. f DSGVO.
+    </p>
+
+    <p>
+      Dabei werden Daten in die USA übermittelt. GitHub stützt solche
+      Übermittlungen nach eigener Angabe auf die Standardvertragsklauseln der
+      Europäischen Kommission (Durchführungsbeschluss 2021/914) und ist zusätzlich
+      unter dem <span lang="en">EU-U.S. Data Privacy Framework</span> zertifiziert.
+      Wie GitHub mit Daten umgeht und wie du GitHub direkt erreichst, steht in der
+      <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub-Datenschutzerklärung</a>;
+      der Datenschutzbeauftragte von GitHub ist dort unter
+      <code>dpo@github.com</code> genannt.
+    </p>
+  </section>
+
+  <section class="panel prosa" aria-labelledby="dritte-titel">
+    <h2 id="dritte-titel" class="panel-title">Links zu anderen Anbietern</h2>
+
+    <p>
+      Die Seite lädt nichts von fremden Servern nach – keine Schriften, keine
+      Skripte, keine Bilder, keine Karten. Sie verlinkt aber auf andere Anbieter,
+      etwa auf das Hilfe-Center von Kleinanzeigen und auf GitHub. Erst wenn du so
+      einen Link anklickst, erfährt der jeweilige Anbieter deine IP-Adresse. Was er
+      damit tut, steht in seiner eigenen Datenschutzerklärung.
+    </p>
+  </section>
+
+  <section class="panel prosa" aria-labelledby="rechte-titel">
+    <h2 id="rechte-titel" class="panel-title">Deine Rechte</h2>
+
+    <p>
+      Dir stehen gegenüber dem Verantwortlichen die Rechte aus Art. 15 bis 21 DSGVO
+      zu: Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
+      Datenübertragbarkeit und Widerspruch. Schreib dafür an die oben genannte
+      Adresse.
+    </p>
+
+    <p>
+      Praktisch wirst du davon hier wenig brauchen: Der Betreiber speichert keine
+      Daten über dich und kann deshalb auch keine herausgeben oder löschen. Für die
+      Protokolle des Hosters ist GitHub der richtige Ansprechpartner.
+    </p>
+
+    <p>
+      Unabhängig davon kannst du dich nach Art. 77 DSGVO bei einer
+      Datenschutz-Aufsichtsbehörde beschweren, in der Regel bei der deines
+      Wohnsitzes oder deines Arbeitsplatzes.
+    </p>
+  </section>
+
+  <section class="panel prosa" aria-labelledby="stand-titel">
+    <h2 id="stand-titel" class="panel-title">Stand</h2>
+
+    <p>
+      Diese Erklärung gilt seit dem <time datetime="2026-09-24">24. September 2026</time>.
+      Ändert sich etwas an der Seite, ändert sie sich mit. Der jeweils gültige Stand
+      steht immer hier.
+    </p>
+  </section>
+
+</main>
+
+<footer class="colophon blatt-fuss">
+  <p><a href="./">Zurück zum Rechner</a></p>
+  <p>Privates Hilfsprojekt, kein Angebot von Kleinanzeigen.</p>
+</footer>
+
+</body>
+</html>
