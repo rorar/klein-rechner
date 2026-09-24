@@ -515,7 +515,10 @@ body {
   color: var(--muted);
 }
 
-.colophon p { margin: 0 0 0.4rem; max-width: 62ch; }
+/* Kein Zeilendeckel: der Fuß ist Kleingedrucktes, das man überfliegt, kein
+   Fließtext, den man Zeile für Zeile liest. Auf 62ch gedeckelt stand er auf
+   halber Breite und ließ rechts daneben ein Loch. */
+.colophon p { margin: 0 0 0.4rem; }
 .colophon a { color: var(--pine); }
 
 .marken {

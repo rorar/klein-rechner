@@ -3,12 +3,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { berechne, berechneDirekt, fmt } from '../js/rechnen.js?v=24';
-import { VERSANDARTEN } from '../js/daten.js?v=24';
+import { berechne, berechneDirekt, fmt } from '../js/rechnen.js?v=25';
+import { VERSANDARTEN } from '../js/daten.js?v=25';
 import {
   textDu, textSie, textNeutral, aufstellung, schutzSatz,
   kostenPosten, ausgerichtetePosten, POSTEN_ARTEN
-} from '../js/texte.js?v=24';
+} from '../js/texte.js?v=25';
 
 const art = cent => VERSANDARTEN.find(a => a.cent === cent);
 const KA_ART = art(299);                 // Hermes M-Paket über Kleinanzeigen, von Shop zu Shop
@@ -22,7 +22,7 @@ test('der Kostenblock nennt Beträge zuerst und in fester Reihenfolge', () => {
   assert.equal(zeilen.length, 5);
   assert.match(zeilen[0], /^78,00\s?€ Artikelpreis$/);
   assert.match(zeilen[1], /^4,01\s?€ Servicegebühr Kleinanzeigen \(0,50\s?€ Pauschal \+ 4,5\s?% vom Artikelpreis\)$/);
-  assert.match(zeilen[2], /^2,99\s?€ Versand \(Hermes M-Paket, von Shop zu Shop, Haftung bis 500\s?€\)$/);
+  assert.match(zeilen[2], /^2,99\s?€ Versand \(Hermes M-Paket, von Shop zu Shop, Haftung bis 500,00\s?€\)$/);
   assert.equal(zeilen[3], '------');
   assert.match(zeilen[4], /^85,00\s?€ zusammen$/);
 });
@@ -198,7 +198,7 @@ test('der Aktionsschalter steht auch ohne gewählte Versandart dabei', () => {
    Gewicht sind die Sorge dessen, der das Paket packt. */
 test('die Nachricht nennt die Haftung, nicht Maß und Gewicht', () => {
   const text = aufstellung(KA);
-  assert.match(text, /Haftung bis 500\s?€/);
+  assert.match(text, /Haftung bis 500,00\s?€/);
   assert.doesNotMatch(text, /80 cm|25 kg|mittel/);
 });
 

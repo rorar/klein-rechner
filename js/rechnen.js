@@ -10,11 +10,10 @@
    lässt sich von außen über seine Adresse importieren. */
 
 import {
-  KLEINANZEIGEN, ZAHLWEGE as ZAHLWEGE_BESCHREIBUNG, VERSANDARTEN, STAND_DER_WERTE,
-  sendungBeschreibung, haftungSatz
-} from './daten.js?v=24';
+  KLEINANZEIGEN, ZAHLWEGE as ZAHLWEGE_BESCHREIBUNG, VERSANDARTEN, STAND_DER_WERTE
+} from './daten.js?v=25';
 
-export { VERSANDARTEN, STAND_DER_WERTE, sendungBeschreibung, haftungSatz };
+export { VERSANDARTEN, STAND_DER_WERTE };
 
 export const KLEINANZEIGEN_GEBUEHR_NAME = KLEINANZEIGEN.gebuehrName;
 export const KLEINANZEIGEN_SCHUTZ_NAME = KLEINANZEIGEN.schutzName;
@@ -34,10 +33,55 @@ export const ZAHLWEGE = ZAHLWEGE_BESCHREIBUNG.map(z => ({ ...z, gebuehr: gebuehr
 
 export const findeZahlweg = id => ZAHLWEGE.find(z => z.id === id) || ZAHLWEGE[0];
 
+/* Der heutige Tag als 2026-09-24. Verglichen wird als Zeichenkette, nicht
+   als Datum: `new Date('2026-12-31')` ist Mitternacht UTC und liefe in
+   Berlin schon um 01:00 Uhr des 31. Dezember ab, einen Tag zu früh.
+   'sv-SE' ist die Sprachkennung, deren Datumsform genau so aussieht. */
+const heuteIso = () => new Date().toLocaleDateString('sv-SE');
+
+/* Läuft die Aktion an diesem Tag noch? Ohne `aktionBis` gibt es keine. */
+export const aktionLaeuft = (art, heute = heuteIso()) =>
+  Boolean(art.aktionBis) && heute <= art.aktionBis;
+
+/* Was die Versandart heute kostet. Nach dem letzten Aktionstag gilt wieder
+   der reguläre Preis - von selbst, ohne dass jemand die Daten anfasst. */
+export const versandpreis = (art, heute = heuteIso()) =>
+  aktionLaeuft(art, heute) ? art.cent : art.regulaerCent;
+
 /* Die Auswahlliste je Feld: der Kleinanzeigen-Versand taucht nur im
-   Kleinanzeigen-Feld auf, die Preise der Dienstleister nur im Direktfeld. */
-export const versandartenFuer = quelle =>
-  VERSANDARTEN.filter(a => a.quelle === quelle || a.quelle === 'beide');
+   Kleinanzeigen-Feld auf, die Preise der Dienstleister nur im Direktfeld.
+
+   `cent` ist hier schon der heute gültige Preis, damit kein Aufrufer die
+   Aktion noch einmal nachrechnen muss. Sortiert wird danach: nach dem
+   Aktionsende stehen die Hermes-Pakete sonst an ihrem alten Platz. */
+export const versandartenFuer = (quelle, heute = heuteIso()) =>
+  VERSANDARTEN
+    .filter(a => a.quelle === quelle || a.quelle === 'beide')
+    .map(a => ({
+      ...a,
+      cent: versandpreis(a, heute),
+      /* Der Hinweis nennt die Bedingung der Aktion. Ist sie vorbei, nennt
+         er nichts mehr. */
+      hinweis: a.aktionBis && !aktionLaeuft(a, heute) ? null : a.hinweis
+    }))
+    .sort((a, b) => a.cent - b.cent);
+
+/* Die Sendung in einer Zeile, wie sie in der Auswahlliste steht: Größe,
+   Maß, Gewicht, Haftung. Das geht den Verkäufer an, der beim Einstellen
+   die passende Größe sucht. Dem Käufer sagt es nichts, was er entscheiden
+   könnte - er bekommt nur die Haftungsgrenze. */
+export function sendungBeschreibung(art) {
+  const groessen = { klein: 'klein', mittel: 'mittel', gross: 'groß' };
+  return [groessen[art.groesse], art.mass, art.gewicht, haftungSatz(art)]
+    .filter(Boolean).join(' · ');
+}
+
+/* Ohne Angabe wird nichts behauptet: „Haftung bis 0 €" wäre eine Aussage,
+   die so nirgends steht. */
+export function haftungSatz(art) {
+  if (typeof art.haftungCent !== 'number') return null;
+  return `Haftung bis ${fmt(art.haftungCent)}`;
+}
 
 /* Anders als Kleinanzeigen bemisst PayPal die Gebühr am gesamten
    überwiesenen Betrag, also einschließlich Versand. Einzeln herausgereicht

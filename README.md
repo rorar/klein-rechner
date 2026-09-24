@@ -95,16 +95,21 @@ Im Vergleichsmodus kommen `vergleich=1`, `direktversand`, `zahlweg`
 (`verkaeufer`, `kaeufer`) dazu. Unbekannte Werte fallen auf den Standard zurück,
 statt die Seite zu zerlegen. Ohne `vergleich=1` werden die vier nicht geschrieben.
 
-`paketstation=1` setzt den Haken für die Zustellung an eine Paketstation. Ohne
+`paketstation=1` setzt den Haken für die Bedingung der Hermes-Aktion. Ohne
 Versandkosten wird er ignoriert, weil es dann nichts zuzustellen gibt.
 
 Unter der Aufstellung kopiert oder teilt „Link kopieren“ beziehungsweise
 „Link teilen“ genau diese Adresse. Der Teilen-Knopf erscheint nur, wo der
 Browser `navigator.share` kennt.
 
-Der Haken ist keine Randnotiz: Aktionspreise über Kleinanzeigen kamen in der
-Vergangenheit nur zustande, wenn an eine Paketstation geliefert wurde. Wer sich
-die Ware nach Hause schicken lässt, zahlt dann mehr als der Rechner anzeigt.
+Der Haken ist keine Randnotiz: die ermäßigten Hermes-Preise gelten laut
+[Teilnahmebedingungen](https://themen.kleinanzeigen.de/reduzierter-hermes-versand/)
+nur mit der Bezahlfunktion und Lieferung von Shop zu Shop. Wer anders versendet,
+zahlt mehr als der Rechner anzeigt.
+
+Der Name `paketstation` ist historisch – früher hing die Aktion an der
+Paketstation. Er bleibt, weil geteilte Links ihn tragen; was er bedeutet, steht
+in `daten.js` als Text und nirgends sonst.
 Deshalb steht die Bedingung in der Aufstellung, in allen drei Texten und im
 Bild – der Käufer soll sie sehen, bevor er zusagt.
 
@@ -136,6 +141,14 @@ Wie der Verkäufer den Schein bucht, interessiert den Käufer nicht und
 bleibt deshalb aus der Nachricht heraus. `kurz` ist freiwillig; fehlt es,
 wird `name` genommen.
 
+Bei den Versandarten beschreiben `groesse`, `mass`, `gewicht` und `haftungCent`
+die Sendung. Sie stehen vollständig in der Auswahlliste, weil der Verkäufer dort
+die passende Größe sucht; in die Nachricht an den Käufer geht davon nur die
+Haftungsgrenze. `cent` ist der heute gültige Preis, `regulaerCent` der reguläre;
+ohne Aktion sind beide gleich. `aktionBis` hält den letzten Aktionstag fest –
+`versandartenFuer()` vergleicht ihn mit dem heutigen Datum und liefert danach
+wieder den regulären Preis.
+
 `basispunkte` sind Zehntausendstel – 450 sind 4,5 %. `grundlage` unterscheidet,
 ob der Satz auf den Artikelpreis oder auf den gesamten Betrag einschließlich
 Versand wirkt. Ein neuer Zahlweg oder ein geänderter Satz ist damit eine reine
@@ -164,7 +177,7 @@ Projekt. `rechnen.js` importiert `daten.js`, eine einzelne Datei zu holen reicht
 also nicht.
 
 ```js
-const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=24');
+const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=25');
 
 berechneAlles({
   artikelpreisCent: 4500,
@@ -230,11 +243,13 @@ PNG an die Teilen-Funktion des Systems. Beides kommt ohne Bibliothek aus.
 
 * Die 4,5 % beziehen sich auf den Artikelpreis, nicht auf Artikelpreis plus Versand.
 * Die Versandarten im Auswahlfeld sind Richtwerte vom September 2026 und jederzeit
-  überschreibbar – das Feld nimmt auch freie Beträge an. Die 2,99 € laufen über
-  Hermes und stehen so in Anzeigen mit Kleinanzeigen-Versand; die Preise je
-  Paketgröße zeigt erst der Kaufvorgang. Diese Versandart setzt den Haken für
-  die Paketstation, jede andere nimmt ihn zurück – der Haken gehört zur
-  Versandart, lässt sich danach aber von Hand ändern. Steht er, taucht die
+  überschreibbar – das Feld nimmt auch freie Beträge an. Die Kleinanzeigen-Liste
+  ist der Versanddialog der App, in drei Größen geteilt; die ermäßigten
+  Hermes-Preise laufen über eine Aktion bis zum 31.12.2026. Danach rechnet die
+  Seite von selbst mit `regulaerCent` weiter, ohne dass jemand die Daten anfasst.
+  Die drei Hermes-Arten setzen den Haken für die Aktionsbedingung, jede andere
+  nimmt ihn zurück – der Haken gehört zur Versandart, lässt sich danach aber von
+  Hand ändern. Steht er, taucht die
   Zustellung in der Aufstellung, in allen drei Texten, im Bild und in der
   Adresse auf.
 * Maßgeblich ist immer, was die Kleinanzeigen-App beim Kauf anzeigt.
@@ -264,12 +279,12 @@ npm test         # node --test, ohne Browser
 Dann http://localhost:8765 öffnen. Über `file://` läuft die Seite nicht: ES-Module
 brauchen HTTP. Auch die Kopierfunktion will HTTPS oder localhost.
 
-Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=24`). Ohne sie
+Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=25`). Ohne sie
 könnte ein Browser ein frisches `ui.js` mit einem veralteten `rechnen.js` mischen.
 Beim Ändern alle Vorkommen gemeinsam hochzählen:
 
 ```sh
-alt=24; neu=25
+alt=25; neu=26
 sed -i "s/?v=$alt/?v=$neu/g" *.html js/*.js test/*.js README.md
 ```
 

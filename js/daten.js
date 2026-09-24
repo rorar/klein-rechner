@@ -131,23 +131,6 @@ export const PAKETSTATION_ZUSTELLUNG = 'von Shop zu Shop';
    DHL laut Onlinefrankierung
    (https://www.dhl.de/de/privatkunden/pakete-versenden.html).
    Online gebucht ist durchweg billiger als im Shop. */
-/* Die Sendung in einer Zeile, wie sie in der Auswahlliste steht: Größe,
-   Maß, Gewicht, Haftung. Das geht den Verkäufer an, der beim Einstellen
-   die passende Größe sucht. Dem Käufer sagt es nichts, was er entscheiden
-   könnte – er bekommt nur die Haftungsgrenze. */
-export function sendungBeschreibung(art) {
-  const groessen = { klein: 'klein', mittel: 'mittel', gross: 'groß' };
-  return [groessen[art.groesse], art.mass, art.gewicht, haftungSatz(art)]
-    .filter(Boolean).join(' · ');
-}
-
-/* Ohne Angabe wird nichts behauptet: „Haftung bis 0 €“ wäre eine Aussage,
-   die so nirgends steht. */
-export function haftungSatz(art) {
-  if (typeof art.haftungCent !== 'number') return null;
-  return `Haftung bis ${(art.haftungCent / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}`;
-}
-
 export const VERSANDARTEN = [
   { name: 'Abholung, kein Versand', cent: 0, regulaerCent: 0, quelle: 'beide' },
 

@@ -8,8 +8,8 @@ import assert from 'node:assert/strict';
 import {
   parseEuroToCent, kleinanzeigenGebuehr, berechne, fmt,
   paypalGebuehr, berechneDirekt, betragMitAufschlag, breakeven, ZAHLWEGE,
-  berechneAlles, MAX_PREIS_CENT, imRahmen
-} from '../js/rechnen.js?v=24';
+  berechneAlles, MAX_PREIS_CENT, imRahmen, versandartenFuer
+} from '../js/rechnen.js?v=25';
 
 test('parseEuroToCent nimmt die Schreibweisen an, die Leute tippen', () => {
   assert.equal(parseEuroToCent('45'), 4500);
@@ -253,4 +253,38 @@ test('betragMitAufschlag verweigert Beträge jenseits der sicheren Ganzzahlen', 
   assert.throws(() => betragMitAufschlag(1e19, paypalGebuehr), RangeError);
   assert.throws(() => betragMitAufschlag(-1, paypalGebuehr), RangeError);
   assert.doesNotThrow(() => betragMitAufschlag(Number.MAX_SAFE_INTEGER - 1, paypalGebuehr));
+});
+
+/* Die Hermes-Aktion läuft am 31.12.2026 aus. Danach muss der reguläre
+   Preis gelten, ohne dass jemand die Daten anfasst. Verglichen wird als
+   Zeichenkette: `new Date('2026-12-31')` ist Mitternacht UTC und liefe in
+   Berlin einen Tag zu früh ab. */
+test('nach dem Aktionsende gilt wieder der reguläre Preis', () => {
+  const paeckchen = heute => versandartenFuer('kleinanzeigen', heute)
+    .find(a => a.name === 'Hermes Päckchen');
+
+  assert.equal(paeckchen('2026-09-24').cent, 99);
+  assert.equal(paeckchen('2026-12-31').cent, 99, 'der letzte Tag zählt noch');
+  assert.equal(paeckchen('2027-01-01').cent, 399);
+});
+
+test('der Aktionshinweis verschwindet mit der Aktion', () => {
+  const vorher = versandartenFuer('kleinanzeigen', '2026-12-31');
+  const nachher = versandartenFuer('kleinanzeigen', '2027-01-01');
+  assert.match(vorher.find(a => a.name === 'Hermes S-Paket').hinweis, /Aktionspreis/);
+  assert.equal(nachher.find(a => a.name === 'Hermes S-Paket').hinweis, null);
+});
+
+test('die Liste bleibt nach Preis sortiert, auch nach dem Aktionsende', () => {
+  for (const heute of ['2026-09-24', '2027-01-01']) {
+    const cents = versandartenFuer('kleinanzeigen', heute).map(a => a.cent);
+    assert.deepEqual(cents, [...cents].sort((a, b) => a - b), heute);
+  }
+});
+
+test('Pakete ohne Aktion behalten ihren Preis', () => {
+  const dhl = heute => versandartenFuer('kleinanzeigen', heute)
+    .find(a => a.name === 'DHL Paket 10 kg');
+  assert.equal(dhl('2026-09-24').cent, 1049);
+  assert.equal(dhl('2030-01-01').cent, 1049);
 });
