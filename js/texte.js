@@ -1,7 +1,7 @@
 /* Fertige Nachrichten zum Verschicken. Kein DOM, damit sich die Texte
    ohne Browser prüfen lassen. */
 
-import { fmt, GEBUEHR_FIX_CENT } from './rechnen.js?v=15';
+import { fmt, GEBUEHR_FIX_CENT } from './rechnen.js?v=16';
 
 export function versandText(r) {
   if (r.versand === 0) return 'entfällt';
@@ -12,7 +12,7 @@ export function aufstellung(r) {
   return [
     `Artikel: ${fmt(r.preis)}`,
     `Versand: ${versandText(r)}`,
-    `Servicegebühr: ${fmt(r.gebuehr)}`,
+    `${r.gebuehrName}: ${fmt(r.gebuehr)}`,
     `Gesamt: ${fmt(r.kaeuferZahlt)}`
   ].join('\n');
 }
@@ -44,7 +44,7 @@ function schutzsatzDirekt(di) {
   /* Nicht jeder Direktweg ist ungeschützt: PayPal Waren und Dienstleistungen
      trägt `schutz: true`. Beleg und Bild lesen dasselbe Feld, der Text tat
      es bisher nicht und behauptete auch dort „Ohne Käuferschutz“. */
-  const satz = di.schutz ? 'Der Käuferschutz greift.' : 'Ohne Käuferschutz.';
+  const satz = di.schutz ? `Der ${di.schutzName} greift.` : 'Ohne Käuferschutz.';
   if (di.warnung) return `${satz} ${di.warnung}`;
   return satz;
 }
@@ -54,17 +54,17 @@ function vergleichRumpf(ka, di) {
     'über „Sicher bezahlen“',
     [
       `Versand ${versandText(ka)}`,
-      `Servicegebühr ${fmt(ka.gebuehr)}`,
+      `${ka.gebuehrName} ${fmt(ka.gebuehr)}`,
       `zusammen ${fmt(ka.kaeuferZahlt)}`
     ],
-    'Der Käuferschutz greift.'
+    `Der ${ka.schutzName} greift.`
   );
 
   const diZeilen = [di.versand > 0 ? `Versand ${fmt(di.versand)}` : 'ohne Versand'];
   if (di.gebuehr > 0 && di.gebuehrTraeger === 'kaeufer') {
-    diZeilen.push(`Gebühr ${fmt(di.gebuehr)} obendrauf`);
+    diZeilen.push(`${di.gebuehrName} ${fmt(di.gebuehr)} obendrauf`);
   } else if (di.gebuehr > 0) {
-    diZeilen.push('Gebühr trägt der Verkäufer');
+    diZeilen.push(`${di.gebuehrName} trägt der Verkäufer`);
   } else {
     diZeilen.push('keine Gebühr');
   }

@@ -5,9 +5,9 @@ import {
   GEBUEHR_FIX_CENT, ZAHLWEGE, findeZahlweg, versandartenFuer,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=15';
-import { textDu, textSie, textNeutral } from './texte.js?v=15';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=15';
+} from './rechnen.js?v=16';
+import { textDu, textSie, textNeutral } from './texte.js?v=16';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=16';
 
 const el = id => document.getElementById(id);
 
@@ -84,10 +84,12 @@ function zeigeKleinanzeigen(r) {
   el('out-preis').textContent = fmt(r.preis);
   el('out-versand').textContent = r.versand > 0 ? fmt(r.versand) : '—';
   el('out-versand-note').textContent = r.paketstation ? 'Zustellung an eine Paketstation' : '';
+  el('out-gebuehr-label').textContent = r.gebuehrName;
   el('out-gebuehr').textContent = fmt(r.gebuehr);
   el('out-gebuehr-formel').textContent = `${fmt(GEBUEHR_FIX_CENT)} + 4,5 % von ${fmt(r.preis)}`;
   el('out-summe').textContent = fmt(r.kaeuferZahlt);
   el('out-behaelt').textContent = fmt(r.verkaeuferBehaelt);
+  el('out-schutz').textContent = `Der ${r.schutzName} greift.`;
 }
 
 function zeigeDirekt(d) {
@@ -96,6 +98,7 @@ function zeigeDirekt(d) {
   el('d-preis').textContent = fmt(d.preis);
   el('d-versand').textContent = d.versand > 0 ? fmt(d.versand) : '—';
   el('d-versand-note').textContent = zahlweg.ohneVersand ? 'Abholung, kein Versand' : '';
+  el('d-gebuehr-label').textContent = d.gebuehrName;
   el('d-gebuehr').textContent = d.gebuehr > 0 ? fmt(d.gebuehr) : '—';
   el('d-gebuehr-formel').textContent = d.gebuehr > 0
     ? `2,49 % + 0,35 € vom Gesamtbetrag, getragen ${d.gebuehrTraeger === 'kaeufer' ? 'vom Käufer' : 'vom Verkäufer'}`
@@ -104,7 +107,7 @@ function zeigeDirekt(d) {
   el('d-behaelt').textContent = fmt(d.verkaeuferBehaelt);
 
   const schutz = el('d-schutz');
-  schutz.textContent = d.schutz ? 'Der Käuferschutz greift.' : 'Ohne Käuferschutz.';
+  schutz.textContent = d.schutz ? `Der ${d.schutzName} greift.` : 'Ohne Käuferschutz.';
   schutz.classList.toggle('schutz-ja', d.schutz);
 
   const warnung = el('zahlweg-warnung');

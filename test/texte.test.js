@@ -3,17 +3,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { berechne, berechneDirekt } from '../js/rechnen.js?v=15';
-import { textDu, textSie, textNeutral, aufstellung } from '../js/texte.js?v=15';
+import { berechne, berechneDirekt } from '../js/rechnen.js?v=16';
+import { textDu, textSie, textNeutral, aufstellung } from '../js/texte.js?v=16';
 
 const KA = berechne(4500, 299, true);
 const direktBlock = text => text.split('\n').filter(z => z.includes('Käuferschutz')).at(-1);
 
 test('der Schutzsatz folgt dem Zahlweg, nicht einer Annahme', () => {
   // PayPal Waren und Dienstleistungen schützt, die übrigen drei nicht.
+  // Der Satz nennt, wessen Schutz greift – „Käuferschutz“ allein sagt nicht,
+  // ob der von Kleinanzeigen oder der von PayPal gemeint ist.
   const erwartung = {
     'ueberweisung': 'Ohne Käuferschutz.',
-    'paypal-wd': 'Der Käuferschutz greift.',
+    'paypal-wd': 'Der PayPal-Käuferschutz greift.',
     'paypal-ff': 'Ohne Käuferschutz.',
     'bar': 'Ohne Käuferschutz.'
   };
@@ -21,6 +23,16 @@ test('der Schutzsatz folgt dem Zahlweg, nicht einer Annahme', () => {
     const di = berechneDirekt(4500, 519, zahlweg, 'verkaeufer');
     assert.ok(direktBlock(textDu(KA, di)).startsWith(anfang), `${zahlweg}: ${direktBlock(textDu(KA, di))}`);
   }
+});
+
+test('beide Wege nennen, wessen Schutz und wessen Gebühr', () => {
+  const di = berechneDirekt(4500, 519, 'paypal-wd', 'verkaeufer');
+  const text = textDu(KA, di);
+  assert.match(text, /Der Kleinanzeigen-Käuferschutz greift\./);
+  assert.match(text, /Der PayPal-Käuferschutz greift\./);
+  assert.match(text, /Servicegebühr Kleinanzeigen/);
+  assert.match(text, /PayPal-Gebühr trägt der Verkäufer/);
+  assert.doesNotMatch(text, /(?<![-\w])Käuferschutz greift/, 'kein unbenannter Käuferschutz');
 });
 
 test('Freunde und Familie trägt die Warnung im Text', () => {

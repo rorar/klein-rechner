@@ -1,7 +1,7 @@
 /* Der Beleg wird von Hand auf ein Canvas gezeichnet. Das sind wenige
    Zeilen je Spalte – dafür lohnt keine Bibliothek, die das DOM nachbaut. */
 
-import { fmt, GEBUEHR_FIX_CENT, findeZahlweg } from './rechnen.js?v=15';
+import { fmt, GEBUEHR_FIX_CENT, findeZahlweg } from './rechnen.js?v=16';
 
 const REPO = 'github.com/rorar/klein-rechner';
 const SEITE = 'rorar.github.io/klein-rechner';
@@ -104,7 +104,7 @@ function zeichneSpalte(g, { x, breite, titel, farbe, r, gebuehrLabel, gebuehrNot
 
   g.fillStyle = r.schutz ? POL_KA : GRAU;
   g.font = '400 14px "IBM Plex Sans", sans-serif';
-  g.fillText(r.schutz ? '✓ Der Käuferschutz greift.' : '○ Ohne Käuferschutz.', x, y);
+  g.fillText(r.schutz ? `✓ Der ${r.schutzName} greift.` : '○ Ohne Käuferschutz.', x, y);
   y += fussnote ? 22 : 0;
 
   if (fussnote) {
@@ -158,7 +158,7 @@ export async function zeichneBeleg(ka, di = null, b = null) {
       titel: 'über „Sicher bezahlen“',
       farbe: vergleich ? POL_KA : '#2c6a4f',
       r: ka,
-      gebuehrLabel: 'Servicegebühr',
+      gebuehrLabel: ka.gebuehrName,
       gebuehrNotiz: `${fmt(GEBUEHR_FIX_CENT)} + 4,5\u00a0% von ${fmt(ka.preis)}`
     }
   ];
@@ -170,7 +170,7 @@ export async function zeichneBeleg(ka, di = null, b = null) {
       titel: `direkt, ${zahlweg.name}`,
       farbe: POL_DIREKT,
       r: di,
-      gebuehrLabel: 'Gebühr',
+      gebuehrLabel: di.gebuehrName,
       gebuehrNotiz: di.gebuehr > 0
         ? `2,49\u00a0% + 0,35\u00a0€, getragen ${di.gebuehrTraeger === 'kaeufer' ? 'vom Käufer' : 'vom Verkäufer'}`
         : 'keine Gebühr',

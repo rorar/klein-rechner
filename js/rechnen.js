@@ -8,6 +8,12 @@
 export const GEBUEHR_FIX_CENT = 50;   // 0,50 € Grundbetrag
 export const GEBUEHR_PROMILLE = 45;   // 4,5 % = 45/1000 des Artikelpreises
 
+/* Wer die Gebühr nimmt und wessen Schutz greift, steht an einer Stelle.
+   Beleg, Bild und Textbaustein lesen dieselben Felder – als „Käuferschutz“
+   ohne Nennung liefen sie schon einmal auseinander. */
+export const KLEINANZEIGEN_GEBUEHR_NAME = 'Servicegebühr Kleinanzeigen';
+export const KLEINANZEIGEN_SCHUTZ_NAME = 'Kleinanzeigen-Käuferschutz';
+
 /* Richtwerte, Stand September 2026. Alle Werte sind überschreibbar –
    das Feld bleibt ein normales Eingabefeld.
 
@@ -78,9 +84,11 @@ export function berechne(preisCent, versandCent, paketstation) {
     preis: preisCent,
     versand: versandCent,
     gebuehr,
+    gebuehrName: KLEINANZEIGEN_GEBUEHR_NAME,
     kaeuferZahlt: preisCent + versandCent + gebuehr,
     verkaeuferBehaelt: preisCent,     // die Gebühr trägt der Käufer
     schutz: true,
+    schutzName: KLEINANZEIGEN_SCHUTZ_NAME,
     paketstation: paketstation && versandCent > 0
   };
 }
@@ -100,12 +108,15 @@ export const ZAHLWEGE = [
   {
     id: 'ueberweisung',
     name: 'Banküberweisung',
+    gebuehrName: 'Gebühr',
     gebuehr: () => 0,
     schutz: false
   },
   {
     id: 'paypal-wd',
     name: 'PayPal Waren und Dienstleistungen',
+    gebuehrName: 'PayPal-Gebühr',
+    schutzName: 'PayPal-Käuferschutz',
     gebuehr: paypalGebuehr,
     schutz: true,
     traeger: true            // nur hier gibt es etwas zu verteilen
@@ -113,6 +124,7 @@ export const ZAHLWEGE = [
   {
     id: 'paypal-ff',
     name: 'PayPal Freunde und Familie',
+    gebuehrName: 'PayPal-Gebühr',
     gebuehr: () => 0,
     schutz: false,
     warnung: 'Für Verkäufe verstößt das gegen die PayPal-Nutzungsbedingungen und kann zur Kontosperrung führen.'
@@ -120,6 +132,7 @@ export const ZAHLWEGE = [
   {
     id: 'bar',
     name: 'Barzahlung bei Abholung',
+    gebuehrName: 'Gebühr',
     gebuehr: () => 0,
     schutz: false,
     ohneVersand: true
@@ -175,9 +188,11 @@ export function berechneDirekt(preisCent, versandCent, zahlwegId, gebuehrTraeger
     preis: preisCent,
     versand,
     gebuehr,
+    gebuehrName: zahlweg.gebuehrName,
     kaeuferZahlt,
     verkaeuferBehaelt,
     schutz: zahlweg.schutz,
+    schutzName: zahlweg.schutzName || null,
     warnung: zahlweg.warnung || null,
     paketstation: false
   };

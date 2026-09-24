@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="light">
 <link rel="preload" href="fonts/Newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css?v=15">
+<link rel="stylesheet" href="styles.css?v=16">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232C6A4F'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' fill='%23FBFBF7' text-anchor='middle'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -30,8 +30,10 @@
                placeholder="z. B. 45,00" aria-describedby="preis-hinweis">
         <span class="unit" aria-hidden="true">€</span>
       </div>
-      <p id="preis-hinweis" class="hint">Der Preis, auf den ihr euch geeinigt habt.</p>
-      <p class="error" id="preis-fehler" role="alert" hidden>Bitte einen Betrag wie 45,00 eintragen.</p>
+      <div class="field-fuss">
+        <p id="preis-hinweis" class="hint">Der Preis, auf den ihr euch geeinigt habt.</p>
+        <p class="error" id="preis-fehler" role="alert" hidden>Bitte einen Betrag wie 45,00 eintragen.</p>
+      </div>
     </div>
 
     <div class="field">
@@ -49,14 +51,16 @@
         </div>
         <ul class="combo-list" id="versand-liste" role="listbox" aria-labelledby="versand-label" hidden></ul>
       </div>
-      <p id="versand-hinweis" class="hint">Eigenen Betrag tippen oder eine Versandart wählen. Die Preise sind Richtwerte vom September 2026.</p>
-      <p class="error" id="versand-fehler" role="alert" hidden>Bitte einen Betrag wie 5,49 eintragen oder das Feld leer lassen.</p>
+      <div class="field-fuss">
+        <p id="versand-hinweis" class="hint">Eigenen Betrag tippen oder eine Versandart wählen. Die Preise sind Richtwerte vom September 2026.</p>
+        <p class="error" id="versand-fehler" role="alert" hidden>Bitte einen Betrag wie 5,49 eintragen oder das Feld leer lassen.</p>
 
-      <label class="schalter" for="paketstation">
-        <input type="checkbox" id="paketstation" aria-describedby="paketstation-hinweis">
-        <span>Zustellung an eine Paketstation</span>
-      </label>
-      <p id="paketstation-hinweis" class="hint">Aktionspreise gibt es teils nur zu dieser Bedingung. Wer sich die Ware nach Hause liefern lässt, zahlt dann mehr.</p>
+        <label class="schalter" for="paketstation">
+          <input type="checkbox" id="paketstation" aria-describedby="paketstation-hinweis">
+          <span>Zustellung an eine Paketstation</span>
+        </label>
+        <p id="paketstation-hinweis" class="hint">Aktionspreise gibt es teils nur zu dieser Bedingung. Wer sich die Ware nach Hause liefern lässt, zahlt dann mehr.</p>
+      </div>
     </div>
 
     <div class="field" id="direktversand-feld" hidden>
@@ -74,8 +78,10 @@
         </div>
         <ul class="combo-list" id="direktversand-liste" role="listbox" aria-labelledby="direktversand-label" hidden></ul>
       </div>
-      <p id="direktversand-hinweis" class="hint">Was derselbe Versand kostet, wenn du ihn selbst buchst. Online frankiert ist durchweg günstiger als im Shop gebucht.</p>
-      <p class="error" id="direktversand-fehler" role="alert" hidden>Bitte einen Betrag wie 5,19 eintragen oder das Feld leer lassen.</p>
+      <div class="field-fuss">
+        <p id="direktversand-hinweis" class="hint">Was derselbe Versand kostet, wenn du ihn selbst buchst. Online frankiert ist durchweg günstiger als im Shop gebucht.</p>
+        <p class="error" id="direktversand-fehler" role="alert" hidden>Bitte einen Betrag wie 5,19 eintragen oder das Feld leer lassen.</p>
+      </div>
     </div>
 
     <label class="schalter schalter-vergleich" for="vergleich">
@@ -112,7 +118,7 @@
         <span class="row-note" id="out-versand-note"></span>
       </div>
       <div class="row">
-        <span class="row-label">Servicegebühr</span>
+        <span class="row-label" id="out-gebuehr-label">Servicegebühr</span>
         <span class="row-dots" aria-hidden="true"></span>
         <span class="row-amount" id="out-gebuehr">—</span>
         <span class="row-note" id="out-gebuehr-formel"></span>
@@ -125,7 +131,7 @@
     </div>
 
     <p class="behaelt"><span>Verkäufer behält</span> <b id="out-behaelt">—</b></p>
-    <p class="schutz schutz-ja">Der Käuferschutz greift.</p>
+    <p class="schutz schutz-ja" id="out-schutz">Der Käuferschutz greift.</p>
 
     <div class="receipt-actions">
       <button type="button" class="copy copy-total" data-copy="summe">Summe kopieren</button>
@@ -176,7 +182,7 @@
         <span class="row-note" id="d-versand-note"></span>
       </div>
       <div class="row" id="d-gebuehr-zeile">
-        <span class="row-label">Gebühr</span>
+        <span class="row-label" id="d-gebuehr-label">Gebühr</span>
         <span class="row-dots" aria-hidden="true"></span>
         <span class="row-amount" id="d-gebuehr">—</span>
         <span class="row-note" id="d-gebuehr-formel"></span>
@@ -279,6 +285,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script type="module" src="js/ui.js?v=15"></script>
+<script type="module" src="js/ui.js?v=16"></script>
 </body>
 </html>

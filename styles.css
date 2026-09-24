@@ -569,6 +569,24 @@ body {
   }
 
   .sheet[data-vergleich="an"] > .panel > .field + .field { margin-top: 0; }
+
+  /* Die Eingabefelder sollen nebeneinander auf einer Höhe stehen, auch wenn
+     eine Beschriftung zweizeilig wird. subgrid teilt jedem Feld dieselben
+     drei Zeilen des Panels zu – Beschriftung, Eingabe, Fuß – statt jede
+     Spalte für sich stapeln zu lassen. */
+  .sheet[data-vergleich="an"] > .panel > .field {
+    display: grid;
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+    /* Die eine Spalte muss ausdrücklich schrumpfbar sein. Implizit wäre sie
+       auto und damit so breit wie ihr breitester Inhalt - die Kinder ragten
+       dann aus dem Feld heraus. */
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    min-width: 0;
+  }
+
+  .sheet[data-vergleich="an"] > .panel > .field > label { align-self: end; }
 }
 
 /* ---------- Zahlweg ---------- */
