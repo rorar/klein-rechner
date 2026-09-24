@@ -74,9 +74,11 @@ body {
 .masthead h1 {
   margin: 0 0 0.6rem;
   max-width: 18ch;
-  font: 500 clamp(2.1rem, 1.2rem + 3.6vw, 3.6rem)/1.06 var(--serif);
+  font: 500 clamp(1.9rem, 1.2rem + 3.6vw, 3.6rem)/1.06 var(--serif);
   letter-spacing: -0.015em;
   text-wrap: balance;
+  /* „bezahlen“?“ passt bei 320 px sonst nicht in eine Zeile. */
+  hyphens: auto;
 }
 
 .standfirst {
@@ -93,7 +95,9 @@ body {
   margin: 0 auto;
   display: grid;
   gap: clamp(1rem, 0.5rem + 2vw, 2rem);
-  grid-template-columns: 1fr;
+  /* minmax(0, 1fr) überall, wo Spuren schrumpfen können müssen: 1fr ist
+     minmax(auto, 1fr) und lässt die Spur nie unter ihren Mindestinhalt. */
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 
@@ -364,16 +368,16 @@ body {
 .texts {
   display: grid;
   gap: clamp(1rem, 0.5rem + 2vw, 2rem);
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 
 @media (min-width: 52rem) {
-  .sheet { grid-template-columns: 1fr 1fr; }
+  .sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (min-width: 58rem) {
-  .texts { grid-template-columns: repeat(3, 1fr); }
+  .texts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 .texts { padding-top: 0.5rem; }
@@ -549,7 +553,10 @@ body {
   .sheet[data-vergleich="an"] > .panel {
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    /* minmax(0, 1fr), nicht 1fr: 1fr ist minmax(auto, 1fr) und lässt die
+       Spur nie unter ihren Mindestinhalt schrumpfen. Die Combobox und die
+       Hinweistexte trieben die Spalten damit über den Rand hinaus. */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0 2rem;
     align-items: start;
   }
@@ -681,6 +688,11 @@ body {
   background: var(--ink);
   box-shadow: 0 0 0 2px var(--card);   /* Ring, damit die Marke auf der Grenze sichtbar bleibt */
 }
+
+/* Am Rand der Skala würde die mittig gesetzte Beschriftung heraushängen.
+   zeigeBreakeven setzt dann data-seite und sie klebt am Balkenende. */
+.skala-marke[data-seite="links"] .skala-marke-wert { left: 0; translate: 0 0; }
+.skala-marke[data-seite="rechts"] .skala-marke-wert { left: auto; right: 0; translate: 0 0; }
 
 .skala-marke-wert {
   position: absolute;

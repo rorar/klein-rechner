@@ -1,7 +1,7 @@
 /* Der Beleg wird von Hand auf ein Canvas gezeichnet. Das sind wenige
    Zeilen je Spalte – dafür lohnt keine Bibliothek, die das DOM nachbaut. */
 
-import { fmt, GEBUEHR_FIX_CENT, findeZahlweg } from './rechnen.js?v=14';
+import { fmt, GEBUEHR_FIX_CENT, findeZahlweg } from './rechnen.js?v=15';
 
 const REPO = 'github.com/rorar/klein-rechner';
 const SEITE = 'rorar.github.io/klein-rechner';

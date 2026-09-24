@@ -5,9 +5,9 @@ import {
   GEBUEHR_FIX_CENT, ZAHLWEGE, findeZahlweg, versandartenFuer,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=14';
-import { textDu, textSie, textNeutral } from './texte.js?v=14';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=14';
+} from './rechnen.js?v=15';
+import { textDu, textSie, textNeutral } from './texte.js?v=15';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=15';
 
 const el = id => document.getElementById(id);
 
@@ -149,8 +149,11 @@ function zeigeBreakeven(b, ka, di) {
     schwelleLabel.hidden = true;
   }
 
+  const markePos = anteil(ka.preis);
   marke.hidden = false;
-  marke.style.left = anteil(ka.preis) + '%';
+  marke.style.left = markePos + '%';
+  /* Nahe den Enden hinge die mittig gesetzte Beschriftung heraus. */
+  marke.dataset.seite = markePos < 12 ? 'links' : (markePos > 88 ? 'rechts' : 'mitte');
   el('skala-marke-wert').textContent = fmt(ka.preis);
   el('skala-bis').textContent = fmt(ende);
 

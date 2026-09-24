@@ -128,7 +128,7 @@ als Modulquelle ohne Weiteres ab; dort holt man die Datei per `fetch` oder legt
 sie ins eigene Projekt.
 
 ```js
-const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=14');
+const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=15');
 
 berechneAlles({
   artikelpreisCent: 4500,
@@ -226,12 +226,12 @@ npm test         # node --test, ohne Browser
 Dann http://localhost:8765 öffnen. Über `file://` läuft die Seite nicht: ES-Module
 brauchen HTTP. Auch die Kopierfunktion will HTTPS oder localhost.
 
-Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=14`). Ohne sie
+Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=15`). Ohne sie
 könnte ein Browser ein frisches `ui.js` mit einem veralteten `rechnen.js` mischen.
 Beim Ändern alle Vorkommen gemeinsam hochzählen:
 
 ```sh
-sed -i 's/?v=14/?v=14/g' index.html js/*.js test/*.js
+sed -i 's/?v=15/?v=15/g' index.html js/*.js test/*.js
 ```
 
 ## Rechtliches
