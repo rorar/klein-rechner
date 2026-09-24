@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="light">
 <link rel="preload" href="fonts/Newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css?v=23">
+<link rel="stylesheet" href="styles.css?v=24">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232C6A4F'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' fill='%23FBFBF7' text-anchor='middle'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -104,23 +104,27 @@
   <section class="receipt" aria-labelledby="beleg-titel">
     <h2 id="beleg-titel" class="panel-title"><span data-solo>Aufstellung</span><span data-vergleich hidden>über „Sicher bezahlen“</span></h2>
 
+    <!-- Die Zeilen schreibt ui.js aus kostenPosten() neu. Was hier steht,
+         ist der Anfangszustand und zugleich die Gestalt, die ohne
+         JavaScript sichtbar bleibt. -->
     <div class="rows" id="rows" aria-live="polite">
-      <div class="row">
+      <div class="row" data-art="preis">
         <span class="row-label">Artikelpreis</span>
         <span class="row-dots" aria-hidden="true"></span>
-        <span class="row-amount" id="out-preis">—</span>
+        <span class="row-amount">—</span>
+        <span class="row-note"></span>
       </div>
-      <div class="row">
+      <div class="row" data-art="gebuehr">
+        <span class="row-label">Servicegebühr Kleinanzeigen</span>
+        <span class="row-dots" aria-hidden="true"></span>
+        <span class="row-amount">—</span>
+        <span class="row-note"></span>
+      </div>
+      <div class="row" data-art="versand">
         <span class="row-label">Versand</span>
         <span class="row-dots" aria-hidden="true"></span>
-        <span class="row-amount" id="out-versand">—</span>
-        <span class="row-note" id="out-versand-note"></span>
-      </div>
-      <div class="row">
-        <span class="row-label" id="out-gebuehr-label">Servicegebühr</span>
-        <span class="row-dots" aria-hidden="true"></span>
-        <span class="row-amount" id="out-gebuehr">—</span>
-        <span class="row-note" id="out-gebuehr-formel"></span>
+        <span class="row-amount">—</span>
+        <span class="row-note"></span>
       </div>
     </div>
 
@@ -130,6 +134,7 @@
     </div>
 
     <p class="behaelt"><span>Verkäufer behält</span> <b id="out-behaelt">—</b></p>
+    <p class="fussnoten" id="fussnoten"></p>
     <p class="schutz schutz-ja" id="out-schutz">Der Käuferschutz greift.</p>
 
     <div class="receipt-actions">
@@ -154,23 +159,24 @@
       <label><input type="radio" name="traeger" value="kaeufer"> legt der Käufer drauf</label>
     </fieldset>
 
-    <div class="rows" aria-live="polite">
-      <div class="row">
+    <div class="rows" id="d-rows" aria-live="polite">
+      <div class="row" data-art="preis">
         <span class="row-label">Artikelpreis</span>
         <span class="row-dots" aria-hidden="true"></span>
-        <span class="row-amount" id="d-preis">—</span>
+        <span class="row-amount">—</span>
+        <span class="row-note"></span>
       </div>
-      <div class="row">
+      <div class="row" data-art="gebuehr">
+        <span class="row-label">Gebühr</span>
+        <span class="row-dots" aria-hidden="true"></span>
+        <span class="row-amount">—</span>
+        <span class="row-note"></span>
+      </div>
+      <div class="row" data-art="versand">
         <span class="row-label">Versand</span>
         <span class="row-dots" aria-hidden="true"></span>
-        <span class="row-amount" id="d-versand">—</span>
-        <span class="row-note" id="d-versand-note"></span>
-      </div>
-      <div class="row" id="d-gebuehr-zeile">
-        <span class="row-label" id="d-gebuehr-label">Gebühr</span>
-        <span class="row-dots" aria-hidden="true"></span>
-        <span class="row-amount" id="d-gebuehr">—</span>
-        <span class="row-note" id="d-gebuehr-formel"></span>
+        <span class="row-amount">—</span>
+        <span class="row-note"></span>
       </div>
     </div>
 
@@ -180,6 +186,7 @@
     </div>
 
     <p class="behaelt"><span>Verkäufer behält</span> <b id="d-behaelt">—</b></p>
+    <p class="fussnoten" id="d-fussnoten"></p>
     <p class="schutz" id="d-schutz">Ohne Käuferschutz.</p>
 
     <div class="receipt-actions">
@@ -287,6 +294,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script type="module" src="js/ui.js?v=23"></script>
+<script type="module" src="js/ui.js?v=24"></script>
 </body>
 </html>

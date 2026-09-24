@@ -2,13 +2,15 @@
    Alles, was hier steht, braucht ein DOM. Gerechnet wird in rechnen.js. */
 
 import {
-  KLEINANZEIGEN_FORMEL, zahlwegFormel, ZAHLWEGE, findeZahlweg, versandartenFuer, imRahmen,
+  KLEINANZEIGEN_FORMEL, KLEINANZEIGEN_GEBUEHR_NAME, ZAHLWEGE, findeZahlweg, versandartenFuer, imRahmen,
   kleinanzeigenGebuehr, STAND_DER_WERTE,
   fmt, parseEuroToCent, berechne, berechneDirekt, breakeven, berechneAlles,
   kleinsterPreis, paypalGebuehr, betragMitAufschlag
-} from './rechnen.js?v=23';
-import { textDu, textSie, textNeutral, breakevenSaetze } from './texte.js?v=23';
-import { zeichneBeleg, dateiname } from './beleg-bild.js?v=23';
+} from './rechnen.js?v=24';
+import {
+  textDu, textSie, textNeutral, breakevenSaetze, kostenPosten
+} from './texte.js?v=24';
+import { zeichneBeleg, dateiname } from './beleg-bild.js?v=24';
 
 /* Steht ganz oben, vor jedem Zugriff aufs Dokument: auf einer fremden
    Seite gäbe es die Knöpfe nicht, das Modul bräche beim Laden ab, und die
@@ -78,16 +80,57 @@ function bauZahlwege() {
 
 /* ---------- Anzeige ---------- */
 
+/* Das Gerüst einer Belegzeile. Die Zeilen stehen nicht fest im Markup,
+   weil kostenPosten() entscheidet, welche es gibt. */
+function zeilenGeruest() {
+  const zeile = document.createElement('div');
+  zeile.className = 'row';
+  zeile.innerHTML = '<span class="row-label"></span>'
+    + '<span class="row-dots" aria-hidden="true"></span>'
+    + '<span class="row-amount"></span><span class="row-note"></span>';
+  return zeile;
+}
+
+/* Eine Zeile befüllen. `ersatz` steht für einen fehlenden Betrag: im
+   gefüllten Beleg leer („ohne Versand, Abholung“ braucht keine Zahl), im
+   leeren ein Gedankenstrich. */
+function fuelleZeile(zeileEl, z, ersatz) {
+  const betragText = z.betrag === null ? ersatz : fmt(z.betrag);
+  zeileEl.dataset.art = z.art;
+  /* Ohne Betrag liefe die Punktlinie ins Leere. */
+  zeileEl.classList.toggle('row-ohne-betrag', betragText === '');
+  zeileEl.querySelector('.row-label').textContent = z.label;
+  zeileEl.querySelector('.row-amount').textContent = betragText;
+  zeileEl.querySelector('.row-note').textContent = z.notiz || '';
+}
+
+/* Bestehende Zeilen werden weiterverwendet und nur neu beschriftet. Ein
+   Neuaufbau bei jedem Tastendruck ließe den Screenreader den ganzen Block
+   noch einmal vorlesen. */
+function zeichneZeilen(behaelter, zeilen, ersatz) {
+  while (behaelter.children.length > zeilen.length) behaelter.lastElementChild.remove();
+  while (behaelter.children.length < zeilen.length) behaelter.appendChild(zeilenGeruest());
+  zeilen.forEach((z, i) => fuelleZeile(behaelter.children[i], z, ersatz));
+}
+
+/* Der leere Beleg zeigt dieselben drei Zeilen wie der gefüllte, nur ohne
+   Beträge. Bliebe die Gestalt der letzten Rechnung stehen, stünde dort
+   etwa „ohne Versand, Abholung“ an einem Beleg ohne Zahlen. */
+const leereZeilen = gebuehrName => [
+  { art: 'preis', label: 'Artikelpreis', betrag: null },
+  { art: 'gebuehr', label: gebuehrName, betrag: null },
+  { art: 'versand', label: 'Versand', betrag: null }
+];
+
 function zeigeLeer() {
-  ['out-preis', 'out-versand', 'out-gebuehr', 'out-summe', 'out-behaelt',
-   'd-preis', 'd-versand', 'd-gebuehr', 'd-summe', 'd-behaelt']
+  zeichneZeilen(el('rows'), leereZeilen(KLEINANZEIGEN_GEBUEHR_NAME), '—');
+  zeichneZeilen(el('d-rows'), leereZeilen(findeZahlweg(zahlwegAktuell()).gebuehrName), '—');
+  /* Auch die Fußnote: sonst stünde am leeren Beleg noch, wer die Gebühr
+     der letzten Rechnung getragen hat. */
+  el('fussnoten').textContent = '';
+  el('d-fussnoten').textContent = '';
+  ['out-summe', 'out-behaelt', 'd-summe', 'd-behaelt']
     .forEach(id => { el(id).textContent = '—'; });
-  el('out-gebuehr-formel').textContent = '';
-  el('d-gebuehr-formel').textContent = '';
-  /* Die Versandnotiz blieb bisher stehen, wenn der Preis geleert wurde –
-     dann hing „Zustellung an eine Paketstation“ an einem leeren Beleg. */
-  el('out-versand-note').textContent = '';
-  el('d-versand-note').textContent = '';
   /* Dasselbe für die JSON-Ansicht: zeigeJsonAnsicht() läuft nur am Ende von
      aktualisiere(), auf diesem Weg also nie. Unter ?format=json stand sonst
      die alte Ausgabe neben einem geleerten Beleg. */
@@ -106,16 +149,29 @@ function zeigeLeer() {
   document.querySelectorAll('.copy, .neben').forEach(b => { b.disabled = true; });
 }
 
-function zeigeKleinanzeigen(r) {
-  el('out-preis').textContent = fmt(r.preis);
-  el('out-versand').textContent = r.versand > 0 ? fmt(r.versand) : '—';
-  el('out-versand-note').textContent = r.paketstation ? 'Zustellung an eine Paketstation' : '';
-  el('out-gebuehr-label').textContent = r.gebuehrName;
-  el('out-gebuehr').textContent = fmt(r.gebuehr);
-  el('out-gebuehr-formel').textContent = `${KLEINANZEIGEN_FORMEL} von ${fmt(r.preis)}`;
-  el('out-summe').textContent = fmt(r.kaeuferZahlt);
-  el('out-behaelt').textContent = fmt(r.verkaeuferBehaelt);
-  el('out-schutz').textContent = `Der ${r.schutzName} greift.`;
+/* Beide Belege aus kostenPosten(), derselben Quelle wie Nachricht und
+   Bild.
+
+   Vorher setzte die Seite jedes Feld für sich. Die Gebührenzeile stand
+   dabei immer über dem Strich, auch wenn der Verkäufer sie trug: 78,00 +
+   3,99 + 2,39 über „Käufer zahlt 81,99 €“. Wer die Posten aus derselben
+   Aufstellung nimmt wie die Summe, kann das nicht mehr treffen. */
+function zeigeBelege(ka, di) {
+  zeigeBeleg('rows', 'fussnoten', 'out', kostenPosten(ka), ka);
+  el('out-schutz').textContent = `Der ${ka.schutzName} greift.`;
+
+  if (di) zeigeBeleg('d-rows', 'd-fussnoten', 'd', kostenPosten(di), di);
+}
+
+/* Anders als im Bild stehen die Belege hier nicht auf gleicher Höhe: über
+   den Zeilen des Direktkaufs stehen Zahlweg und Gebührenträger. Eine
+   Platzhalterzeile für eine fehlende Gebühr richtete also nichts aus und
+   risse nur ein Loch in die Aufstellung. */
+function zeigeBeleg(zeilenId, fussnotenId, praefix, posten, r) {
+  zeichneZeilen(el(zeilenId), posten.zeilen, '');
+  el(fussnotenId).textContent = posten.fussnoten.join(' ');
+  el(`${praefix}-summe`).textContent = fmt(posten.summe.betrag);
+  el(`${praefix}-behaelt`).textContent = fmt(r.verkaeuferBehaelt);
 }
 
 /* Beiwerk, das allein vom Zahlweg abhängt. Lief früher nur mit, wenn eine
@@ -123,7 +179,6 @@ function zeigeKleinanzeigen(r) {
    Freunden und Familie unter einer Banküberweisung stehen. */
 function zeigeZahlwegBeiwerk() {
   const zahlweg = findeZahlweg(zahlwegAktuell());
-  el('d-gebuehr-label').textContent = zahlweg.gebuehrName;
   const warnung = el('zahlweg-warnung');
   warnung.textContent = zahlweg.warnung || '';
   warnung.hidden = !zahlweg.warnung;
@@ -132,21 +187,6 @@ function zeigeZahlwegBeiwerk() {
   const schutz = el('d-schutz');
   schutz.textContent = zahlweg.schutz ? `Der ${zahlweg.schutzName} greift.` : 'Ohne Käuferschutz.';
   schutz.classList.toggle('schutz-ja', Boolean(zahlweg.schutz));
-}
-
-function zeigeDirekt(d) {
-  const zahlweg = findeZahlweg(d.zahlweg);
-
-  el('d-preis').textContent = fmt(d.preis);
-  el('d-versand').textContent = d.versand > 0 ? fmt(d.versand) : '—';
-  el('d-versand-note').textContent = zahlweg.ohneVersand ? 'Abholung, kein Versand' : '';
-  el('d-gebuehr').textContent = d.gebuehr > 0 ? fmt(d.gebuehr) : '—';
-  el('d-gebuehr-formel').textContent = d.gebuehr > 0
-    ? `${zahlwegFormel(d.zahlweg)} vom Gesamtbetrag, getragen ${d.gebuehrTraeger === 'kaeufer' ? 'vom Käufer' : 'vom Verkäufer'}`
-    : '';
-  el('d-summe').textContent = fmt(d.kaeuferZahlt);
-  el('d-behaelt').textContent = fmt(d.verkaeuferBehaelt);
-
 }
 
 /* ---------- Breakeven ---------- */
@@ -249,7 +289,6 @@ function aktualisiere() {
   const ka = berechne(preis, versand === null ? 0 : versand, paketstationFeld.checked,
                       artZu('kleinanzeigen', versand));
   letzteRechnung = ka;
-  zeigeKleinanzeigen(ka);
 
   let di = null;
   if (vergleich) {
@@ -263,13 +302,14 @@ function aktualisiere() {
       zahlweg: di.zahlweg,
       gebuehrTraeger: traegerAktuell()
     });
-    zeigeDirekt(di);
-    zeigeBreakeven(letzterBreakeven, ka, di);
   } else {
     letzteDirekt = null;
     letzterBreakeven = null;
     el('breakeven').hidden = true;
   }
+
+  zeigeBelege(ka, di);
+  if (di) zeigeBreakeven(letzterBreakeven, ka, di);
 
   kopien.summe = fmt(ka.kaeuferZahlt);
   kopien.dsumme = di ? fmt(di.kaeuferZahlt) : '';

@@ -1,7 +1,8 @@
 /* Fertige Nachrichten zum Verschicken. Kein DOM, damit sich die Texte
    ohne Browser prüfen lassen. */
 
-import { fmt } from './rechnen.js?v=23';
+import { fmt } from './rechnen.js?v=24';
+import { PAKETSTATION_ZUSTELLUNG } from './daten.js?v=24';
 
 const TRENNER = '------';
 
@@ -10,7 +11,12 @@ const TRENNER = '------';
    bucht, steht bewusst nicht dabei – das ist in daten.js das Feld
    `hinweis` und geht den Empfänger nichts an. */
 function versandZusatz(r) {
-  const teile = [r.versandName, r.versandZustellung].filter(Boolean);
+  /* Wer den Versandbetrag von Hand eintippt, wählt keine Versandart – dann
+     bleibt `versandZustellung` leer, obwohl der Paketstations-Schalter an
+     ist. Die Seite las den Schalter, das Bild nicht; die Bedingung fehlte
+     dort also genau dann, wenn sie am wenigsten offensichtlich war. */
+  const zustellung = r.versandZustellung || (r.paketstation ? PAKETSTATION_ZUSTELLUNG : null);
+  const teile = [r.versandName, zustellung].filter(Boolean);
   return teile.length ? teile.join(', ') : null;
 }
 
@@ -28,16 +34,16 @@ const kaeuferTraegtGebuehr = r =>
    diesem Projekt schon einmal dazu geführt, dass eine der beiden Fassungen
    etwas anderes behauptet hat. */
 export function kostenPosten(r) {
-  const zeilen = [{ label: 'Angebotspreis', betrag: r.preis }];
+  const zeilen = [{ art: 'preis', label: 'Artikelpreis', betrag: r.preis }];
 
   if (kaeuferTraegtGebuehr(r)) {
-    zeilen.push({ label: r.gebuehrName, betrag: r.gebuehr, notiz: r.gebuehrAufschluesselung });
+    zeilen.push({ art: 'gebuehr', label: r.gebuehrName, betrag: r.gebuehr, notiz: r.gebuehrAufschluesselung });
   }
 
   if (r.versand > 0) {
-    zeilen.push({ label: 'Versand', betrag: r.versand, notiz: versandZusatz(r) });
+    zeilen.push({ art: 'versand', label: 'Versand', betrag: r.versand, notiz: versandZusatz(r) });
   } else {
-    zeilen.push({ label: 'ohne Versand, Abholung', betrag: null });
+    zeilen.push({ art: 'versand', label: 'ohne Versand, Abholung', betrag: null });
   }
 
   const fussnoten = [];
@@ -46,6 +52,26 @@ export function kostenPosten(r) {
   }
 
   return { zeilen, summe: { label: 'zusammen', betrag: r.kaeuferZahlt }, fussnoten };
+}
+
+/* Die feste Reihenfolge der Posten. Nach ihr richtet das Bild seine
+   Spalten aus; kostenPosten() hält sich beim Bauen an dieselbe Folge. */
+export const POSTEN_ARTEN = ['preis', 'gebuehr', 'versand'];
+
+/* Bringt mehrere Aufstellungen auf gemeinsame Zeilen: jede Art bekommt in
+   jeder Spalte dieselbe Zeile, und wo eine Art fehlt, steht null.
+
+   Ohne das richteten sich die Spalten nach der Position aus. Fehlte links
+   die Gebühr, rutschte der Versand eine Zeile hoch und stand neben der
+   Servicegebühr der anderen Spalte – zwei verschiedene Dinge auf einer
+   Höhe. Arten, die in keiner Spalte vorkommen, fallen ganz weg. */
+export function ausgerichtetePosten(aufstellungen) {
+  const arten = POSTEN_ARTEN.filter(
+    art => aufstellungen.some(a => a.zeilen.some(z => z.art === art)));
+  return {
+    arten,
+    spalten: aufstellungen.map(a => arten.map(art => a.zeilen.find(z => z.art === art) || null))
+  };
 }
 
 export function aufstellung(r) {

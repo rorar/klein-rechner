@@ -72,6 +72,11 @@ export const ZAHLWEGE = [
 
 /* ---------- Versandkosten ---------- */
 
+/* Der Zusatz, den der Paketstations-Schalter bedeutet. Steht hier, weil
+   ihn auch texte.js braucht: wer den Versandbetrag von Hand eintippt,
+   wählt keine Versandart, der Schalter gilt aber trotzdem. */
+export const PAKETSTATION_ZUSTELLUNG = 'Zustellung an eine Paketstation';
+
 /* Zwei verschiedene Leser, zwei Felder:
 
      name        steht in der Auswahlliste und darf unterscheiden, wie
@@ -102,7 +107,7 @@ export const VERSANDARTEN = [
 
   { name: 'Hermes über Kleinanzeigen, kleinste Größe', kurz: 'Hermes über Kleinanzeigen', cent: 299, quelle: 'kleinanzeigen',
     hinweis: 'Aktionspreis nur bei Zustellung an eine Paketstation',
-    zustellung: 'Zustellung an eine Paketstation', paketstation: true },
+    zustellung: PAKETSTATION_ZUSTELLUNG, paketstation: true },
 
   { name: 'Hermes Shop-to-Shop Päckchen', cent: 399, quelle: 'direkt',
     hinweis: 'nur online buchbar', zustellung: 'von Shop zu Shop' },

@@ -11,7 +11,7 @@
 
 import {
   KLEINANZEIGEN, ZAHLWEGE as ZAHLWEGE_BESCHREIBUNG, VERSANDARTEN, STAND_DER_WERTE
-} from './daten.js?v=23';
+} from './daten.js?v=24';
 
 export { VERSANDARTEN, STAND_DER_WERTE };
 
@@ -60,11 +60,14 @@ export function gebuehrFormel(deskriptor) {
 export const KLEINANZEIGEN_FORMEL = gebuehrFormel(KLEINANZEIGEN.gebuehr);
 
 /* Ausführlicher, für die Nachricht an den Käufer: dort soll erkennbar
-   sein, woraus die Gebühr besteht und worauf der Anteil sich bezieht. */
+   sein, woraus die Gebühr besteht und worauf der Anteil sich bezieht.
+   Die Grundlage steht immer dabei, nicht nur beim Gesamtbetrag: sonst
+   stand im Vergleich links „4,5 %“ ohne Bezug neben rechts
+   „2,49 % vom Gesamtbetrag“, als wäre das dieselbe Größe. */
 export function gebuehrAufschluesselung(deskriptor) {
   if (!deskriptor) return null;
-  const bezug = deskriptor.grundlage === 'gesamtbetrag' ? ' vom Gesamtbetrag' : '';
-  return `${fmt(deskriptor.festCent)} Pauschal + ${prozent.format(deskriptor.basispunkte / 100)}\u00a0%${bezug}`;
+  const bezug = deskriptor.grundlage === 'gesamtbetrag' ? 'vom Gesamtbetrag' : 'vom Artikelpreis';
+  return `${fmt(deskriptor.festCent)} Pauschal + ${prozent.format(deskriptor.basispunkte / 100)}\u00a0% ${bezug}`;
 }
 
 export const KLEINANZEIGEN_AUFSCHLUESSELUNG = gebuehrAufschluesselung(KLEINANZEIGEN.gebuehr);

@@ -164,7 +164,7 @@ Projekt. `rechnen.js` importiert `daten.js`, eine einzelne Datei zu holen reicht
 also nicht.
 
 ```js
-const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=23');
+const { berechneAlles } = await import('https://rorar.github.io/klein-rechner/js/rechnen.js?v=24');
 
 berechneAlles({
   artikelpreisCent: 4500,
@@ -247,7 +247,7 @@ PNG an die Teilen-Funktion des Systems. Beides kommt ohne Bibliothek aus.
 | `styles.css` | Gestaltung, Beleg-Optik |
 | `js/daten.js` | **Alle Preise, Gebührensätze und Bezeichnungen.** Wer Werte pflegt, fasst nur diese Datei an |
 | `js/rechnen.js` | Die Formeln: Gebührenmodelle, Schwellensuche, JSON – ohne DOM, damit prüfbar und importierbar |
-| `js/texte.js` | Textbausteine, einzeln und im Vergleich |
+| `js/texte.js` | Textbausteine, einzeln und im Vergleich. `kostenPosten()` liefert die Aufstellung als Struktur – Seite, Nachricht und Bild lesen dieselben Posten |
 | `js/beleg-bild.js` | Der Beleg als PNG, ein- oder zweispaltig |
 | `js/ui.js` | Verdrahtung: Eingaben, Combobox, Knöpfe, Adresse |
 | `test/` | `npm test` – Rechenkerne ohne Browser |
@@ -263,12 +263,12 @@ npm test         # node --test, ohne Browser
 Dann http://localhost:8765 öffnen. Über `file://` läuft die Seite nicht: ES-Module
 brauchen HTTP. Auch die Kopierfunktion will HTTPS oder localhost.
 
-Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=23`). Ohne sie
+Die Versionsangabe hängt an den Import-Adressen (`./rechnen.js?v=24`). Ohne sie
 könnte ein Browser ein frisches `ui.js` mit einem veralteten `rechnen.js` mischen.
 Beim Ändern alle Vorkommen gemeinsam hochzählen:
 
 ```sh
-alt=23; neu=24
+alt=24; neu=25
 sed -i "s/?v=$alt/?v=$neu/g" index.html js/*.js test/*.js README.md
 ```
 

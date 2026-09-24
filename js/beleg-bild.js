@@ -1,8 +1,8 @@
 /* Der Beleg wird von Hand auf ein Canvas gezeichnet. Das sind wenige
    Zeilen je Spalte – dafür lohnt keine Bibliothek, die das DOM nachbaut. */
 
-import { fmt, KLEINANZEIGEN_AUFSCHLUESSELUNG, findeZahlweg } from './rechnen.js?v=23';
-import { breakevenSaetze, kostenPosten, schutzSatz } from './texte.js?v=23';
+import { fmt, KLEINANZEIGEN_AUFSCHLUESSELUNG } from './rechnen.js?v=24';
+import { ausgerichtetePosten, breakevenSaetze, kostenPosten, schutzSatz } from './texte.js?v=24';
 
 const REPO = 'github.com/rorar/klein-rechner';
 const SEITE = 'rorar.github.io/klein-rechner';
@@ -37,7 +37,7 @@ async function schriftenBereit() {
    Quelle wie für die Nachricht. Vorher hatte das Bild eine eigene
    Reihenfolge, nannte die Versandart nicht und stellte die Gebühr des
    Verkäufers über den Strich: die Spalte ging nicht auf. */
-function zeichneSpalte(g, { x, breite, titel, farbe, r, zeilenPlatz }) {
+function zeichneSpalte(g, { x, breite, titel, farbe, r, posten, zeilen, zeilenPlatz }) {
   const rechts = x + breite;
 
   const zeile = (y, label, betrag) => {
@@ -58,17 +58,20 @@ function zeichneSpalte(g, { x, breite, titel, farbe, r, zeilenPlatz }) {
     }
   };
 
-  const notiz = (y, text, maxBreite = breite) => {
+  /* Gibt die Grundlinie der letzten gezeichneten Zeile zurück. Ohne Text
+     ist das die Ausgangshöhe: vorher kam y - 17 heraus, und der nächste
+     Aufrufer hätte darüber weitergeschrieben. */
+  const notiz = (y, text) => {
+    const stuecke = umbrich(g, text, breite);
+    if (!stuecke.length) return y;
+
     g.fillStyle = GRAU;
     g.font = '400 13px "IBM Plex Sans", sans-serif';
-    for (const stueck of umbrich(g, text, maxBreite)) {
-      g.fillText(stueck, x, y);
-      y += 17;
-    }
-    return y - 17;
+    stuecke.forEach((stueck, i) => { g.fillText(stueck, x, y + i * 17); });
+    return y + (stuecke.length - 1) * 17;
   };
 
-  const { zeilen, summe, fussnoten } = kostenPosten(r);
+  const { summe, fussnoten } = posten;
 
   let y = 0;
 
@@ -79,9 +82,10 @@ function zeichneSpalte(g, { x, breite, titel, farbe, r, zeilenPlatz }) {
     y += 34;
   }
 
-  /* Alle Spalten bekommen gleich viele Zeilen und gleich viel Platz für
-     Notizen, sonst stünden die Summen auf verschiedener Höhe. */
-  for (let i = 0; i < zeilenPlatz.length; i++) {
+  /* Alle Spalten bekommen dieselben Zeilen in derselben Reihenfolge und
+     gleich viel Platz für Notizen. Wo eine Spalte eine Art nicht kennt,
+     bleibt die Zeile leer, statt die folgenden hochrutschen zu lassen. */
+  for (let i = 0; i < zeilen.length; i++) {
     const z = zeilen[i];
     if (z) zeile(y, z.label, z.betrag === null ? null : fmt(z.betrag));
     if (zeilenPlatz[i] > 0) {
@@ -166,26 +170,28 @@ export async function zeichneBeleg(ka, di = null, b = null) {
   const befund = vergleich ? befundZeilen(b, ka, di) : [];
 
   const rechnungen = vergleich ? [ka, di] : [ka];
+  /* Einmal rechnen und durchreichen: zeichneSpalte läuft zweimal, erst zum
+     Messen, dann zum Malen. Rechnete es dabei jedes Mal neu, könnten
+     gemessene und gemalte Höhe auseinanderlaufen. */
   const postenJeSpalte = rechnungen.map(kostenPosten);
+  const { spalten: zeilenJeSpalte } = ausgerichtetePosten(postenJeSpalte);
 
   /* Wie viele Notizzeilen jede Posten-Zeile braucht, über alle Spalten
      hinweg. Dieselbe Höhe für alle, sonst stünden die Summen versetzt. */
   const mass = document.createElement('canvas').getContext('2d');
   mass.font = '400 13px "IBM Plex Sans", sans-serif';
-  const zeilenAnzahl = Math.max(...postenJeSpalte.map(p => p.zeilen.length));
-  const zeilenPlatz = [];
-  for (let i = 0; i < zeilenAnzahl; i++) {
-    zeilenPlatz.push(Math.max(0, ...postenJeSpalte.map(p =>
-      p.zeilen[i]?.notiz ? umbrich(mass, p.zeilen[i].notiz, spaltenBreite).length : 0)));
-  }
+  const zeilenPlatz = zeilenJeSpalte[0].map((_, i) => Math.max(0, ...zeilenJeSpalte.map(
+    zeilen => zeilen[i]?.notiz ? umbrich(mass, zeilen[i].notiz, spaltenBreite).length : 0)));
 
   const spalten = rechnungen.map((r, i) => ({
     x: i === 0 ? 0 : spaltenBreite + SPALT,
     breite: spaltenBreite,
+    zeilen: zeilenJeSpalte[i],
     zeilenPlatz,
     /* Ohne Vergleich wiederholte die Spaltenüberschrift nur den Titel. */
-    titel: i === 0 ? (vergleich ? 'über „Sicher bezahlen“' : null) : `direkt, ${findeZahlweg(di.zahlweg).name}`,
+    titel: i === 0 ? (vergleich ? 'über „Sicher bezahlen“' : null) : `direkt, ${di.zahlwegName}`,
     farbe: i === 0 ? (vergleich ? POL_KA : '#2c6a4f') : POL_DIREKT,
+    posten: postenJeSpalte[i],
     r
   }));
 
@@ -231,7 +237,7 @@ export async function zeichneBeleg(ka, di = null, b = null) {
 
   g.fillStyle = GRAU;
   g.font = '400 14px "IBM Plex Sans", sans-serif';
-  g.fillText(`Servicegebühr laut Kleinanzeigen: ${KLEINANZEIGEN_AUFSCHLUESSELUNG} vom Artikelpreis.`, RAND, y);
+  g.fillText(`Servicegebühr laut Kleinanzeigen: ${KLEINANZEIGEN_AUFSCHLUESSELUNG}.`, RAND, y);
   g.fillText('Halbe Cent gehen nach oben. Alle Angaben ohne Gewähr.', RAND, y + 22);
   y += 52;
 

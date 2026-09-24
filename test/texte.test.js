@@ -3,9 +3,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { berechne, berechneDirekt, fmt } from '../js/rechnen.js?v=23';
-import { VERSANDARTEN } from '../js/daten.js?v=23';
-import { textDu, textSie, textNeutral, aufstellung, schutzSatz } from '../js/texte.js?v=23';
+import { berechne, berechneDirekt, fmt } from '../js/rechnen.js?v=24';
+import { VERSANDARTEN } from '../js/daten.js?v=24';
+import {
+  textDu, textSie, textNeutral, aufstellung, schutzSatz,
+  kostenPosten, ausgerichtetePosten, POSTEN_ARTEN
+} from '../js/texte.js?v=24';
 
 const art = cent => VERSANDARTEN.find(a => a.cent === cent);
 const KA_ART = art(299);                 // Hermes über Kleinanzeigen, Paketstation
@@ -17,8 +20,8 @@ const direktBlock = text => text.split('\n').filter(z => z.includes('Käuferschu
 test('der Kostenblock nennt Beträge zuerst und in fester Reihenfolge', () => {
   const zeilen = aufstellung(KA).split('\n');
   assert.equal(zeilen.length, 5);
-  assert.match(zeilen[0], /^78,00\s?€ Angebotspreis$/);
-  assert.match(zeilen[1], /^4,01\s?€ Servicegebühr Kleinanzeigen \(0,50\s?€ Pauschal \+ 4,5\s?%\)$/);
+  assert.match(zeilen[0], /^78,00\s?€ Artikelpreis$/);
+  assert.match(zeilen[1], /^4,01\s?€ Servicegebühr Kleinanzeigen \(0,50\s?€ Pauschal \+ 4,5\s?% vom Artikelpreis\)$/);
   assert.match(zeilen[2], /^2,99\s?€ Versand \(Hermes über Kleinanzeigen, Zustellung an eine Paketstation\)$/);
   assert.equal(zeilen[3], '------');
   assert.match(zeilen[4], /^85,00\s?€ zusammen$/);
@@ -123,8 +126,6 @@ test('mit Vergleich nennen alle drei Fassungen beide Wege und die Differenz', ()
    über „Käufer zahlt 81,99 €“ - eine Spalte, die sich nicht nachrechnen
    ließ. Nachricht und Bild lesen jetzt dieselben Posten, und die müssen
    zur Summe passen. */
-import { kostenPosten } from '../js/texte.js?v=23';
-
 test('die Posten über dem Strich ergeben genau die Summe', () => {
   const faelle = [
     berechne(7800, 299, true, KA_ART),
@@ -152,4 +153,53 @@ test('jeder Posten hat entweder einen Betrag oder keinen, nie undefined', () => 
     assert.ok(z.betrag === null || Number.isInteger(z.betrag), `${z.label}: ${z.betrag}`);
     assert.ok(typeof z.label === 'string' && z.label.length > 0);
   }
+});
+
+/* Der Grund: im Vergleichsbild richteten sich die Zeilen nach ihrer
+   Position aus. Fehlte einer Spalte die Gebühr, stand ihr Versand neben
+   der Servicegebühr der anderen - zwei verschiedene Dinge auf einer
+   Höhe. */
+test('ausgerichtetePosten stellt gleiche Arten auf dieselbe Zeile', () => {
+  const ka = kostenPosten(berechne(7800, 299, true, KA_ART));
+  const ohneGebuehr = kostenPosten(berechneDirekt(7800, 399, 'ueberweisung', 'verkaeufer', S2S));
+  const { arten, spalten } = ausgerichtetePosten([ka, ohneGebuehr]);
+
+  assert.deepEqual(arten, POSTEN_ARTEN);
+  assert.equal(spalten[0].length, spalten[1].length);
+  assert.equal(spalten[1][arten.indexOf('gebuehr')], null, 'die Banküberweisung hat keine Gebühr');
+  for (const spalte of spalten) {
+    spalte.forEach((z, i) => {
+      if (z) assert.equal(z.art, arten[i], `${z.label} steht in der Zeile für ${arten[i]}`);
+    });
+  }
+});
+
+test('Arten, die keine Spalte kennt, fallen ganz weg', () => {
+  /* Zwei Wege ohne Gebühr: dann braucht auch keine Spalte eine Zeile
+     dafür. Eine leere Zeile in beiden Spalten wäre nur ein Loch. */
+  const a = kostenPosten(berechneDirekt(7800, 399, 'ueberweisung', 'verkaeufer', S2S));
+  const b = kostenPosten(berechneDirekt(7800, 0, 'bar', 'verkaeufer', art(0)));
+  const { arten } = ausgerichtetePosten([a, b]);
+  assert.deepEqual(arten, ['preis', 'versand']);
+});
+
+/* Der Grund: wer den Versandbetrag von Hand eintippt, trifft keine
+   Versandart. Die Bedingung des Aktionspreises stand dann nur auf der
+   Seite, nicht in Nachricht und Bild. */
+test('die Paketstation steht auch ohne gewählte Versandart dabei', () => {
+  const vonHand = berechne(7800, 450, true, null);
+  assert.match(aufstellung(vonHand), /Versand \(Zustellung an eine Paketstation\)/);
+
+  const ohneSchalter = berechne(7800, 450, false, null);
+  assert.doesNotMatch(aufstellung(ohneSchalter), /Paketstation/);
+});
+
+/* Der Grund: im Bild stand links „4,5 %“ ohne Bezug neben rechts
+   „2,49 % vom Gesamtbetrag“, als wäre das dieselbe Größe. */
+test('jede Gebühr nennt ihre Grundlage', () => {
+  const ka = kostenPosten(berechne(7800, 299, true, KA_ART));
+  assert.match(ka.zeilen.find(z => z.art === 'gebuehr').notiz, /vom Artikelpreis$/);
+
+  const pp = kostenPosten(berechneDirekt(7800, 399, 'paypal-wd', 'kaeufer', S2S));
+  assert.match(pp.zeilen.find(z => z.art === 'gebuehr').notiz, /vom Gesamtbetrag$/);
 });
